@@ -51,8 +51,18 @@ export async function proxy(request: NextRequest) {
 
   // En el dominio plataforma.*, servir el árbol /plataforma en la raíz.
   if (isPlatformHost && !url.pathname.startsWith("/plataforma") && !url.pathname.startsWith("/_next") && !url.pathname.startsWith("/api")) {
+    if (url.pathname === "/") {
+      // La raíz del subdominio no tiene página propia -- "/plataforma" tampoco
+      // existe como ruta, así que reescribir ahí daría 404. En vez de eso,
+      // redirige según sesión; la petición vuelve a pasar por este middleware
+      // con el pathname ya resuelto (/plataforma/login o /plataforma/dashboard)
+      // y de ahí en adelante aplica la misma protección de siempre.
+      const target = url.clone();
+      target.pathname = user && isActiveUser ? "/plataforma/dashboard" : "/plataforma/login";
+      return NextResponse.redirect(target);
+    }
     const rewritten = url.clone();
-    rewritten.pathname = `/plataforma${url.pathname === "/" ? "" : url.pathname}`;
+    rewritten.pathname = `/plataforma${url.pathname}`;
     return NextResponse.rewrite(rewritten);
   }
 
