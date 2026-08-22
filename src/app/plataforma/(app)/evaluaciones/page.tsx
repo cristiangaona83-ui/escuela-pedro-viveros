@@ -7,11 +7,13 @@ import { formatDate } from "@/lib/utils";
 import { listEvaluations } from "@/services/evaluations";
 import { listOpenPeriods, getTeachableCourseSubjects } from "@/services/academic-scope";
 import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 import { EvaluationForm } from "@/features/evaluations/EvaluationForm";
 
 export const metadata: Metadata = { title: "Evaluaciones" };
 
 const STATUS_TONE = { planificada: "neutral", aplicada: "brand", cerrada: "success" } as const;
+const WRITE_ROLES = ["director", "utp", "docente", "superadmin"] as const;
 
 export default async function EvaluacionesPage() {
   const [evaluations, periods, options, session] = await Promise.all([
@@ -20,13 +22,14 @@ export default async function EvaluacionesPage() {
     getTeachableCourseSubjects(),
     getSessionContext(),
   ]);
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Evaluaciones</h1>
       <p className="mt-1 text-sm text-slate-500">Cada evaluación agrupa las calificaciones de un curso y asignatura.</p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_380px]" : ""}`}>
         <Card>
           <CardBody>
             {evaluations.length > 0 ? (
@@ -70,14 +73,16 @@ export default async function EvaluacionesPage() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody>
-            <h2 className="font-semibold text-slate-900">Nueva evaluación</h2>
-            <div className="mt-4">
-              <EvaluationForm options={options} periods={periods} userId={session?.userId ?? ""} />
-            </div>
-          </CardBody>
-        </Card>
+        {allowedToWrite && (
+          <Card>
+            <CardBody>
+              <h2 className="font-semibold text-slate-900">Nueva evaluación</h2>
+              <div className="mt-4">
+                <EvaluationForm options={options} periods={periods} userId={session?.userId ?? ""} />
+              </div>
+            </CardBody>
+          </Card>
+        )}
       </div>
     </div>
   );

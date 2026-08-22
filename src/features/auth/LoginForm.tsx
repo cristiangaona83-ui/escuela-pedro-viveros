@@ -12,7 +12,12 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    const code = searchParams.get("error");
+    if (code === "auth_callback_failed") return "El enlace ya expiró o no es válido. Solicita uno nuevo.";
+    if (code === "account_disabled") return "Esta cuenta está desactivada. Contacta a Dirección para reactivarla.";
+    return null;
+  });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,6 +33,20 @@ export function LoginForm() {
 
     if (signInError) {
       setError("Correo o contraseña incorrectos. Verifica tus datos e inténtalo nuevamente.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: authData } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("active")
+      .eq("id", authData.user?.id ?? "")
+      .maybeSingle();
+
+    if (profile?.active !== true) {
+      await supabase.auth.signOut();
+      setError("Esta cuenta está desactivada. Contacta a Dirección para reactivarla.");
       setLoading(false);
       return;
     }

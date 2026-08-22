@@ -19,17 +19,19 @@ export function UpdatePasswordForm() {
   useEffect(() => {
     const supabase = createClient();
 
-    // El enlace de recuperación deja el token en el fragmento (#...) de la URL;
-    // el cliente de Supabase lo detecta al cargar y dispara PASSWORD_RECOVERY.
+    // Flujo PKCE: el "code" del enlace de recuperación ya se intercambió por
+    // una sesión real en /plataforma/auth/callback (servidor, vía cookies)
+    // antes de llegar aquí, así que getSession() ya debería encontrarla.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setStatus((current) => (current === "checking" ? (session ? "ready" : "invalid") : current));
+    });
+
+    // Red de seguridad adicional: si por algún motivo el evento de recuperación
+    // se dispara igualmente (p. ej. un enlace antiguo con token en el hash).
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setStatus("ready");
-    });
-
-    // Red de seguridad por si el evento ya se disparó antes de suscribirnos.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setStatus((current) => (current === "checking" ? (session ? "ready" : "invalid") : current));
     });
 
     return () => subscription.unsubscribe();

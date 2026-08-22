@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_GRADING_CONFIG, roundGrade } from "@/config/grading";
+import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
 import type { SubjectAverageRow } from "@/lib/pdf/GradesReportDocument";
 
 export interface StudentReportData {
@@ -44,21 +44,18 @@ export async function getStudentSubjectAverages(
 
   const scoreByEval = new Map((grades ?? []).map((g) => [g.evaluation_id, g.score]));
 
-  const bySubject = new Map<string, { name: string; weightedSum: number; totalWeight: number }>();
+  const bySubject = new Map<string, { name: string; scores: { score: number | null; weight: number }[] }>();
   for (const ev of evaluations ?? []) {
     const e = ev as unknown as { id: string; subject_id: string; weight: number; subjects: { name: string } | null };
-    const score = scoreByEval.get(e.id);
-    if (score === null || score === undefined) continue;
-    const entry = bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", weightedSum: 0, totalWeight: 0 };
-    entry.weightedSum += score * (e.weight || 1);
-    entry.totalWeight += e.weight || 1;
+    const entry = bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", scores: [] };
+    entry.scores.push({ score: scoreByEval.get(e.id) ?? null, weight: e.weight });
     bySubject.set(e.subject_id, entry);
   }
 
   const rows: SubjectAverageRow[] = Array.from(bySubject.values())
     .map((s) => ({
       subjectName: s.name,
-      average: s.totalWeight > 0 ? roundGrade(s.weightedSum / s.totalWeight, DEFAULT_GRADING_CONFIG) : null,
+      average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG),
     }))
     .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
 

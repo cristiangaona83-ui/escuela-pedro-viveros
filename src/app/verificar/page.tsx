@@ -7,7 +7,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function VerificarPage() {
+export default async function VerificarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
+  const { code } = await searchParams;
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-950 px-4 py-16">
       <div className="w-full max-w-md">
@@ -16,7 +21,7 @@ export default function VerificarPage() {
           <p className="mt-2 text-sm text-brand-200">{SITE.name}</p>
         </div>
         <div className="mt-8 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-          <VerifyForm />
+          <VerifyForm initialCode={code} />
         </div>
       </div>
     </div>

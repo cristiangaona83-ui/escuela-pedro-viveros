@@ -21,6 +21,17 @@ export async function getCourse(id: string) {
   return data;
 }
 
+/** Lista liviana de cursos activos (solo id/nivel/letra), para selects en otros módulos. */
+export async function listCourseOptions() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("courses")
+    .select("id, level, letter")
+    .eq("active", true)
+    .order("level", { ascending: true });
+  return data ?? [];
+}
+
 export async function listAcademicYears() {
   const supabase = await createClient();
   const { data } = await supabase.from("academic_years").select("*").order("year", { ascending: false });

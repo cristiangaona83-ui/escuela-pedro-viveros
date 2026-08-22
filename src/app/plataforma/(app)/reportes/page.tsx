@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
-import { BarChart3, Users, School, ClipboardList, Award } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { BarChart3, Users, School, ClipboardList, Award, CalendarCheck } from "lucide-react";
+import { Card, CardBody } from "@/components/ui/Card";
 import { getDashboardCounts } from "@/services/dashboard";
+import { listCourseOptions } from "@/services/courses";
+import { AttendanceReportForm } from "@/features/reports/AttendanceReportForm";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Reportes" };
 
+const REPORT_ROLES = ["director", "utp", "superadmin"] as const;
+
 export default async function ReportesPage() {
-  const counts = await getDashboardCounts();
+  const [counts, courseOptions, session] = await Promise.all([getDashboardCounts(), listCourseOptions(), getSessionContext()]);
+  const allowedReports = canWrite(session?.roles ?? [], [...REPORT_ROLES]);
 
   const REPORTS = [
     { title: "Matrícula por curso", icon: School, value: `${counts.courses} cursos activos` },
@@ -21,10 +28,7 @@ export default async function ReportesPage() {
         <BarChart3 className="h-6 w-6 text-brand-700" />
         <h1 className="text-2xl font-semibold text-slate-900">Reportes</h1>
       </div>
-      <p className="mt-1 text-sm text-slate-500">
-        Resumen general del sistema. Los reportes exportables a PDF y Excel (asistencia, seguimiento, planificación) se
-        incorporarán en la siguiente etapa sobre esta misma base de datos.
-      </p>
+      <p className="mt-1 text-sm text-slate-500">Resumen general del sistema y reportes exportables en PDF, generados bajo demanda.</p>
 
       <Card className="mt-6 overflow-hidden">
         <div className="grid grid-cols-2 divide-y divide-slate-100 sm:grid-cols-4 sm:divide-y-0 sm:divide-x">
@@ -39,6 +43,21 @@ export default async function ReportesPage() {
           ))}
         </div>
       </Card>
+
+      {allowedReports && (
+        <Card className="mt-6 max-w-lg">
+          <CardBody>
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="h-4 w-4 text-brand-700" />
+              <h2 className="font-semibold text-slate-900">Reporte de Asistencia</h2>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Por curso y rango de fechas. Documento de uso interno, no un certificado oficial.</p>
+            <div className="mt-4">
+              <AttendanceReportForm courseOptions={courseOptions} />
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

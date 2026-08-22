@@ -5,15 +5,20 @@ import { createClient } from "@/lib/supabase/server";
 import { CertificateAlumnoRegular } from "@/lib/pdf/CertificateAlumnoRegular";
 import { getCertificateSignature } from "@/services/school-config";
 import { SITE } from "@/config/site";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const runtime = "nodejs";
 
+const ALLOWED_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+
 export async function POST(request: Request) {
+  const session = await getSessionContext();
+  if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  if (!canWrite(session.roles, [...ALLOWED_ROLES])) {
+    return NextResponse.json({ error: "No tienes permiso para emitir este certificado" }, { status: 403 });
+  }
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const { student_id, academic_year_id } = await request.json();
   if (!student_id || !academic_year_id) {
@@ -49,7 +54,7 @@ export async function POST(request: Request) {
       cert_type: "alumno_regular",
       student_id,
       academic_year_id,
-      issued_by: user.id,
+      issued_by: session.userId,
       payload: { studentName: `${student.first_names} ${student.last_names}`, courseLabel, year: year.year },
     })
     .select("*")
@@ -82,6 +87,7 @@ export async function POST(request: Request) {
       signatureName: signature.name,
       signatureTitle: signature.title,
       qrDataUrl,
+      verificationCode: certificate.verification_code,
     })
   );
 

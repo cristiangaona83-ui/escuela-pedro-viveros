@@ -18,16 +18,23 @@ export function AssignRoleForm({ profiles, roles }: { profiles: ProfileRow[]; ro
     setLoading(true);
     setError(null);
     const form = new FormData(event.currentTarget);
+    const userId = String(form.get("user_id") || "");
+    const roleId = String(form.get("role_id") || "");
     const supabase = createClient();
-    const { error: dbError } = await supabase.from("user_roles").insert({
-      user_id: String(form.get("user_id") || ""),
-      role_id: String(form.get("role_id") || ""),
-    });
+    const { error: dbError } = await supabase.from("user_roles").insert({ user_id: userId, role_id: roleId });
     setLoading(false);
     if (dbError) {
       setError(dbError.code === "23505" ? "Ese usuario ya tiene ese rol asignado." : "No pudimos asignar el rol.");
       return;
     }
+
+    await supabase.rpc("log_audit", {
+      p_action: "asignar_rol",
+      p_module: "administracion",
+      p_entity: "user_roles",
+      p_details: { user_id: userId, role_id: roleId },
+    });
+
     event.currentTarget.reset();
     router.refresh();
   }

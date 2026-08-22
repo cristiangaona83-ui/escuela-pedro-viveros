@@ -6,10 +6,13 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Field";
 import { listStudents } from "@/services/students";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Estudiantes" };
 
 const STATUS_TONE = { matriculado: "success", retirado: "danger", egresado: "neutral" } as const;
+const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
 
 export default async function EstudiantesPage({
   searchParams,
@@ -17,7 +20,8 @@ export default async function EstudiantesPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const students = await listStudents(q);
+  const [students, session] = await Promise.all([listStudents(q), getSessionContext()]);
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div>
@@ -26,9 +30,11 @@ export default async function EstudiantesPage({
           <h1 className="text-2xl font-semibold text-slate-900">Estudiantes</h1>
           <p className="mt-1 text-sm text-slate-500">Información privada — nunca visible desde el sitio público.</p>
         </div>
-        <LinkButton href="/plataforma/estudiantes/nuevo">
-          <UserPlus className="h-4 w-4" /> Nuevo estudiante
-        </LinkButton>
+        {allowedToWrite && (
+          <LinkButton href="/plataforma/estudiantes/nuevo">
+            <UserPlus className="h-4 w-4" /> Nuevo estudiante
+          </LinkButton>
+        )}
       </div>
 
       <form className="mt-6 max-w-sm">

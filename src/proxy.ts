@@ -2,7 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PLATFORM_HOST_PREFIX = "plataforma.";
-const PUBLIC_PLATFORM_PATHS = ["/plataforma/login", "/plataforma/recuperar", "/plataforma/restablecer-clave"];
+const PUBLIC_PLATFORM_PATHS = [
+  "/plataforma/login",
+  "/plataforma/recuperar",
+  "/plataforma/restablecer-clave",
+  "/plataforma/auth/callback",
+];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -30,6 +35,16 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Una sesión de Supabase Auth válida no basta: si Administración desactivó
+  // el perfil (profiles.active = false), el acceso a la plataforma debe
+  // bloquearse igual que si nunca hubiera iniciado sesión. No se elimina la
+  // cuenta de Auth, solo se le niega el acceso y se cierra la sesión activa.
+  let isActiveUser = false;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("active").eq("id", user.id).maybeSingle();
+    isActiveUser = profile?.active === true;
+  }
+
   const hostname = request.headers.get("host") || "";
   const isPlatformHost = hostname.startsWith(PLATFORM_HOST_PREFIX);
   const url = request.nextUrl;
@@ -41,20 +56,25 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(rewritten);
   }
 
-  // Proteger todas las rutas /plataforma/* salvo login / recuperación de clave.
+  // Proteger todas las rutas /plataforma/* salvo login, recuperación de clave
+  // y el callback de auth (que todavía no tiene sesión cuando llega el `code`).
   const isPlatformRoute = url.pathname.startsWith("/plataforma");
   const isPublicPlatformPath = PUBLIC_PLATFORM_PATHS.some((p) => url.pathname.startsWith(p));
 
   if (isPlatformRoute && !isPublicPlatformPath && !url.pathname.startsWith("/plataforma/api")) {
-    if (!user) {
+    if (!user || !isActiveUser) {
+      if (user && !isActiveUser) {
+        await supabase.auth.signOut();
+      }
       const loginUrl = url.clone();
       loginUrl.pathname = "/plataforma/login";
       loginUrl.searchParams.set("next", url.pathname);
+      if (user && !isActiveUser) loginUrl.searchParams.set("error", "account_disabled");
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  if (url.pathname === "/plataforma/login" && user) {
+  if (url.pathname === "/plataforma/login" && user && isActiveUser) {
     const dashboardUrl = url.clone();
     dashboardUrl.pathname = "/plataforma/dashboard";
     return NextResponse.redirect(dashboardUrl);

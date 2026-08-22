@@ -29,4 +29,11 @@ export const pdfStyles = StyleSheet.create({
   signatureTitle: { fontSize: 9, color: "#5c6b66" },
   qr: { width: 64, height: 64 },
   disclaimer: { fontSize: 7.5, color: "#8a938f", marginTop: 24, textAlign: "center" },
+  // Aislado en su propia linea (nunca dentro de un parrafo que se ajusta a
+  // varias lineas): un salto de linea automatico justo antes o dentro del
+  // codigo es invisible al ver el PDF, pero varios lectores insertan un
+  // caracter real (espacio o "\n") ahi al copiar el texto, invalidando el
+  // codigo copiado aunque se vea identico. Fuente monoespaciada para máxima
+  // legibilidad al copiar/transcribir.
+  verificationCode: { fontSize: 9, fontFamily: "Courier", color: "#5c6b66", textAlign: "center", marginTop: 4, letterSpacing: 0.5 },
 });

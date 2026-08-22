@@ -5,13 +5,18 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { StudentForm } from "@/features/students/StudentForm";
 import { getStudent } from "@/services/students";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Ficha del estudiante" };
 
+const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+
 export default async function EstudianteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const student = await getStudent(id);
+  const [student, session] = await Promise.all([getStudent(id), getSessionContext()]);
   if (!student) notFound();
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -29,7 +34,7 @@ export default async function EstudianteDetailPage({ params }: { params: Promise
 
       <Card className="mt-6">
         <CardBody>
-          <StudentForm student={student} />
+          <StudentForm student={student} canWrite={allowedToWrite} />
         </CardBody>
       </Card>
     </div>

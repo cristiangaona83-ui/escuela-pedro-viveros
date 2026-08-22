@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { createClient } from "@/lib/supabase/client";
 import { formatGrade } from "@/lib/utils";
-import { isGradeInRange, roundGrade, type GradingConfig } from "@/config/grading";
+import { isGradeInRange, roundGrade, computeWeightedAverage, type GradingConfig } from "@/config/grading";
 import type { CourseSubjectOption } from "@/services/academic-scope";
 import type { AcademicPeriodRow } from "@/types/database";
 
@@ -30,11 +30,13 @@ export function GradeEntryGrid({
   periods,
   gradingConfig,
   userId,
+  canWrite,
 }: {
   options: CourseSubjectOption[];
   periods: (AcademicPeriodRow & { academic_years: { year: number } | null })[];
   gradingConfig: GradingConfig;
   userId: string;
+  canWrite: boolean;
 }) {
   const [scopeKey, setScopeKey] = useState("");
   const [periodId, setPeriodId] = useState("");
@@ -106,7 +108,7 @@ export function GradeEntryGrid({
   }, [loadData]);
 
   async function handleCreateEvaluation() {
-    if (!selectedOption || !periodId || !newEvalName.trim()) return;
+    if (!canWrite || !selectedOption || !periodId || !newEvalName.trim()) return;
     const supabase = createClient();
     const { error: dbError } = await supabase.from("evaluations").insert({
       course_id: selectedOption.course_id,
@@ -127,6 +129,7 @@ export function GradeEntryGrid({
   }
 
   async function handleScoreChange(studentId: string, evaluationId: string, rawValue: string) {
+    if (!canWrite) return;
     setError(null);
     const value = rawValue.trim();
     const numeric = value === "" ? null : Number(value.replace(",", "."));
@@ -168,16 +171,10 @@ export function GradeEntryGrid({
     const result: Record<string, number | null> = {};
     for (const s of students) {
       const studentGrades = grades[s.id] ?? {};
-      let weightedSum = 0;
-      let totalWeight = 0;
-      for (const ev of evaluations) {
-        const score = studentGrades[ev.id]?.score;
-        if (score !== null && score !== undefined) {
-          weightedSum += score * (ev.weight || 1);
-          totalWeight += ev.weight || 1;
-        }
-      }
-      result[s.id] = totalWeight > 0 ? roundGrade(weightedSum / totalWeight, gradingConfig) : null;
+      result[s.id] = computeWeightedAverage(
+        evaluations.map((ev) => ({ score: studentGrades[ev.id]?.score, weight: ev.weight })),
+        gradingConfig
+      );
     }
     return result;
   }, [students, evaluations, grades, gradingConfig]);
@@ -207,19 +204,26 @@ export function GradeEntryGrid({
             ))}
           </Select>
         </div>
-        <div className="flex items-end gap-2">
-          <Input
-            placeholder="Nombre nueva evaluación"
-            value={newEvalName}
-            onChange={(e) => setNewEvalName(e.target.value)}
-            disabled={!scopeKey || !periodId || periodClosed}
-          />
-          <Button type="button" size="md" onClick={handleCreateEvaluation} disabled={!scopeKey || !periodId || periodClosed || !newEvalName.trim()}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        {canWrite && (
+          <div className="flex items-end gap-2">
+            <Input
+              placeholder="Nombre nueva evaluación"
+              value={newEvalName}
+              onChange={(e) => setNewEvalName(e.target.value)}
+              disabled={!scopeKey || !periodId || periodClosed}
+            />
+            <Button type="button" size="md" onClick={handleCreateEvaluation} disabled={!scopeKey || !periodId || periodClosed || !newEvalName.trim()}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
+      {!canWrite && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-600">
+          <Lock className="h-4 w-4 shrink-0" /> Solo lectura: tu rol puede consultar el libro de notas, pero no registrar calificaciones.
+        </div>
+      )}
       {periodClosed && (
         <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <Lock className="h-4 w-4 shrink-0" /> Este período está cerrado: las calificaciones no se pueden modificar.
@@ -268,7 +272,7 @@ export function GradeEntryGrid({
                             inputMode="decimal"
                             defaultValue={score !== null && score !== undefined ? formatGrade(score) : ""}
                             onBlur={(e) => handleScoreChange(s.id, ev.id, e.target.value)}
-                            disabled={periodClosed}
+                            disabled={periodClosed || !canWrite}
                             className="h-9 w-16 rounded-lg border border-slate-300 text-center text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-slate-50"
                           />
                           {savingKey === key && <span className="ml-1 text-[10px] text-slate-400">…</span>}
@@ -292,7 +296,7 @@ export function GradeEntryGrid({
         )}
       </div>
 
-      {!loading && evaluations.length > 0 && students.length > 0 && (
+      {canWrite && !loading && evaluations.length > 0 && students.length > 0 && (
         <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
           <CheckCircle2 className="h-3.5 w-3.5" /> Las notas se guardan automáticamente al salir del campo.
         </p>

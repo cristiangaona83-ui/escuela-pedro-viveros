@@ -188,12 +188,18 @@ export type LessonPlanRow = {
   activities: string | null;
   evaluation_desc: string | null;
   resources: string | null;
+  observations: string | null;
   plan_date: string | null;
   status: "borrador" | "enviada" | "revisada" | "aprobada" | "observada";
   reviewer_id: string | null;
   reviewer_comment: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type LessonPlanObjectiveRow = {
+  lesson_plan_id: string;
+  learning_objective_id: string;
 }
 
 export type StudentSupportRow = {
@@ -218,6 +224,8 @@ export type PieRecordRow = {
   support_type: string | null;
   diagnosis: string | null;
   actions: string | null;
+  follow_up: string | null;
+  observations: string | null;
   status: "activo" | "egresado" | "en_evaluacion";
   created_at: string;
   updated_at: string;
@@ -284,6 +292,7 @@ export type GalleryRow = {
   id: string;
   title: string;
   category: string;
+  description: string | null;
   image_url: string;
   event_date: string | null;
   published: boolean;
@@ -403,6 +412,7 @@ export interface Database {
       attendance: CrudTable<AttendanceRow>;
       learning_objectives: CrudTable<LearningObjectiveRow>;
       lesson_plans: CrudTable<LessonPlanRow>;
+      lesson_plan_objectives: CrudTable<LessonPlanObjectiveRow>;
       student_support: CrudTable<StudentSupportRow>;
       pie_records: CrudTable<PieRecordRow>;
       classroom_observations: CrudTable<ClassroomObservationRow>;

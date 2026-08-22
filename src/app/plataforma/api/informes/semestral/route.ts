@@ -4,15 +4,20 @@ import { createClient } from "@/lib/supabase/server";
 import { GradesReportDocument } from "@/lib/pdf/GradesReportDocument";
 import { getStudentSubjectAverages } from "@/services/report-data";
 import { getCertificateSignature } from "@/services/school-config";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const runtime = "nodejs";
 
+const ALLOWED_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+
 export async function POST(request: Request) {
+  const session = await getSessionContext();
+  if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  if (!canWrite(session.roles, [...ALLOWED_ROLES])) {
+    return NextResponse.json({ error: "No tienes permiso para emitir este informe" }, { status: 403 });
+  }
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const { student_id, period_id } = await request.json();
   if (!student_id || !period_id) return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
       cert_type: "informe_semestral",
       student_id,
       academic_year_id: period.academic_year_id,
-      issued_by: user.id,
+      issued_by: session.userId,
       payload: { period: period.name, generalAverage: report.generalAverage },
     })
     .select("*")

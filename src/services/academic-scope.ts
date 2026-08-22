@@ -40,6 +40,50 @@ export async function getTeachableCourseSubjects(): Promise<CourseSubjectOption[
   });
 }
 
+export interface CourseOption {
+  course_id: string;
+  course_label: string;
+}
+
+/**
+ * Cursos que el usuario actual puede ver/gestionar para Asistencia. Refleja
+ * exactamente el alcance de teaches_course() en RLS (asignación de docente
+ * O profesor jefe), más el acceso amplio de lectura de dirección/UTP/
+ * superadmin/convivencia (esta última nunca puede escribir, solo ver).
+ */
+export async function getTeachableCourses(): Promise<CourseOption[]> {
+  const supabase = await createClient();
+  const session = await getSessionContext();
+  const hasBroadAccess = session?.roles.some((r) => ["director", "utp", "superadmin", "convivencia"].includes(r));
+
+  if (hasBroadAccess) {
+    const { data } = await supabase.from("courses").select("id, level, letter").eq("active", true).order("level", { ascending: true });
+    return (data ?? []).map((c) => ({ course_id: c.id, course_label: `${c.level} ${c.letter}` }));
+  }
+
+  if (!session) return [];
+
+  const [{ data: assigned }, { data: homeroom }] = await Promise.all([
+    supabase
+      .from("teacher_assignments")
+      .select("course_id, courses(level, letter)")
+      .eq("active", true)
+      .eq("teacher_id", session.userId),
+    supabase.from("courses").select("id, level, letter").eq("active", true).eq("homeroom_teacher_id", session.userId),
+  ]);
+
+  const byId = new Map<string, string>();
+  for (const row of assigned ?? []) {
+    const r = row as unknown as { course_id: string; courses: { level: string; letter: string } | null };
+    if (r.courses) byId.set(r.course_id, `${r.courses.level} ${r.courses.letter}`);
+  }
+  for (const c of homeroom ?? []) {
+    byId.set(c.id, `${c.level} ${c.letter}`);
+  }
+
+  return Array.from(byId, ([course_id, course_label]) => ({ course_id, course_label }));
+}
+
 export async function listOpenPeriods() {
   const supabase = await createClient();
   const { data } = await supabase

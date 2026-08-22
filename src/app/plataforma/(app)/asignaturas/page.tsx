@@ -5,19 +5,27 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 import { SubjectForm } from "@/features/subjects/SubjectForm";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Asignaturas" };
 
+const WRITE_ROLES = ["director", "utp", "superadmin"] as const;
+
 export default async function AsignaturasPage() {
   const supabase = await createClient();
-  const { data: subjects } = await supabase.from("subjects").select("*").order("name", { ascending: true });
+  const [{ data: subjects }, session] = await Promise.all([
+    supabase.from("subjects").select("*").order("name", { ascending: true }),
+    getSessionContext(),
+  ]);
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Asignaturas</h1>
       <p className="mt-1 text-sm text-slate-500">Catálogo configurable de asignaturas del establecimiento.</p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_320px]" : ""}`}>
         <Card>
           <CardBody>
             {subjects && subjects.length > 0 ? (
@@ -38,14 +46,16 @@ export default async function AsignaturasPage() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody>
-            <h2 className="font-semibold text-slate-900">Nueva asignatura</h2>
-            <div className="mt-4">
-              <SubjectForm />
-            </div>
-          </CardBody>
-        </Card>
+        {allowedToWrite && (
+          <Card>
+            <CardBody>
+              <h2 className="font-semibold text-slate-900">Nueva asignatura</h2>
+              <div className="mt-4">
+                <SubjectForm />
+              </div>
+            </CardBody>
+          </Card>
+        )}
       </div>
     </div>
   );

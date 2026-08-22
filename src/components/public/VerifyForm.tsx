@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ShieldCheck, ShieldX, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, Label } from "@/components/ui/Field";
@@ -15,17 +15,32 @@ const CERT_LABELS: Record<string, string> = {
   cierre_anio: "Informe de Cierre de Año",
 };
 
-export function VerifyForm() {
+/**
+ * El código real (verification_code) son siempre 32 caracteres hexadecimales
+ * en minúscula, sin espacios ni saltos de línea. Al copiarlo desde el PDF,
+ * un salto de línea automático de word-wrap -- invisible al ver el documento
+ * -- puede quedar como un espacio o "\n" real en el texto copiado. Como
+ * ningún whitespace es parte válida del código, es seguro eliminarlo por
+ * completo (en cualquier posición, no solo en los bordes) sin reducir la
+ * entropía ni el formato del código real.
+ */
+function normalizeCode(value: string): string {
+  // \s cubre espacios/tabs/saltos de línea; el resto son separadores de
+  // ancho cero y BOM (U+200B a U+200D, U+FEFF) que un lector de PDF podría
+  // insertar al copiar texto en el punto donde el párrafo se ajustó de línea.
+  return value.replace(/[\s\u200B-\u200D\uFEFF]/g, "").toLowerCase();
+}
+
+export function VerifyForm({ initialCode }: { initialCode?: string }) {
+  const [code, setCode] = useState(initialCode ?? "");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [result, setResult] = useState<VerifyCertificateResult | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function runVerification(value: string) {
     setStatus("loading");
-    const code = String(new FormData(event.currentTarget).get("code") || "").trim();
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("verify_certificate", { p_code: code });
+      const { data, error } = await supabase.rpc("verify_certificate", { p_code: normalizeCode(value) });
       if (error) throw error;
       setResult(data?.[0] ?? null);
     } catch {
@@ -35,12 +50,32 @@ export function VerifyForm() {
     }
   }
 
+  useEffect(() => {
+    // Escanear el QR de un certificado (/verificar?code=...) verifica de
+    // inmediato, sin obligar a pegar el código a mano.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- verificación automática al montar con el código de la URL
+    if (initialCode) void runVerification(initialCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al montar, con el código que trae la URL
+  }, []);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runVerification(code);
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="code">Folio o código de verificación</Label>
-          <Input id="code" name="code" placeholder="PVO-2026-000001" required />
+          <Label htmlFor="code">Código de verificación</Label>
+          <Input
+            id="code"
+            name="code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Escanea el código QR o escribe el código impreso en el documento"
+            required
+          />
         </div>
         <Button type="submit" className="w-full" disabled={status === "loading"}>
           <Search className="h-4 w-4" />

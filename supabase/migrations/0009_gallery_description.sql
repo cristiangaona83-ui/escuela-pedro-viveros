@@ -1,0 +1,11 @@
+-- Fase 9 (Noticias + Galería): agrega la columna "description" a gallery,
+-- pedida por el usuario ("descripción opcional") y ausente del esquema
+-- original (0001_schema.sql). Sin default ni not null -- no afecta filas
+-- existentes.
+--
+-- No se requiere ningún cambio de RLS ni de GRANT: "gallery_select_published_anon"
+-- y "gallery_write_admin" (0002_rls.sql) filtran por rol/estado a nivel de fila,
+-- no por columna, así que ya cubren esta columna nueva igual que el resto de la
+-- tabla; el GRANT existente en 0004_grants.sql es a nivel de tabla, también sin
+-- necesidad de ajuste.
+alter table public.gallery add column if not exists description text;

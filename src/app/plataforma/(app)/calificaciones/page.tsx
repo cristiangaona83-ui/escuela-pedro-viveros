@@ -4,8 +4,11 @@ import { GradeEntryGrid } from "@/features/grades/GradeEntryGrid";
 import { getTeachableCourseSubjects, listOpenPeriods } from "@/services/academic-scope";
 import { getGradingConfig } from "@/services/school-config";
 import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Calificaciones" };
+
+const WRITE_ROLES = ["director", "superadmin", "docente"] as const;
 
 export default async function CalificacionesPage() {
   const [options, periods, gradingConfig, session] = await Promise.all([
@@ -14,6 +17,7 @@ export default async function CalificacionesPage() {
     getGradingConfig(),
     getSessionContext(),
   ]);
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div>
@@ -30,6 +34,7 @@ export default async function CalificacionesPage() {
             periods={periods}
             gradingConfig={gradingConfig}
             userId={session?.userId ?? ""}
+            canWrite={allowedToWrite}
           />
         </CardBody>
       </Card>

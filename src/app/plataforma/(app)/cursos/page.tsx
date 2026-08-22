@@ -6,11 +6,16 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listCourses } from "@/services/courses";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Cursos" };
 
+const WRITE_ROLES = ["director", "utp", "superadmin"] as const;
+
 export default async function CursosPlataformaPage() {
-  const courses = await listCourses();
+  const [courses, session] = await Promise.all([listCourses(), getSessionContext()]);
+  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
 
   return (
     <div>
@@ -19,9 +24,11 @@ export default async function CursosPlataformaPage() {
           <h1 className="text-2xl font-semibold text-slate-900">Cursos</h1>
           <p className="mt-1 text-sm text-slate-500">Gestión de niveles, jefaturas y asignaciones docentes.</p>
         </div>
-        <LinkButton href="/plataforma/cursos/nuevo">
-          <Plus className="h-4 w-4" /> Nuevo curso
-        </LinkButton>
+        {allowedToWrite && (
+          <LinkButton href="/plataforma/cursos/nuevo">
+            <Plus className="h-4 w-4" /> Nuevo curso
+          </LinkButton>
+        )}
       </div>
 
       <div className="mt-6">

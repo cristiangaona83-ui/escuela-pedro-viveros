@@ -26,3 +26,28 @@ export function roundGrade(value: number, config: GradingConfig = DEFAULT_GRADIN
 export function isGradeInRange(value: number, config: GradingConfig = DEFAULT_GRADING_CONFIG): boolean {
   return value >= config.scaleMin && value <= config.scaleMax;
 }
+
+export interface WeightedScore {
+  score: number | null | undefined;
+  weight: number;
+}
+
+/**
+ * Promedio ponderado: suma(nota * ponderación) / suma(ponderación), sobre
+ * las notas no nulas. Única fuente de verdad — usada tanto por la vista en
+ * vivo del libro de notas como por los PDF de informes, para que nunca
+ * puedan mostrar resultados distintos para el mismo estudiante.
+ */
+export function computeWeightedAverage(
+  scores: WeightedScore[],
+  config: GradingConfig = DEFAULT_GRADING_CONFIG
+): number | null {
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const s of scores) {
+    if (s.score === null || s.score === undefined) continue;
+    weightedSum += s.score * (s.weight || 1);
+    totalWeight += s.weight || 1;
+  }
+  return totalWeight > 0 ? roundGrade(weightedSum / totalWeight, config) : null;
+}

@@ -14,6 +14,7 @@ export function CertificateAlumnoRegular({
   signatureName,
   signatureTitle,
   qrDataUrl,
+  verificationCode,
 }: {
   folio: string;
   studentName: string;
@@ -24,6 +25,7 @@ export function CertificateAlumnoRegular({
   signatureName: string;
   signatureTitle: string;
   qrDataUrl: string;
+  verificationCode: string;
 }) {
   return (
     <Document title={`Certificado de Alumno Regular - ${studentName}`}>
@@ -62,8 +64,9 @@ export function CertificateAlumnoRegular({
 
         <Text style={pdfStyles.disclaimer}>
           Fecha de emisión: {formatDate(issuedAt)} · Folio {folio} · Documento emitido por la plataforma pedagógica del
-          establecimiento. Verifique su autenticidad en {SITE.domains.public}/verificar.
+          establecimiento. Verifique su autenticidad en {SITE.domains.public}/verificar con el código:
         </Text>
+        <Text style={pdfStyles.verificationCode}>{verificationCode}</Text>
       </Page>
     </Document>
   );
