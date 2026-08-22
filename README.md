@@ -18,7 +18,7 @@ src/
   app/
     (public)/            Sitio público (usa Header/Footer)
     plataforma/
-      (auth)/             login, recuperar, actualizar-clave (sin sidebar)
+      (auth)/             login, recuperar, restablecer-clave (sin sidebar)
       (app)/               dashboard, estudiantes, cursos, calificaciones, etc. (con sidebar, protegido)
       api/                 Route handlers que generan PDFs (certificados, informes)
     verificar/            Verificación pública de certificados (noindex)

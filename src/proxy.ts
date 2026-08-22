@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PLATFORM_HOST_PREFIX = "plataforma.";
-const PUBLIC_PLATFORM_PATHS = ["/plataforma/login", "/plataforma/recuperar", "/plataforma/actualizar-clave"];
+const PUBLIC_PLATFORM_PATHS = ["/plataforma/login", "/plataforma/recuperar", "/plataforma/restablecer-clave"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

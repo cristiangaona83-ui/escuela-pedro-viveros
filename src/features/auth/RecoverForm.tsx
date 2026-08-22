@@ -16,7 +16,7 @@ export function RecoverForm() {
     const email = String(new FormData(event.currentTarget).get("email") || "");
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/plataforma/actualizar-clave`,
+      redirectTo: `${window.location.origin}/plataforma/restablecer-clave`,
     });
     setStatus("sent");
   }
