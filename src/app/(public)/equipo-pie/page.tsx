@@ -44,7 +44,7 @@ export default async function EquipoPiePage() {
 
       <section className="bg-slate-50 py-14">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-slate-900">Coordinación y profesionales</h2>
+          <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">Coordinación y profesionales</h2>
           <p className="mt-2 text-slate-500">
             Educadoras diferenciales, profesionales asistentes y técnicos que integran el equipo PIE.
           </p>

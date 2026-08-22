@@ -23,7 +23,7 @@ export default async function EstudiantesPage({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Estudiantes</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Estudiantes</h1>
           <p className="mt-1 text-sm text-slate-500">Información privada — nunca visible desde el sitio público.</p>
         </div>
         <LinkButton href="/plataforma/estudiantes/nuevo">
@@ -38,7 +38,7 @@ export default async function EstudiantesPage({
         </div>
       </form>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
         {students.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">

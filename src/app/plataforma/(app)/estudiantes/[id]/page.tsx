@@ -16,7 +16,7 @@ export default async function EstudianteDetailPage({ params }: { params: Promise
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-900">
           {student.last_names}, {student.first_names}
         </h1>
         <Badge tone={student.status === "matriculado" ? "success" : student.status === "retirado" ? "danger" : "neutral"}>

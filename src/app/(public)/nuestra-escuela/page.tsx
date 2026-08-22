@@ -20,7 +20,7 @@ export default function NuestraEscuelaPage() {
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <BookOpen className="h-6 w-6 text-brand-700" />
-          <h2 className="text-2xl font-bold text-slate-900">Historia y trayectoria</h2>
+          <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">Historia y trayectoria</h2>
         </div>
         {HISTORY.paragraphs.length > 0 ? (
           <div className="mt-4 space-y-4 text-slate-600">
@@ -69,7 +69,7 @@ export default function NuestraEscuelaPage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Award className="h-6 w-6 text-brand-700" />
-          <h2 className="text-2xl font-bold text-slate-900">Sellos educativos</h2>
+          <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">Sellos educativos</h2>
         </div>
         {EDUCATIONAL_SEALS.length > 0 ? (
           <div className="mt-6 grid gap-5 md:grid-cols-3">
@@ -93,7 +93,7 @@ export default function NuestraEscuelaPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <HeartHandshake className="h-6 w-6 text-brand-700" />
-            <h2 className="text-2xl font-bold text-slate-900">Valores institucionales</h2>
+            <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">Valores institucionales</h2>
           </div>
           {VALUES.length > 0 ? (
             <div className="mt-6 grid gap-5 md:grid-cols-3">

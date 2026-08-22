@@ -17,7 +17,7 @@ export default async function CalificacionesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Calificaciones</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Calificaciones</h1>
       <p className="mt-1 text-sm text-slate-500">
         Libro de notas digital. Escala {gradingConfig.scaleMin.toFixed(1)} a {gradingConfig.scaleMax.toFixed(1)}, nota mínima de
         aprobación {gradingConfig.approvalMinimum.toFixed(1)}.

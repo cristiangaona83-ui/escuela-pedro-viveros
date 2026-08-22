@@ -15,11 +15,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center text-white">
           <SchoolLogo size={64} />
-          <h1 className="mt-4 text-xl font-bold">{PLATFORM_NAME}</h1>
+          <h1 className="mt-4 font-heading text-xl font-medium tracking-tight">{PLATFORM_NAME}</h1>
           <p className="mt-1 text-sm text-brand-200">{SITE.name}</p>
         </div>
 
-        <div className="mt-8 rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+        <div className="mt-8 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8">
           <Suspense fallback={null}>
             <LoginForm />
           </Suspense>

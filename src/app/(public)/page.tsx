@@ -47,7 +47,7 @@ export default async function HomePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="group rounded-xl border border-slate-200 bg-white p-6 transition-colors hover:border-brand-200"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                 <item.icon className="h-5 w-5" strokeWidth={1.75} />
@@ -66,7 +66,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Noticias y actividades</h2>
+              <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">Noticias y actividades</h2>
               <p className="mt-2 text-slate-500">Lo último de la vida escolar en la comunidad educativa.</p>
             </div>
             <LinkButton href="/noticias" variant="secondary">
@@ -93,19 +93,19 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-brand-800 px-6 py-12 text-center sm:px-12">
-          <h2 className="text-2xl font-bold text-white sm:text-3xl">¿Formas parte de nuestra comunidad?</h2>
-          <p className="mx-auto mt-3 max-w-xl text-brand-100">
+        <div className="rounded-xl bg-brand-900 px-6 py-14 text-center sm:px-12">
+          <h2 className="font-heading text-2xl font-medium tracking-tight text-white sm:text-3xl">¿Formas parte de nuestra comunidad?</h2>
+          <p className="mx-auto mt-3 max-w-xl text-brand-100/90">
             Docentes, equipo directivo y profesionales PIE acceden a la gestión académica desde la Plataforma
             Pedagógica {SITE.name}.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <LinkButton href="/contacto" variant="outline" size="lg">
               Contáctanos
             </LinkButton>
             <a
               href={SITE.domains.platform}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 text-base font-semibold text-white shadow-sm hover:bg-accent-600"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-accent-500 px-6 text-[0.95rem] font-medium text-white transition-colors hover:bg-accent-600"
             >
               Ir a la Plataforma Pedagógica
             </a>

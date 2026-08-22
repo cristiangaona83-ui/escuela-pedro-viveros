@@ -13,7 +13,7 @@ export default async function UsuariosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Usuarios y roles</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Usuarios y roles</h1>
       <p className="mt-1 text-sm text-slate-500">
         Crea las cuentas desde el panel de Supabase (Authentication → Users). Aquí se asignan los roles del sistema.
       </p>

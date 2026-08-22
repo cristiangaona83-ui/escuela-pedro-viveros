@@ -23,7 +23,7 @@ export default async function EvaluacionesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Evaluaciones</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Evaluaciones</h1>
       <p className="mt-1 text-sm text-slate-500">Cada evaluación agrupa las calificaciones de un curso y asignatura.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">

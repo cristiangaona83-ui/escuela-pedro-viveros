@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Icons from "lucide-react";
-import { GraduationCap, X } from "lucide-react";
+import { X } from "lucide-react";
 import { PLATFORM_NAV } from "@/config/navigation";
 import { PLATFORM_NAME } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { SchoolLogo } from "@/components/ui/SchoolLogo";
 import type { RoleCode } from "@/types/database";
 
 function NavIcon({ name, className }: { name: string; className?: string }) {
@@ -28,11 +29,9 @@ export function Sidebar({
 
   const content = (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white">
-          <GraduationCap className="h-5 w-5" />
-        </span>
-        <span className="text-sm font-semibold leading-tight text-white">{PLATFORM_NAME}</span>
+      <div className="flex items-center gap-3 px-5 py-6">
+        <SchoolLogo size={36} />
+        <span className="font-heading text-[0.95rem] font-medium leading-tight tracking-tight text-white">{PLATFORM_NAME}</span>
         <button type="button" onClick={onClose} className="ml-auto text-brand-300 lg:hidden" aria-label="Cerrar menú">
           <X className="h-5 w-5" />
         </button>
@@ -45,8 +44,10 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                active ? "bg-white/10 text-white" : "text-brand-200 hover:bg-white/5 hover:text-white"
+                "flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-[0.875rem] font-medium transition-colors",
+                active
+                  ? "border-accent-400 bg-white/[0.06] text-white"
+                  : "border-transparent text-brand-200/80 hover:bg-white/[0.04] hover:text-white"
               )}
             >
               <NavIcon name={item.icon} className="h-4 w-4 shrink-0" />

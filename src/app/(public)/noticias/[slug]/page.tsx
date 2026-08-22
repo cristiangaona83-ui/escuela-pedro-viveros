@@ -28,9 +28,9 @@ export default async function NoticiaDetailPage({ params }: { params: Promise<{ 
         <Badge tone="brand">{news.category}</Badge>
         <span className="text-sm text-slate-400">{formatDate(news.published_at)}</span>
       </div>
-      <h1 className="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{news.title}</h1>
+      <h1 className="mt-4 font-heading text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl">{news.title}</h1>
 
-      <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
+      <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-xl bg-slate-100">
         {news.cover_image_url ? (
           <Image src={news.cover_image_url} alt={news.title} fill className="object-cover" sizes="768px" />
         ) : (

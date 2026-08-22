@@ -14,7 +14,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
               <SchoolLogo size={44} />
-              <span className="text-base font-semibold text-white">{SITE.name}</span>
+              <span className="font-heading text-base font-medium tracking-tight text-white">{SITE.name}</span>
             </div>
             <p className="mt-4 max-w-sm text-sm text-slate-400">{SITE.slogan}</p>
             {hasSocials && (
@@ -39,7 +39,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-white">Navegación</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-300">Navegación</h3>
             <ul className="mt-4 space-y-2.5 text-sm">
               {PUBLIC_NAV.slice(0, 6).map((item) => (
                 <li key={item.href}>
@@ -52,7 +52,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-white">Contacto</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-300">Contacto</h3>
             <ul className="mt-4 space-y-3 text-sm">
               <li className="flex gap-2.5">
                 <MapPin className="h-4 w-4 shrink-0 text-brand-400" />

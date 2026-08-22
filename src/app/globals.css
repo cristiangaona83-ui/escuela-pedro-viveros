@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1c2624;
+  --foreground: #1b211f;
 }
 
 @theme inline {
@@ -11,40 +11,42 @@
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
 
-  /* Marca — verde bosque institucional (identidad propia, no plantilla genérica). */
-  --color-brand-50: #eef6f2;
-  --color-brand-100: #d6ebdf;
-  --color-brand-200: #aed7c0;
-  --color-brand-300: #7dbc9c;
-  --color-brand-400: #4f9d7c;
-  --color-brand-500: #327f61;
-  --color-brand-600: #23664c;
-  --color-brand-700: #1c5140;
-  --color-brand-800: #184135;
-  --color-brand-900: #14352c;
-  --color-brand-950: #0a1e19;
+  /* Marca — verde institucional profundo, único color de identidad. */
+  --color-brand-50: #f0f5f3;
+  --color-brand-100: #dce8e2;
+  --color-brand-200: #b8d1c4;
+  --color-brand-300: #8bb3a0;
+  --color-brand-400: #5f9179;
+  --color-brand-500: #40745d;
+  --color-brand-600: #305d49;
+  --color-brand-700: #274a3a;
+  --color-brand-800: #213c30;
+  --color-brand-900: #1c3229;
+  --color-brand-950: #0f1e18;
 
-  /* Acento — terracota cálido, evoca los copihues de la dirección. */
-  --color-accent-50: #fdf3ee;
-  --color-accent-100: #fbe1d3;
-  --color-accent-200: #f6bfa1;
-  --color-accent-300: #ef9a6d;
-  --color-accent-400: #e6773f;
-  --color-accent-500: #d65d24;
-  --color-accent-600: #b3481a;
-  --color-accent-700: #8f3917;
-  --color-accent-800: #732f18;
-  --color-accent-900: #5f2916;
+  /* Acento — verde suave de la misma familia, uso deliberadamente escaso. */
+  --color-accent-50: #f1f8f2;
+  --color-accent-100: #dfeee0;
+  --color-accent-200: #bedcc1;
+  --color-accent-300: #96c39c;
+  --color-accent-400: #6fa877;
+  --color-accent-500: #4f8c58;
+  --color-accent-600: #3c7043;
+  --color-accent-700: #325a38;
+  --color-accent-800: #2a482f;
+  --color-accent-900: #233c28;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
 }
 
 ::selection {

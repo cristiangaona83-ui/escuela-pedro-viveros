@@ -22,7 +22,7 @@ export default async function EquipoDirectivoPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         {!hasDirector && (
-          <div className="mb-8 flex items-center gap-4 rounded-2xl border border-brand-100 bg-brand-50 p-6">
+          <div className="mb-8 flex items-center gap-4 rounded-xl border border-brand-100 bg-brand-50 p-6">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white">
               <Users2 className="h-6 w-6" />
             </div>

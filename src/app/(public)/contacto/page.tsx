@@ -50,7 +50,7 @@ export default function ContactoPage() {
               </CardBody>
             </Card>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200">
+            <div className="overflow-hidden rounded-xl border border-slate-200">
               <iframe
                 title="Ubicación de la escuela"
                 src={mapsEmbed}

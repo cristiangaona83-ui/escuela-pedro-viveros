@@ -75,7 +75,7 @@ export function GradesReportDocument({
               <Text style={[pdfStyles.tdCenter, { flex: 0.5 }]}>{formatGrade(r.average)}</Text>
             </View>
           ))}
-          <View style={[pdfStyles.tableRow, { backgroundColor: "#eef6f2" }]}>
+          <View style={[pdfStyles.tableRow, { backgroundColor: "#f0f5f3" }]}>
             <Text style={[pdfStyles.td, pdfStyles.bold]}>Promedio general</Text>
             <Text style={[pdfStyles.tdCenter, pdfStyles.bold, { flex: 0.5 }]}>{formatGrade(generalAverage)}</Text>
           </View>

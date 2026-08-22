@@ -4,7 +4,7 @@ import type { StaffMemberRow } from "@/types/database";
 
 export function StaffCard({ member }: { member: StaffMemberRow }) {
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+    <div className="flex flex-col items-center rounded-xl border border-slate-200 bg-white p-6 text-center">
       <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-brand-50 text-brand-300">
         {member.photo_url ? (
           <Image src={member.photo_url} alt={member.full_name} fill className="object-cover" sizes="96px" />

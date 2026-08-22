@@ -20,7 +20,7 @@ export default async function DocumentosPage() {
 
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
         {documents.length > 0 ? (
-          <ul className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
             {documents.map((doc) => (
               <li key={doc.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
                 <div className="flex items-start gap-4">

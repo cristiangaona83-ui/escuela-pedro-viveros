@@ -14,7 +14,7 @@ export default async function ConfiguracionPage() {
     <div>
       <div className="flex items-center gap-3">
         <Settings2 className="h-6 w-6 text-brand-700" />
-        <h1 className="text-2xl font-bold text-slate-900">Configuración institucional</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Configuración institucional</h1>
       </div>
       <p className="mt-1 text-sm text-slate-500">
         Estos valores se usan en toda la plataforma: libro de notas, certificados e informes.

@@ -31,7 +31,7 @@ export function AppShell({
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar roles={roles} open={open} onClose={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-100 bg-white px-4 sm:px-6">
           <button
             type="button"
             onClick={() => setOpen(true)}

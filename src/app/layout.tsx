@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import { SITE } from "@/config/site";
 import "./globals.css";
 
@@ -9,10 +9,12 @@ const inter = Inter({
   display: "swap",
 });
 
-const poppins = Poppins({
+const fraunces = Fraunces({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: "variable",
+  style: ["normal"],
+  axes: ["opsz"],
   display: "swap",
 });
 
@@ -38,7 +40,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${inter.variable} ${poppins.variable} h-full antialiased`}>
+    <html lang="es" className={`${inter.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white text-slate-800">{children}</body>
     </html>
   );

@@ -31,7 +31,7 @@ export default async function CursoDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">{course.level} {course.letter}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">{course.level} {course.letter}</h1>
       <p className="mt-1 text-sm text-slate-500">Profesor jefe: {teacherName ?? "Sin asignar"}</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

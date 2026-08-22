@@ -9,7 +9,7 @@ export function NewsCard({ news }: { news: NewsRow }) {
   return (
     <Link
       href={`/noticias/${news.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-brand-200"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
         {news.cover_image_url ? (

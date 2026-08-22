@@ -241,7 +241,7 @@ export function GradeEntryGrid({
         ) : evaluations.length === 0 ? (
           <EmptyState icon={Plus} title="Sin evaluaciones en este período" description="Crea la primera evaluación con el formulario de arriba." />
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>

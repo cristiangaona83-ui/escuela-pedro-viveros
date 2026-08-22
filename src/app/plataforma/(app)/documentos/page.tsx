@@ -14,7 +14,7 @@ export default async function DocumentosPlataformaPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Documentos</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Documentos</h1>
       <p className="mt-1 text-sm text-slate-500">Publica PEI, Reglamento Interno, protocolos y circulares. Marca cuáles son públicos.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
