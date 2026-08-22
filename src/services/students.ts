@@ -1,0 +1,40 @@
+import { createClient } from "@/lib/supabase/server";
+import type { StudentRow } from "@/types/database";
+
+export interface StudentWithCourse extends StudentRow {
+  course_label: string | null;
+}
+
+export async function listStudents(search?: string): Promise<StudentWithCourse[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("students")
+    .select("*, enrollments(status, courses(level, letter, academic_years(year)))")
+    .order("last_names", { ascending: true });
+
+  if (search) {
+    query = query.or(`first_names.ilike.%${search}%,last_names.ilike.%${search}%,run.ilike.%${search}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) return [];
+
+  return (data ?? []).map((s) => {
+    type EnrollmentJoin = {
+      status: string;
+      courses: { level: string; letter: string; academic_years: { year: number } | null } | null;
+    };
+    const enrollments = (s as unknown as { enrollments: EnrollmentJoin[] }).enrollments ?? [];
+    const active = enrollments.find((e) => e.status === "activa");
+    const course_label = active?.courses ? `${active.courses.level} ${active.courses.letter}` : null;
+    const { enrollments: _omit, ...rest } = s as unknown as StudentRow & { enrollments: unknown };
+    void _omit;
+    return { ...rest, course_label } as StudentWithCourse;
+  });
+}
+
+export async function getStudent(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("students").select("*, guardians(*)").eq("id", id).maybeSingle();
+  return data;
+}

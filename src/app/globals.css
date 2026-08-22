@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1c2624;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+
+  /* Marca — verde bosque institucional (identidad propia, no plantilla genérica). */
+  --color-brand-50: #eef6f2;
+  --color-brand-100: #d6ebdf;
+  --color-brand-200: #aed7c0;
+  --color-brand-300: #7dbc9c;
+  --color-brand-400: #4f9d7c;
+  --color-brand-500: #327f61;
+  --color-brand-600: #23664c;
+  --color-brand-700: #1c5140;
+  --color-brand-800: #184135;
+  --color-brand-900: #14352c;
+  --color-brand-950: #0a1e19;
+
+  /* Acento — terracota cálido, evoca los copihues de la dirección. */
+  --color-accent-50: #fdf3ee;
+  --color-accent-100: #fbe1d3;
+  --color-accent-200: #f6bfa1;
+  --color-accent-300: #ef9a6d;
+  --color-accent-400: #e6773f;
+  --color-accent-500: #d65d24;
+  --color-accent-600: #b3481a;
+  --color-accent-700: #8f3917;
+  --color-accent-800: #732f18;
+  --color-accent-900: #5f2916;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
