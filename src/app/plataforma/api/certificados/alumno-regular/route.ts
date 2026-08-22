@@ -73,7 +73,12 @@ export async function POST(request: Request) {
   });
 
   const signature = await getCertificateSignature();
-  const verifyUrl = `${SITE.domains.public}/verificar?code=${certificate.verification_code}`;
+  // En producción el QR siempre debe apuntar al dominio institucional
+  // definitivo (nunca a una URL de preview de Vercel u otro host temporal,
+  // ya que el certificado impreso puede circular por años). En desarrollo
+  // local se usa el origin real de la petición para poder probar sin DNS.
+  const baseUrl = process.env.NODE_ENV === "production" ? SITE.domains.public : new URL(request.url).origin;
+  const verifyUrl = `${baseUrl}/verificar?code=${certificate.verification_code}`;
   const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 200 });
 
   const buffer = await renderToBuffer(
