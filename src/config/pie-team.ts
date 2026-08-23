@@ -22,12 +22,12 @@ export interface PieTeamMember {
 }
 
 export const PIE_TEAM: PieTeamMember[] = [
-  { fullName: "Carmen Acuña", role: "Coordinadora PIE", photoSrc: "/images/staff/carmen-acuna.jpg" },
-  { fullName: "Katherine Carrión Henríquez", role: "Psicopedagoga", photoSrc: "/images/staff/katherine-carrion.jpg" },
-  { fullName: "Marcela Hernández Donoso", role: "Psicopedagoga", photoSrc: "/images/staff/marcela-hernandez.jpg" },
-  { fullName: "Yesika Morales Lizama", role: "Educadora Diferencial", photoSrc: "/images/staff/yesika-morales.jpg" },
-  { fullName: "Elizabeth Álvarez Silva", role: "Educadora Diferencial", photoSrc: "/images/staff/elizabeth-alvarez.jpg" },
-  { fullName: "Cristian Saavedra Berrueta", role: "Psicólogo", photoSrc: "/images/staff/cristian-saavedra.jpg" },
-  { fullName: "Daniela Vera Menares", role: "Fonoaudióloga", photoSrc: "/images/staff/daniela-vera.jpg" },
-  { fullName: "Adhara Jiménez Machuca", role: "Técnico en Educación Especial", photoSrc: "/images/staff/adhara-jimenez.jpg" },
+  { fullName: "Carmen Gloria Acuña Tobar", role: "Coordinadora PIE", photoSrc: "/images/staff/carmen-acuna.jpg" },
+  { fullName: "Katherine Soledad Carrión Henríquez", role: "Psicopedagoga", photoSrc: "/images/staff/katherine-carrion.jpg" },
+  { fullName: "Marcela Natali Hernández Donoso", role: "Psicopedagoga", photoSrc: "/images/staff/marcela-hernandez.jpg" },
+  { fullName: "Yesika Krupskaia Morales Lizama", role: "Educadora Diferencial", photoSrc: "/images/staff/yesika-morales.jpg" },
+  { fullName: "Elizabeth Johana Álvarez Silva", role: "Educadora Diferencial", photoSrc: "/images/staff/elizabeth-alvarez.jpg" },
+  { fullName: "Cristian Antonio Saavedra Berrueta", role: "Psicólogo", photoSrc: "/images/staff/cristian-saavedra.jpg" },
+  { fullName: "Daniela Lilliana Vera Menares", role: "Fonoaudióloga", photoSrc: "/images/staff/daniela-vera.jpg" },
+  { fullName: "Adhara Christine Jiménez Machuca", role: "Técnico en Educación Especial", photoSrc: "/images/staff/adhara-jimenez.jpg" },
 ];
