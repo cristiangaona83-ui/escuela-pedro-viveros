@@ -77,7 +77,7 @@ export default async function CursoDetailPage({ params }: { params: Promise<{ id
                   ))}
                 </ul>
               ) : (
-                <EmptyState icon={BookOpen} title="Sin asignaturas asignadas" description="Asigna docentes a las asignaturas desde Administración." />
+                <EmptyState icon={BookOpen} title="Sin asignaturas asignadas" description="Asigna docentes a las asignaturas desde Cursos → Carga docente." />
               )}
             </div>
           </CardBody>

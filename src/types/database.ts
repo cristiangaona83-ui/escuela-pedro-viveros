@@ -85,6 +85,7 @@ export type TeacherAssignmentRow = {
   subject_id: string;
   teacher_id: string;
   active: boolean;
+  weekly_hours: number | null;
   created_at: string;
 }
 

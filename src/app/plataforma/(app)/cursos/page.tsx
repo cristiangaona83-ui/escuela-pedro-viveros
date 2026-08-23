@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, School } from "lucide-react";
+import { Plus, School, Briefcase } from "lucide-react";
 import { LinkButton } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -25,9 +25,14 @@ export default async function CursosPlataformaPage() {
           <p className="mt-1 text-sm text-slate-500">Gestión de niveles, jefaturas y asignaciones docentes.</p>
         </div>
         {allowedToWrite && (
-          <LinkButton href="/plataforma/cursos/nuevo">
-            <Plus className="h-4 w-4" /> Nuevo curso
-          </LinkButton>
+          <div className="flex flex-wrap gap-2">
+            <LinkButton href="/plataforma/cursos/carga-docente" variant="secondary">
+              <Briefcase className="h-4 w-4" /> Carga docente
+            </LinkButton>
+            <LinkButton href="/plataforma/cursos/nuevo">
+              <Plus className="h-4 w-4" /> Nuevo curso
+            </LinkButton>
+          </div>
         )}
       </div>
 
