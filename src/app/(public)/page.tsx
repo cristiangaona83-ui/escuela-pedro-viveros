@@ -42,26 +42,78 @@ export default async function HomePage() {
       <Hero />
 
       <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-10 sm:px-10 sm:py-12">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
-              Matrículas 2027 disponibles
-            </span>
-            <h2 className="mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
-              ¡Sé parte de nuestra comunidad educativa!
-            </h2>
-            <p className="mt-4 leading-relaxed text-slate-600">
-              Ya se encuentran disponibles las matrículas 2027 para la Escuela Profesor Pedro Viveros Ormeño.
-              Invitamos a las familias interesadas a informarse y realizar su proceso de matrícula para el
-              próximo año escolar.
-            </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <LinkButton href="/contacto" size="lg">
-                Más información
-              </LinkButton>
-              <LinkButton href="/contacto" variant="secondary" size="lg">
-                Contacto
-              </LinkButton>
+        <div className="space-y-6">
+          {/* Postulaciones SAE 2027 — bloque principal */}
+          <div className="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-10 sm:px-10 sm:py-12">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+                Admisión 2027
+              </span>
+              <h2 className="mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
+                ¡Postulaciones SAE 2027 abiertas! 🏫✨
+              </h2>
+              <div className="mx-auto mt-4 max-w-2xl space-y-3 text-left leading-relaxed text-slate-600">
+                <p>
+                  Ya se encuentra abierto el Periodo Principal de Postulación del Sistema de Admisión Escolar
+                  (SAE) para el año 2027.
+                </p>
+                <p>
+                  Las familias tienen plazo hasta el <strong>jueves 27 de agosto a las 14:00 horas</strong> para
+                  revisar establecimientos, ordenar sus preferencias y enviar su postulación.
+                </p>
+                <p>
+                  <strong>Recuerda:</strong> el proceso no es por orden de llegada. Puedes realizar tu
+                  postulación con calma dentro del plazo establecido; el día y la hora en que la envíes no
+                  influyen en el resultado.
+                </p>
+              </div>
+
+              <div className="mx-auto mt-8 max-w-xl rounded-xl bg-white/70 px-5 py-6">
+                <p className="font-semibold text-slate-900">
+                  ¿Quieres ser parte de la Escuela Profesor Pedro Viveros Ormeño en 2027?
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Ingresa al Sistema de Admisión Escolar y realiza tu postulación dentro del plazo.
+                </p>
+                <div className="mt-5">
+                  <LinkButton href="https://www.sistemadeadmisionescolar.cl/" target="_blank" rel="noopener noreferrer" size="lg">
+                    Postular en SAE
+                  </LinkButton>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Vacantes 2026 — bloque secundario, visualmente distinto */}
+          <div className="rounded-2xl border border-slate-200 bg-white px-6 py-8 sm:px-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Vacantes 2026
+              </span>
+              <h3 className="mt-3 font-heading text-xl font-medium tracking-tight text-slate-900">
+                ¿Necesitas una vacante para este año?
+              </h3>
+              <div className="mx-auto mt-3 max-w-2xl space-y-2 text-left text-sm leading-relaxed text-slate-600">
+                <p>
+                  Si necesitas matrícula durante el año escolar 2026 o no obtuviste un cupo mediante el proceso
+                  regular, puedes utilizar Anótate en la Lista, plataforma oficial del Ministerio de Educación
+                  para solicitar vacantes disponibles.
+                </p>
+                <p>
+                  Las solicitudes se realizan en línea y las vacantes disponibles se gestionan respetando el
+                  orden de llegada registrado en la plataforma.
+                </p>
+              </div>
+              <div className="mt-5">
+                <LinkButton
+                  href="https://www.sistemadeadmisionescolar.cl/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="secondary"
+                >
+                  Anótate en la Lista
+                </LinkButton>
+              </div>
             </div>
           </div>
         </div>
