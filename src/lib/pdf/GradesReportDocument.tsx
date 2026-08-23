@@ -1,7 +1,7 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { DocumentHeader } from "./DocumentHeader";
-import { SITE } from "@/config/site";
+import { DocumentSignatures, type SignatureEntry } from "./DocumentSignatures";
 import { formatDate, formatGrade } from "@/lib/utils";
 
 export interface SubjectAverageRow {
@@ -20,8 +20,8 @@ export function GradesReportDocument({
   issuedAt,
   rows,
   generalAverage,
-  signatureName,
-  signatureTitle,
+  signatures,
+  guardianName,
   disclaimer,
 }: {
   folio: string;
@@ -34,8 +34,8 @@ export function GradesReportDocument({
   issuedAt: string;
   rows: SubjectAverageRow[];
   generalAverage: number | null;
-  signatureName: string;
-  signatureTitle: string;
+  signatures: SignatureEntry[];
+  guardianName?: string | null;
   disclaimer: string;
 }) {
   return (
@@ -81,13 +81,7 @@ export function GradesReportDocument({
           </View>
         </View>
 
-        <View style={pdfStyles.footerRow}>
-          <View style={pdfStyles.signatureBlock}>
-            <View style={pdfStyles.signatureLine} />
-            <Text style={pdfStyles.signatureName}>{signatureName || SITE.director}</Text>
-            <Text style={pdfStyles.signatureTitle}>{signatureTitle || "Director(a)"}</Text>
-          </View>
-        </View>
+        <DocumentSignatures signatures={signatures} guardianName={guardianName} />
 
         <Text style={pdfStyles.disclaimer}>
           Fecha de emisión: {formatDate(issuedAt)} · Folio {folio}. {disclaimer}

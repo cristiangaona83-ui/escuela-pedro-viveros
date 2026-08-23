@@ -74,6 +74,9 @@ export function EnrollmentRecordDocument(data: EnrollmentRecordData) {
 
         <View style={pdfStyles.footerRow}>
           <View style={pdfStyles.signatureBlock}>
+            <Text style={{ fontSize: 8, color: "#5c6b66", marginBottom: 2 }}>
+              Nombre apoderado/a: {data.guardianName || "_______________________"}
+            </Text>
             <View style={pdfStyles.signatureLine} />
             <Text style={pdfStyles.signatureName}>Firma apoderado/a</Text>
           </View>

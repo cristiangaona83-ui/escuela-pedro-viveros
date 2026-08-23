@@ -3,7 +3,9 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
 import { GradesReportDocument } from "@/lib/pdf/GradesReportDocument";
 import { getStudentSubjectAverages } from "@/services/report-data";
-import { getCertificateSignature } from "@/services/school-config";
+import { getHomeroomTeacherName } from "@/services/students";
+import { listStudentGuardiansFull } from "@/services/guardians";
+import { SITE } from "@/config/site";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -61,7 +63,11 @@ export async function POST(request: Request) {
     p_details: { folio, cert_type: "informe_semestral", student_id },
   });
 
-  const signature = await getCertificateSignature();
+  const [homeroomTeacher, guardians] = await Promise.all([
+    getHomeroomTeacherName(report.courseId),
+    listStudentGuardiansFull(student_id),
+  ]);
+  const primaryGuardian = guardians.find((g) => g.isPrimary) ?? guardians[0] ?? null;
 
   const buffer = await renderToBuffer(
     GradesReportDocument({
@@ -75,8 +81,12 @@ export async function POST(request: Request) {
       issuedAt: certificate.issued_at,
       rows: report.rows,
       generalAverage: report.generalAverage,
-      signatureName: signature.name,
-      signatureTitle: signature.title,
+      signatures: [
+        { name: homeroomTeacher ?? "—", title: "Profesor(a) Jefe" },
+        { name: SITE.utpName, title: "Jefa de UTP" },
+        { name: SITE.director, title: "Director" },
+      ],
+      guardianName: primaryGuardian?.guardian.full_name ?? null,
       disclaimer:
         "Este informe resume el rendimiento académico del período indicado, según los registros de la plataforma pedagógica del establecimiento.",
     })

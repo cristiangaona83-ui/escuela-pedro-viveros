@@ -64,3 +64,16 @@ export function findActiveEnrollment(student: { enrollments?: unknown }) {
   const enrollments = (student.enrollments as StudentEnrollmentJoin[] | undefined) ?? [];
   return enrollments.find((e) => e.status === "activa") ?? null;
 }
+
+/** Nombre del profesor/a jefe de un curso, siempre desde
+ * `courses.homeroom_teacher_id` — nunca hardcodear este dato. */
+export async function getHomeroomTeacherName(courseId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("courses")
+    .select("profiles!courses_homeroom_teacher_id_fkey(full_name)")
+    .eq("id", courseId)
+    .maybeSingle();
+  const profile = (data as unknown as { profiles: { full_name: string } | null } | null)?.profiles;
+  return profile?.full_name ?? null;
+}

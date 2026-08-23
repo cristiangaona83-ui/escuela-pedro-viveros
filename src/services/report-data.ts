@@ -6,6 +6,7 @@ export interface StudentReportData {
   studentName: string;
   studentRun: string;
   courseLabel: string;
+  courseId: string;
   rows: SubjectAverageRow[];
   generalAverage: number | null;
 }
@@ -68,6 +69,7 @@ export async function getStudentSubjectAverages(
     studentName: `${student.first_names} ${student.last_names}`,
     studentRun: student.run,
     courseLabel: `${course.level} ${course.letter}`,
+    courseId: course.id,
     rows,
     generalAverage,
   };
