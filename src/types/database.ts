@@ -99,6 +99,16 @@ export type GuardianRow = {
   created_at: string;
 }
 
+export type StudentGuardianRow = {
+  id: string;
+  student_id: string;
+  guardian_id: string;
+  relationship: string | null;
+  is_primary: boolean;
+  is_emergency_contact: boolean;
+  created_at: string;
+}
+
 export type StudentStatus = "matriculado" | "retirado" | "egresado";
 
 export type StudentRow = {
@@ -454,6 +464,36 @@ export interface Database {
         Args: { p_student_id: string; p_reason: string };
         Returns: boolean;
       };
+      set_primary_guardian: {
+        Args: { p_student_id: string; p_guardian_id: string };
+        Returns: boolean;
+      };
+      search_guardians_by_name: {
+        Args: { p_query: string };
+        Returns: { id: string; full_name: string; phone: string | null; email: string | null; relationship: string | null }[];
+      };
+      create_guardian_contact: {
+        Args: { p_full_name: string; p_phone?: string; p_email?: string; p_relationship?: string };
+        Returns: string;
+      };
+      update_guardian_contact: {
+        Args: { p_guardian_id: string; p_full_name: string; p_phone?: string; p_email?: string; p_relationship?: string };
+        Returns: boolean;
+      };
+      link_guardian_to_student: {
+        Args: {
+          p_student_id: string;
+          p_guardian_id: string;
+          p_relationship?: string;
+          p_is_primary?: boolean;
+          p_is_emergency_contact?: boolean;
+        };
+        Returns: boolean;
+      };
+      unlink_guardian_from_student: {
+        Args: { p_student_id: string; p_guardian_id: string };
+        Returns: boolean;
+      };
     };
     Tables: {
       profiles: CrudTable<ProfileRow>;
@@ -464,6 +504,7 @@ export interface Database {
       subjects: CrudTable<SubjectRow>;
       teacher_assignments: CrudTable<TeacherAssignmentRow>;
       guardians: CrudTable<GuardianRow>;
+      student_guardians: CrudTable<StudentGuardianRow>;
       students: CrudTable<StudentRow>;
       enrollments: CrudTable<EnrollmentRow>;
       academic_periods: CrudTable<AcademicPeriodRow>;
