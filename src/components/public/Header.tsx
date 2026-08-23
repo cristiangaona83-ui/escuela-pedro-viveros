@@ -28,52 +28,48 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
+      <div className="mx-auto grid h-20 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center">
           <SchoolLogo size={42} />
-          <span className="hidden font-heading leading-tight text-brand-900 sm:block">
-            <span className="block text-[0.95rem] font-medium tracking-tight">Escuela Profesor</span>
-            <span className="block text-[0.95rem] font-medium tracking-tight">Pedro Viveros Ormeño</span>
-          </span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 xl:flex">
+        <nav className="hidden min-w-0 items-center justify-center gap-px xl:flex">
           {PUBLIC_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "relative px-3.5 py-2 text-[0.9rem] font-medium text-slate-600 transition-colors hover:text-brand-800",
+                "relative whitespace-nowrap px-2.5 py-2 text-[0.84rem] font-medium text-slate-600 transition-colors hover:text-brand-800 2xl:px-3.5 2xl:text-[0.9rem]",
                 pathname === item.href && "text-brand-800"
               )}
             >
               {item.label}
               {pathname === item.href && (
-                <span className="absolute inset-x-3.5 -bottom-[1px] h-[2px] rounded-full bg-brand-600" />
+                <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-brand-600 2xl:inset-x-3.5" />
               )}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="flex items-center justify-self-end gap-3">
           <a
             href={SITE.domains.platform}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-900"
+            className="hidden items-center gap-1.5 rounded-lg bg-brand-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-900 lg:inline-flex"
           >
             Plataforma Pedagógica
             <ArrowUpRight className="h-4 w-4" />
           </a>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700 xl:hidden"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={open}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700 xl:hidden"
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={open}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (
