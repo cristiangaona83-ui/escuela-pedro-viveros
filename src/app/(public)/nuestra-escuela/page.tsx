@@ -23,7 +23,7 @@ export default function NuestraEscuelaPage() {
         </div>
         <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-slate-600 sm:text-base">
           {HISTORY.paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
+            <p key={i} className="text-justify">{p}</p>
           ))}
         </div>
       </section>
