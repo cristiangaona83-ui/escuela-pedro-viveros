@@ -8,7 +8,7 @@
 export const SITE = {
   name: "Escuela Profesor Pedro Viveros Ormeño",
   shortName: "Escuela Pedro Viveros Ormeño",
-  slogan: "Educamos para aprender, convivir y construir nuevas oportunidades.",
+  slogan: "Una educación para la cabeza, el corazón y la mano.",
   director: "Cristian Fernando Gaona Villena",
   utpName: "Carolina Saavedra Rojas",
   address: {
