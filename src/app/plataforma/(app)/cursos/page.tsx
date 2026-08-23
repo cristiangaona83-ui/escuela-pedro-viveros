@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, School, Briefcase } from "lucide-react";
+import { Plus, School, Briefcase, UserCog } from "lucide-react";
 import { LinkButton } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -26,6 +26,9 @@ export default async function CursosPlataformaPage() {
         </div>
         {allowedToWrite && (
           <div className="flex flex-wrap gap-2">
+            <LinkButton href="/plataforma/cursos/jefaturas" variant="secondary">
+              <UserCog className="h-4 w-4" /> Jefaturas
+            </LinkButton>
             <LinkButton href="/plataforma/cursos/carga-docente" variant="secondary">
               <Briefcase className="h-4 w-4" /> Carga docente
             </LinkButton>
