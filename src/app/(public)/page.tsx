@@ -5,6 +5,7 @@ import {
   Users2,
   ArrowRight,
   Newspaper,
+  Clock,
 } from "lucide-react";
 import { Hero } from "@/components/public/Hero";
 import { NewsCard } from "@/components/public/NewsCard";
@@ -40,6 +41,37 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 rounded-2xl border border-brand-100 bg-white px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:gap-6 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <Clock className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <h2 className="font-heading text-lg font-medium tracking-tight text-slate-900">Horario de estudiantes</h2>
+          </div>
+          <div className="grid flex-1 grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+            <div>
+              <p className="text-sm font-semibold text-brand-700">Lunes a jueves</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Entrada: <span className="font-medium text-slate-900">08:15 hrs.</span>
+              </p>
+              <p className="text-sm text-slate-600">
+                Salida: <span className="font-medium text-slate-900">15:30 hrs.</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-brand-700">Viernes</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Entrada: <span className="font-medium text-slate-900">08:15 hrs.</span>
+              </p>
+              <p className="text-sm text-slate-600">
+                Salida: <span className="font-medium text-slate-900">13:15 hrs.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
         <div className="space-y-6">
