@@ -33,6 +33,7 @@ export default function AsistentesDeLaEducacionPage() {
                 role={member.role}
                 photoSrc={member.photoSrc}
                 hasPhoto={photoExists(member.photoSrc)}
+                initials={member.initials}
               />
             ))}
           </div>
