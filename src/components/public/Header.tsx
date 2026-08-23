@@ -28,30 +28,30 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white">
-      <div className="mx-auto grid h-20 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center">
+      <div className="mx-auto grid h-20 max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-6 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center">
           <SchoolLogo size={42} />
         </Link>
 
-        <nav className="hidden min-w-0 items-center justify-center gap-px xl:flex">
+        <nav className="hidden items-center justify-center gap-1 min-[1720px]:flex">
           {PUBLIC_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "relative whitespace-nowrap px-2.5 py-2 text-[0.84rem] font-medium text-slate-600 transition-colors hover:text-brand-800 2xl:px-3.5 2xl:text-[0.9rem]",
+                "relative whitespace-nowrap px-3 py-2 text-[0.9rem] font-medium text-slate-600 transition-colors hover:text-brand-800",
                 pathname === item.href && "text-brand-800"
               )}
             >
               {item.label}
               {pathname === item.href && (
-                <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-brand-600 2xl:inset-x-3.5" />
+                <span className="absolute inset-x-3 -bottom-[1px] h-[2px] rounded-full bg-brand-600" />
               )}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center justify-self-end gap-3">
+        <div className="flex shrink-0 items-center justify-self-end gap-3">
           <a
             href={SITE.domains.platform}
             className="hidden items-center gap-1.5 rounded-lg bg-brand-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-900 lg:inline-flex"
@@ -63,7 +63,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700 xl:hidden"
+            className="min-[1720px]:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
           >
@@ -73,7 +73,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto bg-white xl:hidden">
+        <div className="fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto bg-white min-[1720px]:hidden">
           <nav className="flex flex-col gap-1 px-4 py-4">
             {PUBLIC_NAV.map((item) => (
               <Link
