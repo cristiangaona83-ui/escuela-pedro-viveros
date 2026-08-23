@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ShieldCheck } from "lucide-react";
 import { UpdatePasswordForm } from "@/features/auth/UpdatePasswordForm";
+import { SchoolLogo } from "@/components/ui/SchoolLogo";
 import { PLATFORM_NAME } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -13,9 +13,7 @@ export default function RestablecerClavePage() {
     <div className="flex min-h-screen items-center justify-center bg-brand-950 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center text-white">
-          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/10">
-            <ShieldCheck className="h-7 w-7" />
-          </span>
+          <SchoolLogo size={56} />
           <h1 className="mt-4 font-heading text-xl font-medium tracking-tight">Restablecer contraseña</h1>
           <p className="mt-1 text-sm text-brand-200">{PLATFORM_NAME}</p>
         </div>

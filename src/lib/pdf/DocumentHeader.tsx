@@ -10,8 +10,8 @@ import { SITE } from "@/config/site";
  * nunca haya dos copias del logo ni del nombre del establecimiento. */
 export function getLogoDataUri() {
   try {
-    const logoPath = join(process.cwd(), "public", "images", "logo-escuela.jpg");
-    return `data:image/jpeg;base64,${readFileSync(logoPath).toString("base64")}`;
+    const logoPath = join(process.cwd(), "public", "images", "logo-escuela-renovado.png");
+    return `data:image/png;base64,${readFileSync(logoPath).toString("base64")}`;
   } catch {
     return null;
   }

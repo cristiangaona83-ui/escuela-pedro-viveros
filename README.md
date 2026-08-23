@@ -42,7 +42,7 @@ La arquitectura separa **UI**, **lógica de dominio** (`features/`), **acceso a 
 
 ## 3. Módulos funcionales en esta entrega
 
-Se incorporó el escudo oficial (`public/images/logo-escuela.jpg`) en el header, footer y login,
+Se incorporó el escudo oficial (`public/images/logo-escuela-renovado.png`) en el header, footer y login,
 la fotografía real de la fachada (`public/images/fachada-escuela.png`) en el Hero, y el PEI, el
 Reglamento Interno y el Reglamento de Evaluación reales en Documentos Institucionales
 (`public/documents/`).
