@@ -41,7 +41,13 @@ export default function ContactoPage() {
                 </div>
                 <div className="flex gap-3">
                   <Mail className="h-5 w-5 shrink-0 text-brand-700" />
-                  <p className="text-sm text-slate-500">{SITE.email ?? "Correo por confirmar"}</p>
+                  {SITE.email ? (
+                    <a href={`mailto:${SITE.email}`} className="text-sm text-slate-500 hover:text-brand-700">
+                      {SITE.email}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-slate-500">Correo por confirmar</p>
+                  )}
                 </div>
                 <div className="flex gap-3">
                   <Clock className="h-5 w-5 shrink-0 text-brand-700" />

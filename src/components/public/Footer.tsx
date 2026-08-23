@@ -77,7 +77,9 @@ export function Footer() {
               {SITE.email && (
                 <li className="flex gap-2.5">
                   <Mail className="h-4 w-4 shrink-0 text-brand-400" />
-                  <span>{SITE.email}</span>
+                  <a href={`mailto:${SITE.email}`} className="hover:text-white">
+                    {SITE.email}
+                  </a>
                 </li>
               )}
             </ul>

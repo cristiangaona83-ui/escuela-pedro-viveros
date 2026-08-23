@@ -20,9 +20,9 @@ export const SITE = {
     full: "Los Copihues 1033, Tejas Verdes, Llolleo, San Antonio, Región de Valparaíso, Chile",
   },
   phone: "+56 44 367 0367",
+  email: "epviveros@gmail.com",
   // Pendiente de entrega oficial — no inventar.
   rbd: null as string | null,
-  email: null as string | null,
   schedule: null as string | null,
   socials: {
     facebook: "https://www.facebook.com/share/198W6ptond/",
