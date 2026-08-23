@@ -10,7 +10,10 @@ import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Editar registro PIE" };
 
-const ALLOWED_ROLES = ["pie", "director", "utp", "superadmin"] as const;
+const ALLOWED_ROLES = [
+  "pie", "director", "utp", "superadmin",
+  "educadora_diferencial", "psicopedagoga", "fonoaudiologa", "psicologo",
+] as const;
 
 export default async function EditarPieRecordPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,7 +41,13 @@ export default async function EditarPieRecordPage({ params }: { params: Promise<
       </p>
       <Card className="mt-6">
         <CardBody>
-          <PieRecordForm record={record} studentOptions={studentOptions} professionalOptions={professionalOptions} />
+          <PieRecordForm
+            record={record}
+            studentOptions={studentOptions}
+            professionalOptions={professionalOptions}
+            currentUserId={session?.userId}
+            roles={session?.roles}
+          />
         </CardBody>
       </Card>
     </div>

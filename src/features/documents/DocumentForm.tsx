@@ -18,11 +18,11 @@ import type { DocumentRow } from "@/types/database";
 
 const FOLDER = "documentos";
 
-export function DocumentForm({ document }: { document?: DocumentRow }) {
+export function DocumentForm({ document, restrictToPrivate = false }: { document?: DocumentRow; restrictToPrivate?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isPublic, setIsPublic] = useState(document?.is_public ?? true);
+  const [isPublic, setIsPublic] = useState(restrictToPrivate ? false : (document?.is_public ?? true));
   const [hasNewFile, setHasNewFile] = useState(false);
   const isEdit = Boolean(document);
 
@@ -141,14 +141,18 @@ export function DocumentForm({ document }: { document?: DocumentRow }) {
         <input
           type="checkbox"
           checked={isPublic}
-          disabled={isEdit && !hasNewFile}
+          disabled={restrictToPrivate || (isEdit && !hasNewFile)}
           onChange={(e) => setIsPublic(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300 disabled:opacity-50"
         />
         Visible en el sitio público
       </label>
-      {isEdit && !hasNewFile && (
-        <p className="text-xs text-slate-400">Para cambiar la visibilidad, sube el archivo nuevamente.</p>
+      {restrictToPrivate ? (
+        <p className="text-xs text-slate-400">Los documentos que subes quedan siempre como internos, nunca visibles en el sitio público.</p>
+      ) : (
+        isEdit && !hasNewFile && (
+          <p className="text-xs text-slate-400">Para cambiar la visibilidad, sube el archivo nuevamente.</p>
+        )
       )}
 
       {error && <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><AlertCircle className="h-4 w-4 shrink-0" /> {error}</div>}

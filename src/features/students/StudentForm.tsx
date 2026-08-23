@@ -6,12 +6,29 @@ import { Save, AlertCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input, Select } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
-import type { StudentRow } from "@/types/database";
+import type { StudentRow, RoleCode } from "@/types/database";
 
-export function StudentForm({ student, canWrite = true }: { student?: StudentRow; canWrite?: boolean }) {
+// Estos dos roles nunca reciben UPDATE directo sobre students (RLS no se lo
+// permite) — su única vía de edición es el RPC acotado update_student_fields,
+// que nunca toca status (los cambios de estado van por matricular/retirar/
+// reactivar). director/utp/administrativo/superadmin conservan su UPDATE
+// directo de siempre, sin cambios.
+const RPC_ONLY_EDIT_ROLES: RoleCode[] = ["inspectoria_general", "convivencia"];
+
+export function StudentForm({
+  student,
+  canWrite = true,
+  roles = [],
+}: {
+  student?: StudentRow;
+  canWrite?: boolean;
+  roles?: RoleCode[];
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isEdit = Boolean(student);
+  const usesRpcEdit = isEdit && roles.some((r) => RPC_ONLY_EDIT_ROLES.includes(r));
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,6 +46,26 @@ export function StudentForm({ student, canWrite = true }: { student?: StudentRow
     };
 
     const supabase = createClient();
+
+    if (usesRpcEdit) {
+      const { error: rpcError } = await supabase.rpc("update_student_fields", {
+        p_student_id: student!.id,
+        p_first_names: payload.first_names,
+        p_last_names: payload.last_names,
+        p_run: payload.run,
+        p_birth_date: payload.birth_date,
+        p_notes: payload.notes ?? undefined,
+      });
+      setLoading(false);
+      if (rpcError) {
+        setError(rpcError.message || "No pudimos guardar el estudiante.");
+        return;
+      }
+      router.push(`/plataforma/estudiantes/${student!.id}`);
+      router.refresh();
+      return;
+    }
+
     const { data, error: dbError } = student
       ? await supabase.from("students").update(payload).eq("id", student.id).select("id").single()
       : await supabase.from("students").insert(payload).select("id").single();
@@ -42,6 +79,26 @@ export function StudentForm({ student, canWrite = true }: { student?: StudentRow
       );
       return;
     }
+
+    await supabase.rpc("log_audit", {
+      p_action: student ? "actualizar_estudiante" : "crear_estudiante",
+      p_module: "estudiantes",
+      p_entity: "students",
+      p_entity_id: data.id,
+      p_details: student
+        ? {
+            before: {
+              first_names: student.first_names,
+              last_names: student.last_names,
+              run: student.run,
+              birth_date: student.birth_date,
+              status: student.status,
+              notes: student.notes,
+            },
+            after: payload,
+          }
+        : { after: payload },
+    });
 
     router.push(`/plataforma/estudiantes/${data.id}`);
     router.refresh();
@@ -71,8 +128,13 @@ export function StudentForm({ student, canWrite = true }: { student?: StudentRow
             <Input id="birth_date" name="birth_date" type="date" defaultValue={student?.birth_date ?? undefined} />
           </FormField>
         </div>
-        <FormField label="Estado de matrícula" htmlFor="status" required>
-          <Select id="status" name="status" defaultValue={student?.status ?? "matriculado"}>
+        <FormField
+          label="Estado de matrícula"
+          htmlFor="status"
+          required
+          hint={usesRpcEdit ? "Usa \"Retirar\", \"Matricular\" o \"Reactivar\" para cambiar el estado." : undefined}
+        >
+          <Select id="status" name="status" defaultValue={student?.status ?? "matriculado"} disabled={usesRpcEdit}>
             <option value="matriculado">Matriculado</option>
             <option value="retirado">Retirado</option>
             <option value="egresado">Egresado</option>

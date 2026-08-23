@@ -17,7 +17,10 @@ export const metadata: Metadata = { title: "PIE" };
 
 const STATUS_TONE = { activo: "success", en_evaluacion: "warning", egresado: "neutral" } as const;
 const STATUS_LABEL = { activo: "Activo", en_evaluacion: "En evaluación", egresado: "Egresado" } as const;
-const ALLOWED_ROLES = ["pie", "director", "utp", "superadmin"] as const;
+const ALLOWED_ROLES = [
+  "pie", "director", "utp", "superadmin",
+  "educadora_diferencial", "psicopedagoga", "fonoaudiologa", "psicologo",
+] as const;
 
 export default async function PiePage({
   searchParams,
@@ -100,7 +103,12 @@ export default async function PiePage({
           <CardBody>
             <h2 className="font-semibold text-slate-900">Nuevo registro</h2>
             <div className="mt-4">
-              <PieRecordForm studentOptions={studentOptions} professionalOptions={professionalOptions} />
+              <PieRecordForm
+                studentOptions={studentOptions}
+                professionalOptions={professionalOptions}
+                currentUserId={session?.userId}
+                roles={session?.roles}
+              />
             </div>
           </CardBody>
         </Card>

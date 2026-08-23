@@ -5,6 +5,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Field";
+import { QuickActionsPanel } from "@/features/students/QuickActionsPanel";
 import { listStudents } from "@/services/students";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -13,6 +14,7 @@ export const metadata: Metadata = { title: "Estudiantes" };
 
 const STATUS_TONE = { matriculado: "success", retirado: "danger", egresado: "neutral" } as const;
 const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+const QUICK_ACTIONS_ROLES = ["director", "utp", "superadmin", "inspectoria_general", "convivencia"] as const;
 
 export default async function EstudiantesPage({
   searchParams,
@@ -22,6 +24,7 @@ export default async function EstudiantesPage({
   const { q } = await searchParams;
   const [students, session] = await Promise.all([listStudents(q), getSessionContext()]);
   const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
+  const showQuickActions = canWrite(session?.roles ?? [], [...QUICK_ACTIONS_ROLES]);
 
   return (
     <div>
@@ -37,10 +40,16 @@ export default async function EstudiantesPage({
         )}
       </div>
 
+      {showQuickActions && (
+        <div className="mt-6">
+          <QuickActionsPanel />
+        </div>
+      )}
+
       <form className="mt-6 max-w-sm">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input name="q" defaultValue={q} placeholder="Buscar por nombre o RUN…" className="pl-9" />
+          <Input id="buscar" name="q" defaultValue={q} placeholder="Buscar por nombre o RUN…" className="pl-9" />
         </div>
       </form>
 

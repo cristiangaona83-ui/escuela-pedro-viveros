@@ -14,7 +14,12 @@ export type RoleCode =
   | "pie"
   | "convivencia"
   | "administrativo"
-  | "superadmin";
+  | "superadmin"
+  | "inspectoria_general"
+  | "educadora_diferencial"
+  | "psicopedagoga"
+  | "fonoaudiologa"
+  | "psicologo";
 
 export type CertificateType =
   | "alumno_regular"
@@ -117,6 +122,17 @@ export type EnrollmentRow = {
   status: "activa" | "retirada" | "trasladada";
   enrolled_at: string;
   created_at: string;
+}
+
+/** Vista de solo lectura public.guardian_contact_info (0014) — nombre, teléfono,
+ * correo y vínculo del apoderado, sin RUN. Minimización de datos para roles
+ * que solo necesitan contactar a la familia (p. ej. inspectoria_general). */
+export type GuardianContactRow = {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  relationship: string | null;
 }
 
 export type AcademicPeriodRow = {
@@ -372,7 +388,12 @@ export type VerifyCertificateResult = {
 
 export interface Database {
   public: {
-    Views: Record<string, never>;
+    Views: {
+      guardian_contact_info: {
+        Row: GuardianContactRow;
+        Relationships: [];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
     Functions: {
@@ -393,6 +414,44 @@ export interface Database {
           p_details?: Record<string, unknown>;
         };
         Returns: void;
+      };
+      withdraw_student: {
+        Args: { p_student_id: string; p_academic_year_id: string; p_reason?: string };
+        Returns: boolean;
+      };
+      update_student_fields: {
+        Args: {
+          p_student_id: string;
+          p_first_names: string;
+          p_last_names: string;
+          p_run: string;
+          p_birth_date: string | null;
+          p_notes?: string;
+        };
+        Returns: boolean;
+      };
+      enroll_student: {
+        Args: { p_student_id: string; p_course_id: string; p_academic_year_id: string };
+        Returns: boolean;
+      };
+      create_student_with_enrollment: {
+        Args: {
+          p_first_names: string;
+          p_last_names: string;
+          p_run: string;
+          p_birth_date: string | null;
+          p_course_id: string;
+          p_academic_year_id: string;
+        };
+        Returns: string;
+      };
+      reactivate_student: {
+        Args: { p_student_id: string; p_course_id: string; p_academic_year_id: string };
+        Returns: boolean;
+      };
+      delete_student_if_unused: {
+        Args: { p_student_id: string; p_reason: string };
+        Returns: boolean;
       };
     };
     Tables: {

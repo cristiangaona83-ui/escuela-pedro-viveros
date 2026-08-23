@@ -49,33 +49,45 @@ export interface CourseOption {
  * Cursos que el usuario actual puede ver/gestionar para Asistencia. Refleja
  * exactamente el alcance de teaches_course() en RLS (asignación de docente
  * O profesor jefe), más el acceso amplio de lectura de dirección/UTP/
- * superadmin/convivencia (esta última nunca puede escribir, solo ver).
+ * superadmin/convivencia/inspectoria_general (convivencia nunca puede
+ * escribir, solo ver; inspectoria_general puede ver y escribir).
  */
-export async function getTeachableCourses(): Promise<CourseOption[]> {
+export async function getTeachableCourses(academicYearId?: string): Promise<CourseOption[]> {
   const supabase = await createClient();
   const session = await getSessionContext();
-  const hasBroadAccess = session?.roles.some((r) => ["director", "utp", "superadmin", "convivencia"].includes(r));
+  const hasBroadAccess = session?.roles.some((r) => ["director", "utp", "superadmin", "convivencia", "inspectoria_general"].includes(r));
 
   if (hasBroadAccess) {
-    const { data } = await supabase.from("courses").select("id, level, letter").eq("active", true).order("level", { ascending: true });
+    let query = supabase.from("courses").select("id, level, letter").eq("active", true).order("level", { ascending: true });
+    if (academicYearId) query = query.eq("academic_year_id", academicYearId);
+    const { data } = await query;
     return (data ?? []).map((c) => ({ course_id: c.id, course_label: `${c.level} ${c.letter}` }));
   }
 
   if (!session) return [];
 
-  const [{ data: assigned }, { data: homeroom }] = await Promise.all([
-    supabase
-      .from("teacher_assignments")
-      .select("course_id, courses(level, letter)")
-      .eq("active", true)
-      .eq("teacher_id", session.userId),
-    supabase.from("courses").select("id, level, letter").eq("active", true).eq("homeroom_teacher_id", session.userId),
-  ]);
+  const assignedQuery = supabase
+    .from("teacher_assignments")
+    .select("course_id, courses(level, letter, academic_year_id)")
+    .eq("active", true)
+    .eq("teacher_id", session.userId);
+  let homeroomQuery = supabase
+    .from("courses")
+    .select("id, level, letter, academic_year_id")
+    .eq("active", true)
+    .eq("homeroom_teacher_id", session.userId);
+  if (academicYearId) {
+    homeroomQuery = homeroomQuery.eq("academic_year_id", academicYearId);
+  }
+
+  const [{ data: assigned }, { data: homeroom }] = await Promise.all([assignedQuery, homeroomQuery]);
 
   const byId = new Map<string, string>();
   for (const row of assigned ?? []) {
-    const r = row as unknown as { course_id: string; courses: { level: string; letter: string } | null };
-    if (r.courses) byId.set(r.course_id, `${r.courses.level} ${r.courses.letter}`);
+    const r = row as unknown as { course_id: string; courses: { level: string; letter: string; academic_year_id: string } | null };
+    if (r.courses && (!academicYearId || r.courses.academic_year_id === academicYearId)) {
+      byId.set(r.course_id, `${r.courses.level} ${r.courses.letter}`);
+    }
   }
   for (const c of homeroom ?? []) {
     byId.set(c.id, `${c.level} ${c.letter}`);

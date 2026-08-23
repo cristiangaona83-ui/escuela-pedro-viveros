@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import type { PieRecordWithRelations } from "@/services/pie-records";
-import type { PieRecordRow } from "@/types/database";
+import type { PieRecordRow, RoleCode } from "@/types/database";
+
+const PIE_SPECIALIST_ROLES: RoleCode[] = ["educadora_diferencial", "psicopedagoga", "fonoaudiologa", "psicologo"];
 
 interface StudentOption {
   id: string;
@@ -28,15 +30,21 @@ export function PieRecordForm({
   record,
   studentOptions,
   professionalOptions,
+  currentUserId,
+  roles,
 }: {
   record?: PieRecordWithRelations;
   studentOptions: StudentOption[];
   professionalOptions: ProfessionalOption[];
+  currentUserId?: string;
+  roles?: RoleCode[];
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = Boolean(record);
+  const isPieSpecialist = Boolean(currentUserId) && (roles ?? []).some((r) => PIE_SPECIALIST_ROLES.includes(r));
+  const currentUserName = professionalOptions.find((p) => p.id === currentUserId)?.full_name;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +56,7 @@ export function PieRecordForm({
     const payload = {
       student_id: String(form.get("student_id") || ""),
       coordinator_id: String(form.get("coordinator_id") || "") || null,
-      professional_id: String(form.get("professional_id") || "") || null,
+      professional_id: isPieSpecialist ? currentUserId! : String(form.get("professional_id") || "") || null,
       support_type: String(form.get("support_type") || "").trim() || null,
       diagnosis: String(form.get("diagnosis") || "").trim() || null,
       actions: String(form.get("actions") || "").trim() || null,
@@ -103,13 +111,23 @@ export function PieRecordForm({
             ))}
           </Select>
         </FormField>
-        <FormField label="Profesional responsable" htmlFor="professional_id" hint="Opcional">
-          <Select id="professional_id" name="professional_id" defaultValue={record?.professional_id ?? ""}>
-            <option value="">Sin asignar</option>
-            {professionalOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.full_name}</option>
-            ))}
-          </Select>
+        <FormField
+          label="Profesional responsable"
+          htmlFor="professional_id"
+          hint={isPieSpecialist ? "Este registro queda asignado a ti — no puedes asignarlo a otro profesional." : "Opcional"}
+        >
+          {isPieSpecialist ? (
+            <Select id="professional_id" disabled value={currentUserId}>
+              <option value={currentUserId}>{currentUserName ?? "Tú"}</option>
+            </Select>
+          ) : (
+            <Select id="professional_id" name="professional_id" defaultValue={record?.professional_id ?? ""}>
+              <option value="">Sin asignar</option>
+              {professionalOptions.map((p) => (
+                <option key={p.id} value={p.id}>{p.full_name}</option>
+              ))}
+            </Select>
+          )}
         </FormField>
       </div>
       <FormField label="Tipo de apoyo" htmlFor="support_type" hint="Ej: PIE - NEE transitoria, PIE - NEE permanente">

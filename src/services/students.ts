@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { StudentRow } from "@/types/database";
+import type { StudentRow, GuardianContactRow } from "@/types/database";
 
 export interface StudentWithCourse extends StudentRow {
   course_label: string | null;
@@ -35,6 +35,29 @@ export async function listStudents(search?: string): Promise<StudentWithCourse[]
 
 export async function getStudent(id: string) {
   const supabase = await createClient();
-  const { data } = await supabase.from("students").select("*, guardians(*)").eq("id", id).maybeSingle();
+  const { data } = await supabase
+    .from("students")
+    .select("*, guardians(*), enrollments(id, status, academic_year_id, courses(level, letter, academic_years(year)))")
+    .eq("id", id)
+    .maybeSingle();
+  return data;
+}
+
+/** Matrícula activa del estudiante (para el botón de retiro). */
+export function findActiveEnrollment(student: { enrollments?: unknown }) {
+  type EnrollmentJoin = {
+    id: string;
+    status: string;
+    academic_year_id: string;
+    courses: { level: string; letter: string; academic_years: { year: number } | null } | null;
+  };
+  const enrollments = (student.enrollments as EnrollmentJoin[] | undefined) ?? [];
+  return enrollments.find((e) => e.status === "activa") ?? null;
+}
+
+/** Datos mínimos del apoderado (sin RUN) vía la vista public.guardian_contact_info. */
+export async function getGuardianContact(guardianId: string): Promise<GuardianContactRow | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("guardian_contact_info").select("*").eq("id", guardianId).maybeSingle();
   return data;
 }

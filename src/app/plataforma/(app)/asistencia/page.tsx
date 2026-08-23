@@ -9,7 +9,7 @@ import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Asistencia" };
 
-const WRITE_ROLES = ["director", "utp", "docente", "superadmin"] as const;
+const WRITE_ROLES = ["director", "utp", "docente", "superadmin", "inspectoria_general"] as const;
 
 export default async function AsistenciaPage() {
   const [courses, session] = await Promise.all([getTeachableCourses(), getSessionContext()]);

@@ -14,7 +14,8 @@ import { canWrite } from "@/features/auth/can";
 
 export const metadata: Metadata = { title: "Documentos" };
 
-const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+const FULL_WRITE_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+const CREATE_ROLES = [...FULL_WRITE_ROLES, "inspectoria_general"] as const;
 
 export default async function DocumentosPlataformaPage({
   searchParams,
@@ -28,14 +29,19 @@ export default async function DocumentosPlataformaPage({
     getSessionContext(),
   ]);
 
-  const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
+  const roles = session?.roles ?? [];
+  const allowedToWrite = canWrite(roles, [...FULL_WRITE_ROLES]);
+  const allowedToCreate = canWrite(roles, [...CREATE_ROLES]);
+  const isInspectoriaOnly = !allowedToWrite && roles.includes("inspectoria_general");
+  const canEditDocument = (d: { uploaded_by: string | null }) =>
+    allowedToWrite || (isInspectoriaOnly && d.uploaded_by === session?.userId);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Documentos</h1>
       <p className="mt-1 text-sm text-slate-500">Publica PEI, Reglamento Interno, protocolos y circulares. Marca cuáles son públicos.</p>
 
-      <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_360px]" : ""}`}>
+      <div className={`mt-6 grid gap-6 ${allowedToCreate ? "lg:grid-cols-[1fr_360px]" : ""}`}>
         <Card>
           <CardBody>
             <form className="mb-4 flex max-w-sm items-end gap-2">
@@ -66,18 +72,16 @@ export default async function DocumentosPlataformaPage({
                     <div className="flex items-center gap-1">
                       <Badge tone={d.is_public ? "success" : "neutral"}>{d.is_public ? "Público" : "Interno"}</Badge>
                       <DocumentDownloadLink document={d} />
-                      {allowedToWrite && (
-                        <>
-                          <Link
-                            href={`/plataforma/documentos/${d.id}`}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                            aria-label={`Editar ${d.title}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                          <DeleteDocumentButton document={d} />
-                        </>
+                      {canEditDocument(d) && (
+                        <Link
+                          href={`/plataforma/documentos/${d.id}`}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                          aria-label={`Editar ${d.title}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
                       )}
+                      {allowedToWrite && <DeleteDocumentButton document={d} />}
                     </div>
                   </li>
                 ))}
@@ -88,11 +92,11 @@ export default async function DocumentosPlataformaPage({
           </CardBody>
         </Card>
 
-        {allowedToWrite && (
+        {allowedToCreate && (
           <Card>
             <CardBody>
               <h2 className="font-semibold text-slate-900">Nuevo documento</h2>
-              <div className="mt-4"><DocumentForm /></div>
+              <div className="mt-4"><DocumentForm restrictToPrivate={isInspectoriaOnly} /></div>
             </CardBody>
           </Card>
         )}

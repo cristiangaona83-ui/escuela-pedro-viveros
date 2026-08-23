@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { PieRecordRow } from "@/types/database";
+import type { PieRecordRow, RoleCode } from "@/types/database";
 
 const SELECT_WITH_RELATIONS =
   "*, students(first_names, last_names), coordinator:profiles!pie_records_coordinator_id_fkey(full_name), professional:profiles!pie_records_professional_id_fkey(full_name)";
@@ -28,12 +28,14 @@ export async function getPieRecord(id: string): Promise<PieRecordWithRelations |
   return data as unknown as PieRecordWithRelations | null;
 }
 
-/** Miembros del equipo PIE, para asignar coordinador/profesional responsable. */
+const PIE_TEAM_ROLES: RoleCode[] = ["pie", "educadora_diferencial", "psicopedagoga", "fonoaudiologa", "psicologo"];
+
+/** Miembros del equipo PIE (coordinadora + profesionales), para asignar coordinador/profesional responsable. */
 export async function listPieTeamOptions() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_roles")
     .select("profiles(id, full_name), roles!inner(code)")
-    .eq("roles.code", "pie");
+    .in("roles.code", PIE_TEAM_ROLES);
   return data ?? [];
 }
