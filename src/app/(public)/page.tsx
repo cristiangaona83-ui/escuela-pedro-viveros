@@ -93,7 +93,7 @@ export default async function HomePage() {
               <h3 className="mt-3 font-heading text-xl font-medium tracking-tight text-slate-900">
                 ¿Necesitas una vacante para este año?
               </h3>
-              <div className="mx-auto mt-3 max-w-2xl space-y-2 text-left text-sm leading-relaxed text-slate-600">
+              <div className="mx-auto mt-3 max-w-2xl space-y-2 text-justify text-sm leading-relaxed text-slate-600">
                 <p>
                   Si necesitas matrícula durante el año escolar 2026 o no obtuviste un cupo mediante el proceso
                   regular, puedes utilizar Anótate en la Lista, plataforma oficial del Ministerio de Educación
