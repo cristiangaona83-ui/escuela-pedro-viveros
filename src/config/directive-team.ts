@@ -20,7 +20,7 @@ export interface DirectiveTeamMember {
 }
 
 export const DIRECTIVE_TEAM: DirectiveTeamMember[] = [
-  { fullName: "Cristian Fernando Gaona Villena", role: "Director", photoSrc: "/images/staff/cristian-gaona.jpg" },
+  { fullName: "Cristian Fernando Gaona Villena", role: "Director", photoSrc: "/images/staff/cristian-gaona.png" },
   { fullName: "Carolina del Carmen Saavedra Rojas", role: "Jefa de UTP", photoSrc: "/images/staff/carolina-saavedra.jpg" },
   { fullName: "Elizabeth del Pilar Acevedo Silva", role: "Inspectora General", photoSrc: "/images/staff/elizabeth-acevedo.jpg" },
   // Cargo exacto pedido por dirección — no usar "Encargada de Convivencia" ni "Convivencia Escolar".
