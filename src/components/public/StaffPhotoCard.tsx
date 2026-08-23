@@ -7,12 +7,13 @@ function initials(fullName: string): string {
   return (first + last).toUpperCase();
 }
 
-/** Tarjeta del Equipo Directivo. `hasPhoto` se determina en el servidor
- * (existencia real del archivo en public/) — mientras no exista, se
- * muestra un avatar con iniciales. Apenas se coloque el archivo en
- * photoSrc y se despliegue de nuevo, la fotografía real aparece sin tocar
- * este componente. */
-export function DirectiveStaffCard({
+/** Tarjeta institucional de una persona (fotografía + nombre + cargo),
+ * reutilizada por Equipo Directivo y Equipo PIE. `hasPhoto` se determina en
+ * el servidor (existencia real del archivo en public/) — mientras no
+ * exista, se muestra un avatar con iniciales. Apenas se coloque el archivo
+ * en photoSrc y se despliegue de nuevo, la fotografía real aparece sin
+ * tocar este componente. */
+export function StaffPhotoCard({
   fullName,
   role,
   photoSrc,
