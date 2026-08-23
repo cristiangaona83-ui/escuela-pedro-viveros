@@ -17,6 +17,15 @@ export const HISTORY: { paragraphs: string[] } = {
   ],
 };
 
+export const PEI_INTRO: { paragraphs: string[] } = {
+  paragraphs: [
+    "El Proyecto Educativo Institucional (PEI) expresa la identidad, los principios y las aspiraciones que orientan el quehacer de la Escuela Profesor Pedro Viveros Ormeño.",
+    "En él se establecen nuestra misión, visión, sellos educativos, valores y principales lineamientos pedagógicos y formativos, los cuales orientan las decisiones y acciones de nuestra comunidad educativa.",
+    "Nuestro PEI refleja el compromiso con una educación inclusiva, integral y de calidad, que reconoce la diversidad, promueve el bienestar y fortalece el desarrollo de las capacidades de cada estudiante, favoreciendo su participación activa en una sociedad más justa, equitativa y solidaria.",
+    "Conoce en detalle nuestro Proyecto Educativo Institucional y los principios que guían el trabajo de nuestra escuela.",
+  ],
+};
+
 export const MISSION: string | null =
   "Nuestra unidad educativa imparte una educación inclusiva y transformadora que impulsa el desarrollo integral de los estudiantes, respetando la diversidad y estimulando la creatividad. A través de la innovación pedagógica, se promueve el bienestar, la colaboración y el sentido de pertenencia en toda la comunidad escolar, con el propósito de contribuir activamente a la construcción de una sociedad más justa, equitativa y solidaria.";
 

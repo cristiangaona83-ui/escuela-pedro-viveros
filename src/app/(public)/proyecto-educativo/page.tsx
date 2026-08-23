@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, Download } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
+import { PEI_INTRO } from "@/config/institutional-content";
+import { getPublicDocuments } from "@/services/public-content";
 
 export const metadata: Metadata = { title: "Proyecto Educativo Institucional" };
 
-export default function ProyectoEducativoPage() {
+export default async function ProyectoEducativoPage() {
+  const documents = await getPublicDocuments();
+  const peiDocument = documents.find((doc) => doc.category === "PEI");
+
   return (
     <>
       <PageHeader
@@ -16,12 +20,23 @@ export default function ProyectoEducativoPage() {
       />
 
       <section className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
-        <EmptyState
-          icon={FileText}
-          title="El Proyecto Educativo Institucional está en preparación"
-          description="Cuando la dirección entregue el documento oficial del PEI, podrás consultarlo en detalle aquí y descargarlo desde la sección Documentos Institucionales."
-        />
-        <div className="mt-8 text-center">
+        <div className="flex items-center justify-center gap-3 text-center">
+          <FileText className="h-6 w-6 shrink-0 text-brand-700" />
+          <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">Proyecto Educativo Institucional</h2>
+        </div>
+
+        <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-slate-600 sm:text-base">
+          {PEI_INTRO.paragraphs.map((p, i) => (
+            <p key={i} className="text-justify">{p}</p>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {peiDocument && (
+            <LinkButton href={peiDocument.file_url} target="_blank" rel="noopener noreferrer">
+              <Download className="h-4 w-4" /> Ver / Descargar PEI
+            </LinkButton>
+          )}
           <LinkButton href="/documentos" variant="secondary">
             Ir a Documentos Institucionales <ArrowRight className="h-4 w-4" />
           </LinkButton>
