@@ -5,6 +5,7 @@ export const PUBLIC_NAV = [
   { label: "Equipo Directivo", href: "/equipo-directivo" },
   { label: "Equipo PIE", href: "/equipo-pie" },
   { label: "Cursos", href: "/cursos" },
+  { label: "Asistentes de la Educación", href: "/asistentes-de-la-educacion" },
   { label: "Noticias", href: "/noticias" },
   { label: "Galería", href: "/galeria" },
   { label: "Documentos", href: "/documentos" },
