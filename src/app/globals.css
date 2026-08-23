@@ -58,3 +58,50 @@ h1, h2, h3, h4, h5, h6 {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
+
+/* Contenido de Informativos Semanales (editor y lectura pública) — estilos
+   mínimos y explícitos en vez de instalar un plugin de tipografía solo para
+   esto. */
+.bulletin-content h2 {
+  margin-top: 1.25em;
+  margin-bottom: 0.4em;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-brand-900);
+}
+.bulletin-content h2:first-child {
+  margin-top: 0;
+}
+.bulletin-content h3 {
+  margin-top: 1em;
+  margin-bottom: 0.35em;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-brand-700);
+}
+.bulletin-content p {
+  margin-bottom: 0.75em;
+  line-height: 1.7;
+}
+.bulletin-content ul,
+.bulletin-content ol {
+  margin: 0 0 0.75em 1.25em;
+  line-height: 1.7;
+}
+.bulletin-content ul {
+  list-style-type: disc;
+}
+.bulletin-content ol {
+  list-style-type: decimal;
+}
+.bulletin-content a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bulletin-content strong {
+  font-weight: 600;
+}
+.bulletin-content p:last-child {
+  margin-bottom: 0;
+}

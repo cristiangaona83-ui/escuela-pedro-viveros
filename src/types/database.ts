@@ -399,6 +399,20 @@ export type GalleryRow = {
   created_at: string;
 }
 
+export type WeeklyBulletinRow = {
+  id: string;
+  number: number;
+  title: string;
+  week_label: string;
+  publish_date: string;
+  content: Record<string, unknown>;
+  pdf_url: string | null;
+  published: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type DocumentRow = {
   id: string;
   title: string;
@@ -647,6 +661,7 @@ export interface Database {
       staff_members: CrudTable<StaffMemberRow>;
       news: CrudTable<NewsRow>;
       gallery: CrudTable<GalleryRow>;
+      weekly_bulletins: CrudTable<WeeklyBulletinRow>;
       documents: CrudTable<DocumentRow>;
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;

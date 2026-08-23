@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { CourseRow, DocumentRow, GalleryRow, NewsRow, StaffMemberRow } from "@/types/database";
+import type { CourseRow, DocumentRow, GalleryRow, NewsRow, StaffMemberRow, WeeklyBulletinRow } from "@/types/database";
 import { STATIC_INSTITUTIONAL_DOCUMENTS } from "@/config/institutional-documents";
 
 /**
@@ -54,6 +54,37 @@ export async function getGallery(): Promise<GalleryRow[]> {
     return data ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function getPublishedBulletins(): Promise<WeeklyBulletinRow[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("weekly_bulletins")
+      .select("*")
+      .eq("published", true)
+      .order("number", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getPublishedBulletinByNumber(number: number): Promise<WeeklyBulletinRow | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("weekly_bulletins")
+      .select("*")
+      .eq("number", number)
+      .eq("published", true)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch {
+    return null;
   }
 }
 
