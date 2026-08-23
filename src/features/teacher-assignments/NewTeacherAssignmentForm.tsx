@@ -32,24 +32,50 @@ export function NewTeacherAssignmentForm({
     setLoading(true);
     setError(null);
     const form = new FormData(event.currentTarget);
+    const courseId = String(form.get("course_id") || "");
+    const subjectId = String(form.get("subject_id") || "");
+    const teacherId = String(form.get("teacher_id") || "");
     const hoursRaw = String(form.get("weekly_hours") || "").trim();
+    const weeklyHours = hoursRaw ? Number(hoursRaw) : null;
+
+    if (!courseId || !subjectId || !teacherId) {
+      setLoading(false);
+      setError("Selecciona curso, asignatura y docente.");
+      return;
+    }
+    if (weeklyHours !== null && (!Number.isFinite(weeklyHours) || weeklyHours <= 0)) {
+      setLoading(false);
+      setError("Las horas semanales deben ser un número mayor a 0, o dejar el campo vacío.");
+      return;
+    }
 
     const supabase = createClient();
     const { error: dbError } = await supabase.from("teacher_assignments").insert({
       academic_year_id: academicYearId,
-      course_id: String(form.get("course_id") || ""),
-      subject_id: String(form.get("subject_id") || ""),
-      teacher_id: String(form.get("teacher_id") || ""),
-      weekly_hours: hoursRaw ? Number(hoursRaw) : null,
+      course_id: courseId,
+      subject_id: subjectId,
+      teacher_id: teacherId,
+      weekly_hours: weeklyHours,
     });
 
     setLoading(false);
     if (dbError) {
-      setError(
-        dbError.code === "23505"
-          ? "Ese docente ya tiene esta asignatura asignada en este curso."
-          : "No pudimos crear la asignación."
-      );
+      console.error("teacher_assignments insert error", dbError);
+      if (dbError.code === "23505") {
+        setError("Ese docente ya tiene esta asignatura asignada en este curso.");
+      } else {
+        setError(
+          [
+            "No pudimos crear la asignación.",
+            dbError.code ? `Código: ${dbError.code}.` : null,
+            dbError.message ? `Mensaje: ${dbError.message}.` : null,
+            dbError.details ? `Detalle: ${dbError.details}.` : null,
+            dbError.hint ? `Sugerencia: ${dbError.hint}.` : null,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+      }
       return;
     }
 
@@ -57,12 +83,7 @@ export function NewTeacherAssignmentForm({
       p_action: "crear_asignacion_docente",
       p_module: "carga_docente",
       p_entity: "teacher_assignments",
-      p_details: {
-        course_id: form.get("course_id"),
-        subject_id: form.get("subject_id"),
-        teacher_id: form.get("teacher_id"),
-        weekly_hours: hoursRaw || null,
-      },
+      p_details: { course_id: courseId, subject_id: subjectId, teacher_id: teacherId, weekly_hours: weeklyHours },
     });
 
     event.currentTarget.reset();

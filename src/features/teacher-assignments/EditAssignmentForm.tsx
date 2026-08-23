@@ -37,6 +37,10 @@ export function EditAssignmentForm({
     const hoursRaw = String(form.get("weekly_hours") || "").trim();
     const weekly_hours = hoursRaw ? Number(hoursRaw) : null;
     if (!teacher_id) return;
+    if (weekly_hours !== null && (!Number.isFinite(weekly_hours) || weekly_hours <= 0)) {
+      setError("Las horas semanales deben ser un número mayor a 0, o dejar el campo vacío.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -48,11 +52,22 @@ export function EditAssignmentForm({
 
     if (dbError) {
       setLoading(false);
-      setError(
-        dbError.code === "23505"
-          ? "Ese docente ya tiene esta misma asignatura asignada en este curso."
-          : "No pudimos guardar el cambio."
-      );
+      console.error("teacher_assignments update error", dbError);
+      if (dbError.code === "23505") {
+        setError("Ese docente ya tiene esta misma asignatura asignada en este curso.");
+      } else {
+        setError(
+          [
+            "No pudimos guardar el cambio.",
+            dbError.code ? `Código: ${dbError.code}.` : null,
+            dbError.message ? `Mensaje: ${dbError.message}.` : null,
+            dbError.details ? `Detalle: ${dbError.details}.` : null,
+            dbError.hint ? `Sugerencia: ${dbError.hint}.` : null,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+      }
       return;
     }
 
