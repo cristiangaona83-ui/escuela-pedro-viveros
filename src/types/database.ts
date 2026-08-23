@@ -94,7 +94,9 @@ export type GuardianRow = {
   full_name: string;
   run: string | null;
   phone: string | null;
+  phone_alt: string | null;
   email: string | null;
+  address: string | null;
   relationship: string | null;
   created_at: string;
 }
@@ -110,6 +112,7 @@ export type StudentGuardianRow = {
 }
 
 export type StudentStatus = "matriculado" | "retirado" | "egresado";
+export type StudentSex = "M" | "F";
 
 export type StudentRow = {
   id: string;
@@ -121,6 +124,19 @@ export type StudentRow = {
   status: StudentStatus;
   notes: string | null;
   active: boolean;
+  nationality: string | null;
+  birth_country: string | null;
+  sex: StudentSex | null;
+  personal_phone: string | null;
+  personal_email: string | null;
+  address_street: string | null;
+  address_number: string | null;
+  address_sector: string | null;
+  address_commune: string | null;
+  address_region: string | null;
+  first_enrollment_date: string | null;
+  pickup_restriction_flag: boolean;
+  pickup_restriction_note: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -132,7 +148,62 @@ export type EnrollmentRow = {
   academic_year_id: string;
   status: "activa" | "retirada" | "trasladada";
   enrolled_at: string;
+  enrollment_number: string | null;
+  origin_school: string | null;
+  origin_course: string | null;
+  admission_condition: string | null;
+  withdrawal_reason: string | null;
+  withdrawn_at: string | null;
+  reactivated_at: string | null;
+  notes: string | null;
   created_at: string;
+}
+
+export type StudentPickupAuthorizationRow = {
+  id: string;
+  student_id: string;
+  full_name: string;
+  relationship: string | null;
+  phone: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export type StudentPickupRestrictionRow = {
+  student_id: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+}
+
+export type StudentAuthorizationRow = {
+  id: string;
+  student_id: string;
+  auth_type: string;
+  authorized: boolean;
+  authorized_at: string;
+  observation: string | null;
+  guardian_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type StudentEnrollmentDocumentRow = {
+  id: string;
+  student_id: string;
+  doc_type: string;
+  status: "solicitado" | "entregado" | "pendiente";
+  doc_date: string | null;
+  observation: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /** Vista de solo lectura public.guardian_contact_info (0014) — nombre, teléfono,
@@ -142,7 +213,9 @@ export type GuardianContactRow = {
   id: string;
   full_name: string;
   phone: string | null;
+  phone_alt: string | null;
   email: string | null;
+  address: string | null;
   relationship: string | null;
 }
 
@@ -470,14 +543,37 @@ export interface Database {
       };
       search_guardians_by_name: {
         Args: { p_query: string };
-        Returns: { id: string; full_name: string; phone: string | null; email: string | null; relationship: string | null }[];
+        Returns: {
+          id: string;
+          full_name: string;
+          phone: string | null;
+          phone_alt: string | null;
+          email: string | null;
+          address: string | null;
+          relationship: string | null;
+        }[];
       };
       create_guardian_contact: {
-        Args: { p_full_name: string; p_phone?: string; p_email?: string; p_relationship?: string };
+        Args: {
+          p_full_name: string;
+          p_phone?: string;
+          p_email?: string;
+          p_relationship?: string;
+          p_phone_alt?: string;
+          p_address?: string;
+        };
         Returns: string;
       };
       update_guardian_contact: {
-        Args: { p_guardian_id: string; p_full_name: string; p_phone?: string; p_email?: string; p_relationship?: string };
+        Args: {
+          p_guardian_id: string;
+          p_full_name: string;
+          p_phone?: string;
+          p_email?: string;
+          p_relationship?: string;
+          p_phone_alt?: string;
+          p_address?: string;
+        };
         Returns: boolean;
       };
       link_guardian_to_student: {
@@ -494,6 +590,32 @@ export interface Database {
         Args: { p_student_id: string; p_guardian_id: string };
         Returns: boolean;
       };
+      update_student_identity_extra: {
+        Args: {
+          p_student_id: string;
+          p_nationality?: string;
+          p_birth_country?: string;
+          p_sex?: string;
+          p_personal_phone?: string;
+          p_personal_email?: string;
+          p_address_street?: string;
+          p_address_number?: string;
+          p_address_sector?: string;
+          p_address_commune?: string;
+          p_address_region?: string;
+        };
+        Returns: boolean;
+      };
+      update_enrollment_details: {
+        Args: {
+          p_enrollment_id: string;
+          p_origin_school?: string;
+          p_origin_course?: string;
+          p_admission_condition?: string;
+          p_notes?: string;
+        };
+        Returns: boolean;
+      };
     };
     Tables: {
       profiles: CrudTable<ProfileRow>;
@@ -507,6 +629,10 @@ export interface Database {
       student_guardians: CrudTable<StudentGuardianRow>;
       students: CrudTable<StudentRow>;
       enrollments: CrudTable<EnrollmentRow>;
+      student_pickup_authorizations: CrudTable<StudentPickupAuthorizationRow>;
+      student_pickup_restrictions: CrudTable<StudentPickupRestrictionRow>;
+      student_authorizations: CrudTable<StudentAuthorizationRow>;
+      student_enrollment_documents: CrudTable<StudentEnrollmentDocumentRow>;
       academic_periods: CrudTable<AcademicPeriodRow>;
       evaluations: CrudTable<EvaluationRow>;
       grades: CrudTable<GradeRow>;

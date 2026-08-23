@@ -14,7 +14,9 @@ interface SearchResult {
   id: string;
   full_name: string;
   phone: string | null;
+  phone_alt: string | null;
   email: string | null;
+  address: string | null;
   relationship: string | null;
 }
 
@@ -83,7 +85,9 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
     const form = new FormData(event.currentTarget);
     const full_name = String(form.get("full_name") || "").trim();
     const phone = String(form.get("phone") || "").trim() || undefined;
+    const phone_alt = String(form.get("phone_alt") || "").trim() || undefined;
     const email = String(form.get("email") || "").trim() || undefined;
+    const address = String(form.get("address") || "").trim() || undefined;
     const relationship = String(form.get("relationship") || "").trim() || undefined;
     if (!full_name) return;
 
@@ -95,6 +99,8 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
       p_phone: phone,
       p_email: email,
       p_relationship: relationship,
+      p_phone_alt: phone_alt,
+      p_address: address,
     });
     if (createError || !guardianId) {
       setBusy(false);
@@ -119,7 +125,9 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
     const form = new FormData(event.currentTarget);
     const full_name = String(form.get("full_name") || "").trim();
     const phone = String(form.get("phone") || "").trim() || undefined;
+    const phone_alt = String(form.get("phone_alt") || "").trim() || undefined;
     const email = String(form.get("email") || "").trim() || undefined;
+    const address = String(form.get("address") || "").trim() || undefined;
     const relationship = String(form.get("relationship") || "").trim() || undefined;
     setBusy(true);
     const supabase = createClient();
@@ -129,6 +137,8 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
       p_phone: phone,
       p_email: email,
       p_relationship: relationship,
+      p_phone_alt: phone_alt,
+      p_address: address,
     });
     setBusy(false);
     if (rpcError) { window.alert(rpcError.message || "No pudimos guardar los cambios."); return; }
@@ -159,8 +169,10 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
                   <div className="grid gap-2 sm:grid-cols-2">
                     <Input name="full_name" defaultValue={g.guardian.full_name} placeholder="Nombre completo" required />
                     <Input name="phone" defaultValue={g.guardian.phone ?? ""} placeholder="Teléfono" />
+                    <Input name="phone_alt" defaultValue={g.guardian.phone_alt ?? ""} placeholder="Teléfono alternativo" />
                     <Input name="email" defaultValue={g.guardian.email ?? ""} placeholder="Correo" type="email" />
                     <Input name="relationship" defaultValue={g.relationship ?? ""} placeholder="Vínculo" />
+                    <Input name="address" defaultValue={g.guardian.address ?? ""} placeholder="Domicilio" />
                   </div>
                   <div className="flex gap-2">
                     <Button type="submit" size="sm" disabled={busy}>{busy ? "Guardando…" : "Guardar"}</Button>
@@ -176,8 +188,10 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
                       {g.isEmergencyContact && <Badge tone="warning">Emergencia</Badge>}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {g.relationship || "Vínculo no indicado"} · {g.guardian.phone || "sin teléfono"} · {g.guardian.email || "sin correo"}
+                      {g.relationship || "Vínculo no indicado"} · {g.guardian.phone || "sin teléfono"}
+                      {g.guardian.phone_alt && ` (alt. ${g.guardian.phone_alt})`} · {g.guardian.email || "sin correo"}
                     </p>
+                    {g.guardian.address && <p className="text-xs text-slate-400">{g.guardian.address}</p>}
                   </div>
                   <div className="flex items-center gap-1">
                     {!g.isPrimary && (
@@ -239,8 +253,10 @@ export function GuardianManagerLimited({ studentId, guardians }: { studentId: st
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input name="full_name" placeholder="Nombre completo" required />
                   <Input name="phone" placeholder="Teléfono" />
+                  <Input name="phone_alt" placeholder="Teléfono alternativo" />
                   <Input name="email" placeholder="Correo" type="email" />
                   <Input name="relationship" placeholder="Vínculo" />
+                  <Input name="address" placeholder="Domicilio" />
                 </div>
                 <Button type="submit" size="sm" disabled={busy}>{busy ? "Guardando…" : "Crear y vincular"}</Button>
               </form>

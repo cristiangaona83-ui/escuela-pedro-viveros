@@ -24,7 +24,7 @@ export async function listStudentGuardiansFull(studentId: string): Promise<Stude
   const supabase = await createClient();
   const { data } = await supabase
     .from("student_guardians")
-    .select("id, is_primary, is_emergency_contact, relationship, guardians(id, full_name, run, phone, email, relationship, created_at)")
+    .select("id, is_primary, is_emergency_contact, relationship, guardians(id, full_name, run, phone, phone_alt, email, address, relationship, created_at)")
     .eq("student_id", studentId)
     .order("is_primary", { ascending: false });
 

@@ -14,7 +14,15 @@ function GuardianEditForm({ guardianId, onDone, onCancel, initial }: {
   guardianId: string;
   onDone: () => void;
   onCancel: () => void;
-  initial: { full_name: string; run: string | null; phone: string | null; email: string | null; relationship: string | null };
+  initial: {
+    full_name: string;
+    run: string | null;
+    phone: string | null;
+    phone_alt: string | null;
+    email: string | null;
+    address: string | null;
+    relationship: string | null;
+  };
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +34,9 @@ function GuardianEditForm({ guardianId, onDone, onCancel, initial }: {
       full_name: String(form.get("full_name") || "").trim(),
       run: String(form.get("run") || "").trim() || null,
       phone: String(form.get("phone") || "").trim() || null,
+      phone_alt: String(form.get("phone_alt") || "").trim() || null,
       email: String(form.get("email") || "").trim() || null,
+      address: String(form.get("address") || "").trim() || null,
       relationship: String(form.get("relationship") || "").trim() || null,
     };
     setLoading(true);
@@ -54,8 +64,10 @@ function GuardianEditForm({ guardianId, onDone, onCancel, initial }: {
         <Input name="full_name" defaultValue={initial.full_name} placeholder="Nombre completo" required />
         <Input name="run" defaultValue={initial.run ?? ""} placeholder="RUN (opcional)" />
         <Input name="phone" defaultValue={initial.phone ?? ""} placeholder="Teléfono" />
+        <Input name="phone_alt" defaultValue={initial.phone_alt ?? ""} placeholder="Teléfono alternativo" />
         <Input name="email" defaultValue={initial.email ?? ""} placeholder="Correo" type="email" />
-        <Input name="relationship" defaultValue={initial.relationship ?? ""} placeholder="Vínculo (madre, padre, tutor…)" className="sm:col-span-2" />
+        <Input name="relationship" defaultValue={initial.relationship ?? ""} placeholder="Vínculo (madre, padre, tutor…)" />
+        <Input name="address" defaultValue={initial.address ?? ""} placeholder="Domicilio" className="sm:col-span-2" />
       </div>
       {error && <p className="flex items-center gap-1.5 text-xs text-red-700"><AlertCircle className="h-3.5 w-3.5" />{error}</p>}
       <div className="flex gap-2">
@@ -124,7 +136,9 @@ export function GuardianManagerFull({ studentId, guardians }: { studentId: strin
     const full_name = String(form.get("full_name") || "").trim();
     const run = String(form.get("run") || "").trim() || null;
     const phone = String(form.get("phone") || "").trim() || null;
+    const phone_alt = String(form.get("phone_alt") || "").trim() || null;
     const email = String(form.get("email") || "").trim() || null;
+    const address = String(form.get("address") || "").trim() || null;
     const relationship = String(form.get("relationship") || "").trim() || null;
     const makePrimary = form.get("is_primary") === "on";
     if (!full_name) return;
@@ -141,7 +155,7 @@ export function GuardianManagerFull({ studentId, guardians }: { studentId: strin
       } else {
         const { data: created, error: createError } = await supabase
           .from("guardians")
-          .insert({ full_name, run, phone, email, relationship })
+          .insert({ full_name, run, phone, phone_alt, email, address, relationship })
           .select("id")
           .single();
         if (createError) {
@@ -154,7 +168,7 @@ export function GuardianManagerFull({ studentId, guardians }: { studentId: strin
     } else {
       const { data: created, error: createError } = await supabase
         .from("guardians")
-        .insert({ full_name, phone, email, relationship })
+        .insert({ full_name, phone, phone_alt, email, address, relationship })
         .select("id")
         .single();
       if (createError) {
@@ -224,9 +238,11 @@ export function GuardianManagerFull({ studentId, guardians }: { studentId: strin
                       {g.isEmergencyContact && <Badge tone="warning">Emergencia</Badge>}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {g.relationship || "Vínculo no indicado"} · {g.guardian.phone || "sin teléfono"} · {g.guardian.email || "sin correo"}
+                      {g.relationship || "Vínculo no indicado"} · {g.guardian.phone || "sin teléfono"}
+                      {g.guardian.phone_alt && ` (alt. ${g.guardian.phone_alt})`} · {g.guardian.email || "sin correo"}
                       {g.guardian.run && ` · RUN ${g.guardian.run}`}
                     </p>
+                    {g.guardian.address && <p className="text-xs text-slate-400">{g.guardian.address}</p>}
                   </div>
                   <div className="flex items-center gap-1">
                     {!g.isPrimary && (
@@ -270,11 +286,17 @@ export function GuardianManagerFull({ studentId, guardians }: { studentId: strin
               <FormField label="Teléfono" htmlFor="add_phone">
                 <Input id="add_phone" name="phone" />
               </FormField>
+              <FormField label="Teléfono alternativo" htmlFor="add_phone_alt">
+                <Input id="add_phone_alt" name="phone_alt" />
+              </FormField>
               <FormField label="Correo" htmlFor="add_email">
                 <Input id="add_email" name="email" type="email" />
               </FormField>
               <FormField label="Vínculo" htmlFor="add_relationship" hint="Madre, padre, tutor/a, etc.">
                 <Input id="add_relationship" name="relationship" />
+              </FormField>
+              <FormField label="Domicilio" htmlFor="add_address">
+                <Input id="add_address" name="address" />
               </FormField>
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-600">

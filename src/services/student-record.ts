@@ -58,9 +58,61 @@ export async function listEnrollmentHistory(studentId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("enrollments")
-    .select("id, status, enrolled_at, courses(level, letter, academic_years(year))")
+    .select(
+      "id, status, enrolled_at, enrollment_number, withdrawal_reason, withdrawn_at, reactivated_at, notes, courses(level, letter, academic_years(year))"
+    )
     .eq("student_id", studentId)
     .order("enrolled_at", { ascending: false });
+  return data ?? [];
+}
+
+/** Personas autorizadas para retirar al estudiante — solo las activas
+ * (student_pickup_authorizations, 0020). */
+export async function listPickupAuthorizations(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("student_pickup_authorizations")
+    .select("*")
+    .eq("student_id", studentId)
+    .eq("active", true)
+    .order("created_at", { ascending: true });
+  return data ?? [];
+}
+
+/** Restricción de retiro (alerta mínima) — a lo sumo una fila por
+ * estudiante (student_pickup_restrictions, 0020). Consultar solo cuando el
+ * rol ya esté autorizado (ver RLS y page.tsx). */
+export async function getPickupRestriction(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("student_pickup_restrictions")
+    .select("student_id, note, created_at")
+    .eq("student_id", studentId)
+    .maybeSingle();
+  return data;
+}
+
+/** Autorizaciones administrativas del estudiante (uso de imagen, salidas
+ * pedagógicas, etc. — student_authorizations, 0020). */
+export async function listStudentAuthorizations(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("student_authorizations")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("auth_type", { ascending: true });
+  return data ?? [];
+}
+
+/** Documentación de matrícula (solicitado/entregado/pendiente —
+ * student_enrollment_documents, 0020). */
+export async function listEnrollmentDocuments(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("student_enrollment_documents")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("doc_type", { ascending: true });
   return data ?? [];
 }
 

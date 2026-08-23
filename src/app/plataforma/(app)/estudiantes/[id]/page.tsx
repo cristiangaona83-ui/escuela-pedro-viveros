@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate, calculateAge } from "@/lib/utils";
 import { StudentForm } from "@/features/students/StudentForm";
+import { StudentIdentityForm } from "@/features/students/StudentIdentityForm";
+import { EnrollmentDetailsForm } from "@/features/students/EnrollmentDetailsForm";
+import { PickupAuthorizationsManager } from "@/features/students/PickupAuthorizationsManager";
+import { PickupRestrictionManager } from "@/features/students/PickupRestrictionManager";
+import { StudentAuthorizationsManager } from "@/features/students/StudentAuthorizationsManager";
+import { EnrollmentDocumentsManager } from "@/features/students/EnrollmentDocumentsManager";
 import { WithdrawStudentButton } from "@/features/students/WithdrawStudentButton";
 import { EnrollStudentButton } from "@/features/students/EnrollStudentButton";
 import { ReactivateStudentButton } from "@/features/students/ReactivateStudentButton";
@@ -23,6 +29,10 @@ import {
   listAuditHistoryForStudent,
   listEnrollmentHistory,
   listCertificatesForStudent,
+  listPickupAuthorizations,
+  getPickupRestriction,
+  listStudentAuthorizations,
+  listEnrollmentDocuments,
   summarizeAttendance,
 } from "@/services/student-record";
 import { listTeacherAssignments } from "@/services/teacher-assignments";
@@ -37,6 +47,11 @@ const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin", "inspect
 const MANAGE_ROLES = ["director", "utp", "administrativo", "superadmin", "inspectoria_general", "convivencia"] as const;
 const GUARDIAN_FULL_ROLES = ["director", "utp", "administrativo", "convivencia", "superadmin"] as const;
 const PIE_ACCESS_ROLES = ["pie", "director", "utp", "superadmin"] as const; // igual que pie_records_select_scope
+const PICKUP_AUTH_READ_ROLES = ["director", "utp", "administrativo", "convivencia", "inspectoria_general", "superadmin"] as const;
+const PICKUP_AUTH_WRITE_ROLES = ["director", "utp", "inspectoria_general", "superadmin"] as const;
+const PICKUP_RESTRICTION_ROLES = ["director", "utp", "convivencia", "inspectoria_general", "superadmin"] as const;
+const AUTHORIZATIONS_READ_ROLES = ["director", "utp", "administrativo", "convivencia", "inspectoria_general", "superadmin"] as const;
+const AUTHORIZATIONS_WRITE_ROLES = ["director", "utp", "administrativo", "convivencia", "superadmin"] as const;
 
 const TABS: StudentTab[] = [
   { key: "resumen", label: "Resumen" },
@@ -122,10 +137,39 @@ export default async function EstudianteDetailPage({
   const history = tab === "historial" ? await listAuditHistoryForStudent(student.id) : null;
   const enrollmentHistory = tab === "historial" || tab === "matricula" ? await listEnrollmentHistory(student.id) : null;
 
+  // Bloques administrativos nuevos (consolidación de la Ficha de Matrícula) —
+  // se consultan solo cuando el rol tiene acceso real (defensa en profundidad
+  // además de RLS) y solo para las pestañas donde se muestran.
+  const canReadPickupAuth = canWrite(roles, [...PICKUP_AUTH_READ_ROLES]);
+  const canWritePickupAuth = canWrite(roles, [...PICKUP_AUTH_WRITE_ROLES]);
+  const canManagePickupRestriction = canWrite(roles, [...PICKUP_RESTRICTION_ROLES]);
+  const canReadAuthorizations = canWrite(roles, [...AUTHORIZATIONS_READ_ROLES]);
+  const canWriteAuthorizations = canWrite(roles, [...AUTHORIZATIONS_WRITE_ROLES]);
+  const needsMatriculaExtras = tab === "matricula" || tab === "resumen";
+
+  const pickupAuthorizations = canReadPickupAuth && needsMatriculaExtras ? await listPickupAuthorizations(student.id) : null;
+  const pickupRestriction = canManagePickupRestriction && needsMatriculaExtras ? await getPickupRestriction(student.id) : null;
+  const studentAuthorizations = canReadAuthorizations && tab === "matricula" ? await listStudentAuthorizations(student.id) : null;
+  const enrollmentDocuments = canReadAuthorizations && tab === "matricula" ? await listEnrollmentDocuments(student.id) : null;
+
   const courseLabel = activeEnrollment?.courses ? `${activeEnrollment.courses.level} ${activeEnrollment.courses.letter}` : null;
   const academicYear = activeEnrollment?.courses?.academic_years?.year ?? null;
   const homeroomTeacher = activeEnrollment?.courses?.profiles?.full_name ?? null;
   const age = calculateAge(student.birth_date);
+
+  // Indicador de completitud — solo campos administrativos esenciales, no se
+  // almacena: se calcula en cada carga a partir de lo ya consultado.
+  const completenessChecks: { label: string; ok: boolean }[] = [
+    { label: "Identificación (RUN, fecha de nacimiento)", ok: Boolean(student.run && student.birth_date) },
+    { label: "Matrícula vigente", ok: Boolean(activeEnrollment) },
+    { label: "Domicilio", ok: Boolean(student.address_street && student.address_commune) },
+    { label: "Apoderado/a principal", ok: Boolean(primaryGuardian) },
+    { label: "Teléfono de contacto", ok: Boolean(primaryGuardian?.guardian.phone || student.personal_phone) },
+    { label: "Contacto de emergencia", ok: Boolean(emergencyContact) },
+    { label: "Profesor/a jefe", ok: Boolean(homeroomTeacher) },
+  ];
+  const missingCount = completenessChecks.filter((c) => !c.ok).length;
+  const isComplete = missingCount === 0;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -150,11 +194,20 @@ export default async function EstudianteDetailPage({
                 {student.status}
               </Badge>
               {hasPieAccess && pieActive && <Badge tone="accent">PIE</Badge>}
+              <Badge tone={isComplete ? "success" : "warning"}>
+                {isComplete ? "Ficha completa" : `Información pendiente (${missingCount})`}
+              </Badge>
+              {canManagePickupRestriction && pickupRestriction && <Badge tone="danger">Restricción de retiro</Badge>}
             </div>
           </div>
           <p className="mt-1 text-xs text-slate-400">
             Sin foto registrada — el esquema actual no tiene un campo de fotografía para estudiantes.
           </p>
+          {!isComplete && (
+            <p className="mt-1 text-xs text-amber-700">
+              Falta: {completenessChecks.filter((c) => !c.ok).map((c) => c.label).join(" · ")}
+            </p>
+          )}
 
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             <StatCard label="Fecha de nacimiento" value={student.birth_date ? formatDate(student.birth_date) : "—"} hint={age !== null ? `${age} años` : undefined} />
@@ -167,9 +220,11 @@ export default async function EstudianteDetailPage({
             <StatCard label="Otros apoderados vinculados" value={String(Math.max(otherGuardiansCount, 0))} />
           </div>
 
-          <div className="mt-4">
-            <FichaMatriculaActions studentId={student.id} />
-          </div>
+          {allowedToManage && (
+            <div className="mt-4">
+              <FichaMatriculaActions studentId={student.id} />
+            </div>
+          )}
         </CardBody>
       </Card>
 
@@ -188,6 +243,11 @@ export default async function EstudianteDetailPage({
               <Link href={`/plataforma/estudiantes/${student.id}?tab=asistencia`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
                 <CalendarCheck className="h-3.5 w-3.5" /> Ver asistencia
               </Link>
+              {canReadPickupAuth && (
+                <Link href={`/plataforma/estudiantes/${student.id}?tab=matricula`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  <UserRound className="h-3.5 w-3.5" /> Gestionar autorizados para retiro
+                </Link>
+              )}
               {student.status === "matriculado" && activeEnrollment && (
                 <WithdrawStudentButton
                   studentId={student.id}
@@ -315,9 +375,39 @@ export default async function EstudianteDetailPage({
           <div className="space-y-4">
             <Card>
               <CardBody>
+                <h2 className="mb-3 font-semibold text-slate-900">Identificación</h2>
                 <StudentForm student={student} canWrite={allowedToWrite} roles={roles} />
               </CardBody>
             </Card>
+            <Card>
+              <CardBody>
+                <h2 className="mb-3 font-semibold text-slate-900">Nacionalidad, contacto y domicilio</h2>
+                <StudentIdentityForm student={student} canWrite={allowedToWrite} roles={roles} />
+              </CardBody>
+            </Card>
+
+            {activeEnrollment && (
+              <Card>
+                <CardBody>
+                  <h2 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
+                    <GraduationCap className="h-4 w-4 text-slate-400" /> Datos de esta matrícula
+                    {activeEnrollment.enrollment_number && (
+                      <span className="text-xs font-normal text-slate-400">Folio {activeEnrollment.enrollment_number}</span>
+                    )}
+                  </h2>
+                  <EnrollmentDetailsForm
+                    enrollmentId={activeEnrollment.id}
+                    originSchool={activeEnrollment.origin_school}
+                    originCourse={activeEnrollment.origin_course}
+                    admissionCondition={activeEnrollment.admission_condition}
+                    notes={activeEnrollment.notes}
+                    canWrite={allowedToWrite}
+                    roles={roles}
+                  />
+                </CardBody>
+              </Card>
+            )}
+
             <Card>
               <CardBody>
                 <h2 className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
@@ -328,12 +418,22 @@ export default async function EstudianteDetailPage({
                     {enrollmentHistory.map((e) => {
                       const c = (e as unknown as { courses: { level: string; letter: string; academic_years: { year: number } | null } | null }).courses;
                       return (
-                        <li key={e.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-                          <span className="text-slate-700">
-                            {c ? `${c.level} ${c.letter}` : "—"} {c?.academic_years ? `· ${c.academic_years.year}` : ""}
-                            {e.enrolled_at && <span className="ml-2 text-slate-400">{formatDate(e.enrolled_at)}</span>}
-                          </span>
-                          <Badge tone={e.status === "activa" ? "success" : "neutral"}>{e.status}</Badge>
+                        <li key={e.id} className="py-2 text-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-slate-700">
+                              {c ? `${c.level} ${c.letter}` : "—"} {c?.academic_years ? `· ${c.academic_years.year}` : ""}
+                              {e.enrolled_at && <span className="ml-2 text-slate-400">{formatDate(e.enrolled_at)}</span>}
+                              {e.enrollment_number && <span className="ml-2 text-slate-400">· Folio {e.enrollment_number}</span>}
+                            </span>
+                            <Badge tone={e.status === "activa" ? "success" : "neutral"}>{e.status}</Badge>
+                          </div>
+                          {(e.withdrawal_reason || e.withdrawn_at) && (
+                            <p className="mt-0.5 text-xs text-slate-500">
+                              Retiro{e.withdrawn_at ? ` (${formatDate(e.withdrawn_at)})` : ""}: {e.withdrawal_reason || "sin motivo registrado"}
+                            </p>
+                          )}
+                          {e.reactivated_at && <p className="mt-0.5 text-xs text-slate-500">Reincorporación: {formatDate(e.reactivated_at)}</p>}
+                          {e.notes && <p className="mt-0.5 text-xs text-slate-400">{e.notes}</p>}
                         </li>
                       );
                     })}
@@ -343,6 +443,38 @@ export default async function EstudianteDetailPage({
                 )}
               </CardBody>
             </Card>
+
+            {canManagePickupRestriction && (
+              <PickupRestrictionManager
+                studentId={student.id}
+                note={pickupRestriction?.note ?? null}
+                canWrite={canManagePickupRestriction}
+              />
+            )}
+
+            {canReadPickupAuth && (
+              <PickupAuthorizationsManager
+                studentId={student.id}
+                authorizations={pickupAuthorizations ?? []}
+                canWrite={canWritePickupAuth}
+              />
+            )}
+
+            {canReadAuthorizations && (
+              <StudentAuthorizationsManager
+                studentId={student.id}
+                authorizations={studentAuthorizations ?? []}
+                canWrite={canWriteAuthorizations}
+              />
+            )}
+
+            {canReadAuthorizations && (
+              <EnrollmentDocumentsManager
+                studentId={student.id}
+                documents={enrollmentDocuments ?? []}
+                canWrite={canWriteAuthorizations}
+              />
+            )}
           </div>
         )}
 

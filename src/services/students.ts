@@ -38,7 +38,7 @@ export async function getStudent(id: string) {
   const { data } = await supabase
     .from("students")
     .select(
-      "*, enrollments(id, status, academic_year_id, course_id, enrolled_at, courses(level, letter, academic_years(year), profiles!courses_homeroom_teacher_id_fkey(full_name)))"
+      "*, enrollments(id, status, academic_year_id, course_id, enrolled_at, enrollment_number, origin_school, origin_course, admission_condition, withdrawal_reason, withdrawn_at, reactivated_at, notes, courses(level, letter, academic_years(year), profiles!courses_homeroom_teacher_id_fkey(full_name)))"
     )
     .eq("id", id)
     .maybeSingle();
@@ -51,6 +51,14 @@ export interface StudentEnrollmentJoin {
   academic_year_id: string;
   course_id: string;
   enrolled_at: string;
+  enrollment_number: string | null;
+  origin_school: string | null;
+  origin_course: string | null;
+  admission_condition: string | null;
+  withdrawal_reason: string | null;
+  withdrawn_at: string | null;
+  reactivated_at: string | null;
+  notes: string | null;
   courses: {
     level: string;
     letter: string;
