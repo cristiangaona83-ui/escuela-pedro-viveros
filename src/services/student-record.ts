@@ -63,3 +63,38 @@ export async function listEnrollmentHistory(studentId: string) {
     .order("enrolled_at", { ascending: false });
   return data ?? [];
 }
+
+/** Certificados emitidos para un estudiante, reutilizando certificates —
+ * misma RLS que el módulo Certificados (director/utp/administrativo/
+ * superadmin). Para roles fuera de ese alcance (p. ej. inspectoria_general)
+ * esta consulta simplemente devuelve vacío, sin ampliar nada. */
+export async function listCertificatesForStudent(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("certificates")
+    .select("id, folio, cert_type, issued_at, status, verification_code")
+    .eq("student_id", studentId)
+    .order("issued_at", { ascending: false });
+  return data ?? [];
+}
+
+export interface AttendanceSummary {
+  total: number;
+  presente: number;
+  ausente: number;
+  atraso: number;
+  retiro: number;
+  attendanceRate: number | null;
+}
+
+/** Resumen de asistencia calculado a partir de listAttendanceForStudent —
+ * no es una consulta nueva, es una agregación de los mismos datos. */
+export function summarizeAttendance(rows: { status: string }[]): AttendanceSummary {
+  const total = rows.length;
+  const presente = rows.filter((r) => r.status === "presente").length;
+  const ausente = rows.filter((r) => r.status === "ausente").length;
+  const atraso = rows.filter((r) => r.status === "atraso").length;
+  const retiro = rows.filter((r) => r.status === "retiro").length;
+  const attendanceRate = total > 0 ? Math.round(((presente + atraso) / total) * 100) : null;
+  return { total, presente, ausente, atraso, retiro, attendanceRate };
+}

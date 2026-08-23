@@ -15,6 +15,7 @@ export interface EnrollmentRecordData {
   guardianRelationship: string | null;
   guardianPhone: string | null;
   guardianEmail: string | null;
+  homeroomTeacher: string | null;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
   notes: string | null;
@@ -49,6 +50,7 @@ export function EnrollmentRecordDocument(data: EnrollmentRecordData) {
           {row("Curso", data.courseLabel ?? "Sin matrícula activa")}
           {row("Año académico", data.academicYear ? String(data.academicYear) : "—")}
           {row("Fecha de matrícula", data.enrolledAt ? formatDate(data.enrolledAt) : "—")}
+          {row("Profesor/a jefe", data.homeroomTeacher ?? "Sin asignar")}
         </View>
 
         <View style={{ marginTop: 12, borderWidth: 1, borderColor: "#dce8e2", borderRadius: 6, padding: 12 }}>
@@ -68,6 +70,17 @@ export function EnrollmentRecordDocument(data: EnrollmentRecordData) {
         <View style={{ marginTop: 12, borderWidth: 1, borderColor: "#dce8e2", borderRadius: 6, padding: 12 }}>
           <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 8, color: "#213c30" }}>Observaciones</Text>
           <Text style={{ fontSize: 9, color: "#1c2624" }}>{data.notes || "Sin observaciones."}</Text>
+        </View>
+
+        <View style={pdfStyles.footerRow}>
+          <View style={pdfStyles.signatureBlock}>
+            <View style={pdfStyles.signatureLine} />
+            <Text style={pdfStyles.signatureName}>Firma apoderado/a</Text>
+          </View>
+          <View style={pdfStyles.signatureBlock}>
+            <View style={pdfStyles.signatureLine} />
+            <Text style={pdfStyles.signatureName}>Firma y timbre del establecimiento</Text>
+          </View>
         </View>
 
         <Text style={pdfStyles.disclaimer}>

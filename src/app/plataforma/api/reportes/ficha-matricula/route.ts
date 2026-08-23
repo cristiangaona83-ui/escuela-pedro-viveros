@@ -27,7 +27,12 @@ export async function POST(request: Request) {
 
   const enrollment = findActiveEnrollment(student) as unknown as {
     enrolled_at?: string;
-    courses: { level: string; letter: string; academic_years: { year: number } | null } | null;
+    courses: {
+      level: string;
+      letter: string;
+      academic_years: { year: number } | null;
+      profiles: { full_name: string } | null;
+    } | null;
   } | null;
 
   const supabase = await createClient();
@@ -51,6 +56,7 @@ export async function POST(request: Request) {
       guardianRelationship: primary?.relationship ?? null,
       guardianPhone: primary?.guardian.phone ?? null,
       guardianEmail: primary?.guardian.email ?? null,
+      homeroomTeacher: enrollment?.courses?.profiles?.full_name ?? null,
       emergencyContactName: emergencyContact?.guardian.full_name ?? null,
       emergencyContactPhone: emergencyContact?.guardian.phone ?? null,
       notes: student.notes,
