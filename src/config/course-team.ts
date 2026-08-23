@@ -24,6 +24,10 @@ export interface CourseTeamMember {
   fullName: string;
   role: string;
   photoSrc: string;
+  /** Iniciales explícitas para el avatar cuando no hay foto — el cálculo
+   * automático (primera + última palabra) no siempre coincide con nombre +
+   * apellido paterno real. */
+  initials?: string;
 }
 
 export interface CourseTeamEntry {
@@ -77,4 +81,14 @@ export const COURSE_TEAM: CourseTeamEntry[] = [
     courseName: "8° Básico",
     homeroomTeacher: { fullName: "Sebastián Antonio Vergara Moraga", role: "Profesor Jefe", photoSrc: "/images/staff/sebastian-vergara.jpg" },
   },
+];
+
+/**
+ * Docentes de asignatura — no son jefatura de ningún curso, así que no
+ * forman parte de COURSE_TEAM. Se muestran en su propio bloque al final de
+ * Nuestros Cursos, con el mismo diseño visual (StaffMemberCard).
+ */
+export const SUBJECT_TEACHERS: CourseTeamMember[] = [
+  { fullName: "Andrés Eduardo Moya Álvarez", role: "Profesor de Educación Física", photoSrc: "/images/staff/andres-moya.jpg", initials: "AM" },
+  { fullName: "Angelina Ester Santelice Carreño", role: "Docente de Asignatura", photoSrc: "/images/staff/angelina-santelice.jpg", initials: "AS" },
 ];

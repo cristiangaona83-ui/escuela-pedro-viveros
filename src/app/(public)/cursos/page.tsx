@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/public/PageHeader";
-import { CourseTeamCard } from "@/components/public/CourseTeamCard";
-import { COURSE_TEAM } from "@/config/course-team";
+import { CourseTeamCard, StaffMemberCard } from "@/components/public/CourseTeamCard";
+import { COURSE_TEAM, SUBJECT_TEACHERS } from "@/config/course-team";
 import { photoExists } from "@/lib/staff-photo";
 
 export const metadata: Metadata = { title: "Nuestros Cursos" };
@@ -31,6 +31,15 @@ export default function CursosPage() {
               assistant={course.assistant}
               assistantHasPhoto={course.assistant ? photoExists(course.assistant.photoSrc) : undefined}
             />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
+        <h2 className="text-center font-heading text-2xl font-medium tracking-tight text-slate-900">Docentes de Asignatura</h2>
+        <div className="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-6 min-[420px]:grid-cols-2">
+          {SUBJECT_TEACHERS.map((teacher) => (
+            <StaffMemberCard key={teacher.fullName} member={teacher} hasPhoto={photoExists(teacher.photoSrc)} />
           ))}
         </div>
       </section>
