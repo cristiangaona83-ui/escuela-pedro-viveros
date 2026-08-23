@@ -1,52 +1,38 @@
 import type { Metadata } from "next";
-import { School, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Card, CardBody } from "@/components/ui/Card";
-import { getPublicCourses } from "@/services/public-content";
+import { CourseTeamCard } from "@/components/public/CourseTeamCard";
+import { COURSE_TEAM } from "@/config/course-team";
+import { photoExists } from "@/lib/staff-photo";
 
 export const metadata: Metadata = { title: "Nuestros Cursos" };
 
-export default async function CursosPage() {
-  const courses = await getPublicCourses();
-
+export default function CursosPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Cursos"
-        title="Nuestros Cursos"
-        description="Desde Prekínder a 8° Básico, cada curso cuenta con un docente de jefatura a cargo del acompañamiento formativo."
-      />
+      <PageHeader eyebrow="Cursos" title="Nuestros Cursos" />
+
+      <section className="mx-auto max-w-4xl px-4 pt-14 sm:px-6 lg:px-8">
+        <p className="text-justify text-[15px] leading-relaxed text-slate-600 sm:text-base">
+          Desde Prekínder hasta 8° Básico, cada curso de nuestra escuela cuenta con un docente de jefatura que
+          acompaña el proceso educativo y formativo de sus estudiantes. En los niveles que corresponde, este
+          trabajo se fortalece con el apoyo de asistentes de aula, favoreciendo el acompañamiento integral y la
+          atención de las necesidades de los niños y niñas.
+        </p>
+      </section>
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-        {courses.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
-              <Card key={course.id}>
-                <CardBody>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                    <School className="h-5 w-5" strokeWidth={1.75} />
-                  </span>
-                  <h3 className="mt-3 text-base font-semibold text-slate-900">
-                    {course.level} {course.letter}
-                  </h3>
-                  {course.homeroom_teacher?.full_name && (
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-                      <UserRound className="h-3.5 w-3.5" /> {course.homeroom_teacher.full_name}
-                    </p>
-                  )}
-                  {course.description && <p className="mt-2 text-sm text-slate-500">{course.description}</p>}
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={School}
-            title="Cursos en publicación"
-            description="La oferta de cursos —desde Prekínder hasta 8° Básico— y sus docentes de jefatura se mostrarán aquí una vez cargados en la plataforma."
-          />
-        )}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {COURSE_TEAM.map((course) => (
+            <CourseTeamCard
+              key={course.courseName}
+              courseName={course.courseName}
+              homeroomTeacher={course.homeroomTeacher}
+              homeroomHasPhoto={photoExists(course.homeroomTeacher.photoSrc)}
+              assistant={course.assistant}
+              assistantHasPhoto={course.assistant ? photoExists(course.assistant.photoSrc) : undefined}
+            />
+          ))}
+        </div>
       </section>
     </>
   );
