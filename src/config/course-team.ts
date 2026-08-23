@@ -35,12 +35,12 @@ export interface CourseTeamEntry {
 export const COURSE_TEAM: CourseTeamEntry[] = [
   {
     courseName: "Prekínder",
-    homeroomTeacher: { fullName: "Claudia Marcela Galarce Bustos", role: "Educadora / Jefatura de curso", photoSrc: "/images/staff/claudia-galarce.jpg" },
+    homeroomTeacher: { fullName: "Claudia Marcela Galarce Bustos", role: "Educadora de Párvulos", photoSrc: "/images/staff/claudia-galarce.jpg" },
     assistant: { fullName: "María Patricia Ortiz Martínez", role: "Asistente de Aula", photoSrc: "/images/staff/maria-ortiz.jpg" },
   },
   {
     courseName: "Kínder",
-    homeroomTeacher: { fullName: "Lucero Rivera Ortega", role: "Educadora / Jefatura de curso", photoSrc: "/images/staff/lucero-rivera.jpg" },
+    homeroomTeacher: { fullName: "Lucero del Carmen Rivera Ortega", role: "Educadora de Párvulos", photoSrc: "/images/staff/lucero-rivera.jpg" },
     assistant: { fullName: "Fernanda Camilla Pereira", role: "Asistente de Aula", photoSrc: "/images/staff/fernanda-pereira.jpg" },
   },
   {
