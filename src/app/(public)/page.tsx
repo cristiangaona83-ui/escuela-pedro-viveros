@@ -41,6 +41,32 @@ export default async function HomePage() {
     <>
       <Hero />
 
+      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-10 sm:px-10 sm:py-12">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+              Matrículas 2027 disponibles
+            </span>
+            <h2 className="mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
+              ¡Sé parte de nuestra comunidad educativa!
+            </h2>
+            <p className="mt-4 leading-relaxed text-slate-600">
+              Ya se encuentran disponibles las matrículas 2027 para la Escuela Profesor Pedro Viveros Ormeño.
+              Invitamos a las familias interesadas a informarse y realizar su proceso de matrícula para el
+              próximo año escolar.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <LinkButton href="/contacto" size="lg">
+                Más información
+              </LinkButton>
+              <LinkButton href="/contacto" variant="secondary" size="lg">
+                Contacto
+              </LinkButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           {HIGHLIGHTS.map((item) => (
