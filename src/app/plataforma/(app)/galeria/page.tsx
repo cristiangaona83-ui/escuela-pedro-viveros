@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Images, Pencil } from "lucide-react";
+import { Images, Pencil, UploadCloud } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { GalleryForm } from "@/features/gallery/GalleryForm";
 import { ToggleGalleryVisibleButton } from "@/features/gallery/ToggleGalleryVisibleButton";
@@ -21,8 +22,17 @@ export default async function GaleriaAdminPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Galería</h1>
-      <p className="mt-1 text-sm text-slate-500">Administra las fotografías visibles en el sitio público.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Galería</h1>
+          <p className="mt-1 text-sm text-slate-500">Administra las fotografías visibles en el sitio público.</p>
+        </div>
+        {allowedToWrite && (
+          <LinkButton href="/plataforma/galeria/masiva" variant="secondary" size="sm">
+            <UploadCloud className="h-4 w-4" /> Subir varias fotografías
+          </LinkButton>
+        )}
+      </div>
 
       <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_400px]" : ""}`}>
         <Card>
