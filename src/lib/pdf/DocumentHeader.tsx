@@ -4,7 +4,11 @@ import { View, Text, Image } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { SITE } from "@/config/site";
 
-function getLogoDataUri() {
+/** Base única del logo institucional para todo documento imprimible/PDF de
+ * la plataforma (certificados, informes, listados, ficha de matrícula,
+ * etc.) — un solo lugar que lee el archivo y arma el data URI, para que
+ * nunca haya dos copias del logo ni del nombre del establecimiento. */
+export function getLogoDataUri() {
   try {
     const logoPath = join(process.cwd(), "public", "images", "logo-escuela.jpg");
     return `data:image/jpeg;base64,${readFileSync(logoPath).toString("base64")}`;
@@ -13,7 +17,11 @@ function getLogoDataUri() {
   }
 }
 
-export function DocumentHeader({ folio }: { folio: string }) {
+/** Cabecera institucional uniforme: logo + nombre + dirección del
+ * establecimiento, iguales en todo documento generado desde la plataforma.
+ * `folio` es opcional — solo los certificados con folio correlativo lo
+ * muestran; reportes/listados/fichas no llevan folio y omiten esa columna. */
+export function DocumentHeader({ folio }: { folio?: string }) {
   const logoDataUri = getLogoDataUri();
 
   return (
@@ -32,7 +40,7 @@ export function DocumentHeader({ folio }: { folio: string }) {
           <Text style={pdfStyles.schoolAddress}>{SITE.address.full}</Text>
         </View>
       </View>
-      <Text style={pdfStyles.folio}>Folio {folio}</Text>
+      {folio && <Text style={pdfStyles.folio}>Folio {folio}</Text>}
     </View>
   );
 }

@@ -1,8 +1,6 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
+import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { SITE } from "@/config/site";
+import { DocumentHeader } from "./DocumentHeader";
 import { formatDate } from "@/lib/utils";
 import type { CourseRosterStudent } from "@/services/course-roster";
 
@@ -11,15 +9,6 @@ const STATUS_LABEL: Record<CourseRosterStudent["enrollment_status"], string> = {
   retirada: "Retirado",
   trasladada: "Trasladado",
 };
-
-function getLogoDataUri() {
-  try {
-    const logoPath = join(process.cwd(), "public", "images", "logo-escuela.jpg");
-    return `data:image/jpeg;base64,${readFileSync(logoPath).toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
 
 export function CourseRosterDocument({
   courseLabel,
@@ -32,27 +21,10 @@ export function CourseRosterDocument({
   students: CourseRosterStudent[];
   issuedAt: string;
 }) {
-  const logoDataUri = getLogoDataUri();
-
   return (
     <Document title={`Listado de estudiantes - ${courseLabel} ${academicYear}`}>
       <Page size="A4" style={pdfStyles.page}>
-        <View style={pdfStyles.headerRow}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            {logoDataUri ? (
-              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
-              <Image src={logoDataUri} style={{ width: 44, height: 44, borderRadius: 8 }} />
-            ) : (
-              <View style={pdfStyles.logoBox}>
-                <Text style={pdfStyles.logoText}>PV</Text>
-              </View>
-            )}
-            <View style={{ marginLeft: 8 }}>
-              <Text style={pdfStyles.schoolName}>{SITE.name}</Text>
-              <Text style={pdfStyles.schoolAddress}>{SITE.address.full}</Text>
-            </View>
-          </View>
-        </View>
+        <DocumentHeader />
 
         <Text style={pdfStyles.title}>LISTADO DE ESTUDIANTES</Text>
         <Text style={{ fontSize: 10, textAlign: "center", marginTop: -14, marginBottom: 16, color: "#5c6b66" }}>

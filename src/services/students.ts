@@ -37,18 +37,19 @@ export async function getStudent(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("students")
-    .select("*, enrollments(id, status, academic_year_id, courses(level, letter, academic_years(year)))")
+    .select("*, enrollments(id, status, academic_year_id, enrolled_at, courses(level, letter, academic_years(year)))")
     .eq("id", id)
     .maybeSingle();
   return data;
 }
 
-/** Matrícula activa del estudiante (para el botón de retiro). */
+/** Matrícula activa del estudiante (para el botón de retiro y la Ficha de Matrícula). */
 export function findActiveEnrollment(student: { enrollments?: unknown }) {
   type EnrollmentJoin = {
     id: string;
     status: string;
     academic_year_id: string;
+    enrolled_at: string;
     courses: { level: string; letter: string; academic_years: { year: number } | null } | null;
   };
   const enrollments = (student.enrollments as EnrollmentJoin[] | undefined) ?? [];
