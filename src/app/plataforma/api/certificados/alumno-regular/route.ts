@@ -46,7 +46,12 @@ export async function POST(request: Request) {
     p_cert_type: "alumno_regular",
     p_year: year.year,
   });
-  if (folioError || !folio) return NextResponse.json({ error: "No se pudo generar el folio" }, { status: 500 });
+  if (folioError || !folio) {
+    console.error("[certificados/alumno-regular] next_certificate_folio error", {
+      code: folioError?.code, message: folioError?.message, details: folioError?.details, hint: folioError?.hint,
+    });
+    return NextResponse.json({ error: "No se pudo generar el folio" }, { status: 500 });
+  }
 
   const { data: certificate, error: insertError } = await supabase
     .from("certificates")
@@ -62,16 +67,26 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError || !certificate) {
-    return NextResponse.json({ error: "No se pudo registrar el certificado" }, { status: 500 });
+    console.error("[certificados/alumno-regular] certificates insert error", {
+      code: insertError?.code, message: insertError?.message, details: insertError?.details, hint: insertError?.hint,
+      student_id, academic_year_id, folio,
+    });
+    const friendly = insertError?.code === "23505" ? "Ya existe un certificado con ese folio. Vuelve a intentarlo." : "No se pudo registrar el certificado";
+    return NextResponse.json({ error: friendly }, { status: 500 });
   }
 
-  await supabase.rpc("log_audit", {
+  const { error: auditError } = await supabase.rpc("log_audit", {
     p_action: "emitir_certificado",
     p_module: "certificados",
     p_entity: "certificates",
     p_entity_id: certificate.id,
     p_details: { folio, cert_type: "alumno_regular", student_id },
   });
+  if (auditError) {
+    console.error("[certificados/alumno-regular] log_audit error (certificado ya registrado, no se interrumpe la emisión)", {
+      code: auditError.code, message: auditError.message,
+    });
+  }
 
   const [signature, guardians] = await Promise.all([
     getCertificateSignature(),

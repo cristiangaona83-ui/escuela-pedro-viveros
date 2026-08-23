@@ -39,7 +39,12 @@ export async function POST(request: Request) {
     p_cert_type: "informe_semestral",
     p_year: year,
   });
-  if (folioError || !folio) return NextResponse.json({ error: "No se pudo generar el folio" }, { status: 500 });
+  if (folioError || !folio) {
+    console.error("[informes/semestral] next_certificate_folio error", {
+      code: folioError?.code, message: folioError?.message, details: folioError?.details, hint: folioError?.hint,
+    });
+    return NextResponse.json({ error: "No se pudo generar el folio" }, { status: 500 });
+  }
 
   const { data: certificate, error: insertError } = await supabase
     .from("certificates")
@@ -53,15 +58,27 @@ export async function POST(request: Request) {
     })
     .select("*")
     .single();
-  if (insertError || !certificate) return NextResponse.json({ error: "No se pudo registrar el informe" }, { status: 500 });
+  if (insertError || !certificate) {
+    console.error("[informes/semestral] certificates insert error", {
+      code: insertError?.code, message: insertError?.message, details: insertError?.details, hint: insertError?.hint,
+      student_id, academic_year_id: period.academic_year_id, folio,
+    });
+    const friendly = insertError?.code === "23505" ? "Ya existe un informe con ese folio. Vuelve a intentarlo." : "No se pudo registrar el informe";
+    return NextResponse.json({ error: friendly }, { status: 500 });
+  }
 
-  await supabase.rpc("log_audit", {
+  const { error: auditError } = await supabase.rpc("log_audit", {
     p_action: "emitir_informe",
     p_module: "informes",
     p_entity: "certificates",
     p_entity_id: certificate.id,
     p_details: { folio, cert_type: "informe_semestral", student_id },
   });
+  if (auditError) {
+    console.error("[informes/semestral] log_audit error (informe ya registrado, no se interrumpe la emisión)", {
+      code: auditError.code, message: auditError.message,
+    });
+  }
 
   const [homeroomTeacher, guardians] = await Promise.all([
     getHomeroomTeacherName(report.courseId),
