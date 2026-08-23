@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { MapPin, Phone, Mail, Clock, Navigation } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Navigation, Link2 } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
 import { ContactForm } from "@/components/public/ContactForm";
 import { Card, CardBody } from "@/components/ui/Card";
 import { SITE } from "@/config/site";
+import { telHref } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Contacto" };
 
@@ -29,7 +30,13 @@ export default function ContactoPage() {
                 </div>
                 <div className="flex gap-3">
                   <Phone className="h-5 w-5 shrink-0 text-brand-700" />
-                  <p className="text-sm text-slate-500">{SITE.phone ?? "Teléfono por confirmar"}</p>
+                  {SITE.phone ? (
+                    <a href={telHref(SITE.phone)} className="text-sm text-slate-500 hover:text-brand-700">
+                      {SITE.phone}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-slate-500">Teléfono por confirmar</p>
+                  )}
                 </div>
                 <div className="flex gap-3">
                   <Mail className="h-5 w-5 shrink-0 text-brand-700" />
@@ -39,14 +46,26 @@ export default function ContactoPage() {
                   <Clock className="h-5 w-5 shrink-0 text-brand-700" />
                   <p className="text-sm text-slate-500">{SITE.schedule ?? "Horario de atención por confirmar"}</p>
                 </div>
-                <a
-                  href={mapsHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-800"
-                >
-                  <Navigation className="h-4 w-4" /> Cómo llegar
-                </a>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href={mapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-800"
+                  >
+                    <Navigation className="h-4 w-4" /> Cómo llegar
+                  </a>
+                  {SITE.socials.facebook && (
+                    <a
+                      href={SITE.socials.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-brand-200 hover:bg-brand-50"
+                    >
+                      <Link2 className="h-4 w-4" /> Síguenos en Facebook
+                    </a>
+                  )}
+                </div>
               </CardBody>
             </Card>
 

@@ -3,6 +3,7 @@ import { MapPin, Mail, Phone, Link2, Camera, Play } from "lucide-react";
 import { SITE } from "@/config/site";
 import { PUBLIC_NAV } from "@/config/navigation";
 import { SchoolLogo } from "@/components/ui/SchoolLogo";
+import { telHref } from "@/lib/utils";
 
 export function Footer() {
   const hasSocials = SITE.socials.facebook || SITE.socials.instagram || SITE.socials.youtube;
@@ -20,7 +21,13 @@ export function Footer() {
             {hasSocials && (
               <div className="mt-5 flex gap-3">
                 {SITE.socials.facebook && (
-                  <a href={SITE.socials.facebook} className="rounded-lg bg-white/5 p-2 hover:bg-white/10" aria-label="Facebook">
+                  <a
+                    href={SITE.socials.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-white/5 p-2 hover:bg-white/10"
+                    aria-label="Facebook"
+                  >
                     <Link2 className="h-4 w-4" />
                   </a>
                 )}
@@ -61,7 +68,9 @@ export function Footer() {
               {SITE.phone && (
                 <li className="flex gap-2.5">
                   <Phone className="h-4 w-4 shrink-0 text-brand-400" />
-                  <span>{SITE.phone}</span>
+                  <a href={telHref(SITE.phone)} className="hover:text-white">
+                    {SITE.phone}
+                  </a>
                 </li>
               )}
               {SITE.email && (

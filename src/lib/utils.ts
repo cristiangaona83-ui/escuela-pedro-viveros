@@ -26,6 +26,11 @@ export function calculateAge(birthDate: string | null | undefined): number | nul
   return age;
 }
 
+/** "+56 44 367 0367" -> "tel:+56443670367" para que sea clickeable en celular. */
+export function telHref(phone: string) {
+  return `tel:${phone.replace(/[^0-9+]/g, "")}`;
+}
+
 export function slugify(value: string) {
   return value
     .normalize("NFD")
