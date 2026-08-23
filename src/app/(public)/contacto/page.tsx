@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { MapPin, Phone, Mail, Clock, Navigation, Link2 } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Navigation } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
 import { ContactForm } from "@/components/public/ContactForm";
 import { Card, CardBody } from "@/components/ui/Card";
+import { FacebookIcon } from "@/components/ui/FacebookIcon";
 import { SITE } from "@/config/site";
 import { telHref } from "@/lib/utils";
 
@@ -62,7 +63,7 @@ export default function ContactoPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-brand-200 hover:bg-brand-50"
                     >
-                      <Link2 className="h-4 w-4" /> Síguenos en Facebook
+                      <FacebookIcon className="h-4 w-4" /> Síguenos en Facebook
                     </a>
                   )}
                 </div>

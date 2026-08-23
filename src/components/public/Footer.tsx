@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { MapPin, Mail, Phone, Link2, Camera, Play } from "lucide-react";
+import { MapPin, Mail, Phone, Camera, Play } from "lucide-react";
 import { SITE } from "@/config/site";
 import { PUBLIC_NAV } from "@/config/navigation";
 import { SchoolLogo } from "@/components/ui/SchoolLogo";
+import { FacebookIcon } from "@/components/ui/FacebookIcon";
 import { telHref } from "@/lib/utils";
 
 export function Footer() {
@@ -28,7 +29,7 @@ export function Footer() {
                     className="rounded-lg bg-white/5 p-2 hover:bg-white/10"
                     aria-label="Facebook"
                   >
-                    <Link2 className="h-4 w-4" />
+                    <FacebookIcon className="h-4 w-4" />
                   </a>
                 )}
                 {SITE.socials.instagram && (
