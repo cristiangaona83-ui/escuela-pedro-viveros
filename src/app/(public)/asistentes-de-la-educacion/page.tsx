@@ -1,13 +1,27 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/public/PageHeader";
 import { StaffPhotoCard } from "@/components/public/StaffPhotoCard";
-import { getSupportStaffCategories } from "@/config/support-staff";
-import { photoExists } from "@/lib/staff-photo";
+import { getStaffSection } from "@/services/public-content";
+import { resolveStaffPhoto } from "@/lib/staff-photo";
 
 export const metadata: Metadata = { title: "Asistentes de la Educación" };
 
-export default function AsistentesDeLaEducacionPage() {
-  const categories = getSupportStaffCategories();
+const CATEGORY_ORDER = ["apoyo_educativo", "salud_bienestar", "apoyo_administrativo", "auxiliares_servicios"] as const;
+const CATEGORY_LABELS: Record<string, string> = {
+  apoyo_educativo: "Apoyo educativo",
+  salud_bienestar: "Salud y Bienestar",
+  apoyo_administrativo: "Apoyo administrativo y de funcionamiento",
+  auxiliares_servicios: "Auxiliares de Servicios",
+};
+
+export default async function AsistentesDeLaEducacionPage() {
+  const staff = await getStaffSection("asistente");
+
+  const categories = CATEGORY_ORDER.map((key) => ({
+    key,
+    label: CATEGORY_LABELS[key],
+    members: staff.filter((m) => m.category === key),
+  })).filter((c) => c.members.length > 0);
 
   return (
     <>
@@ -26,16 +40,19 @@ export default function AsistentesDeLaEducacionPage() {
         <section key={category.key} className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
           <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900">{category.label}</h2>
           <div className="mt-8 grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {category.members.map((member) => (
-              <StaffPhotoCard
-                key={member.fullName}
-                fullName={member.fullName}
-                role={member.role}
-                photoSrc={member.photoSrc}
-                hasPhoto={photoExists(member.photoSrc)}
-                initials={member.initials}
-              />
-            ))}
+            {category.members.map((member) => {
+              const { src, hasPhoto } = resolveStaffPhoto(member.staff_member.photo_url);
+              return (
+                <StaffPhotoCard
+                  key={member.id}
+                  fullName={member.staff_member.full_name}
+                  role={member.role_title}
+                  photoSrc={src}
+                  hasPhoto={hasPhoto}
+                  initials={member.staff_member.initials ?? undefined}
+                />
+              );
+            })}
           </div>
         </section>
       ))}

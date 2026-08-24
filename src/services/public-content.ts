@@ -1,6 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
-import type { CourseRow, DocumentRow, GalleryRow, NewsRow, StaffMemberRow, WeeklyBulletinRow } from "@/types/database";
+import type {
+  CourseRow,
+  CourseTeamMemberRow,
+  CourseTeamRow,
+  DocumentRow,
+  GalleryRow,
+  NewsRow,
+  StaffMemberRow,
+  StaffSection,
+  StaffSectionMembershipRow,
+  SubjectTeacherRow,
+  WeeklyBulletinRow,
+} from "@/types/database";
 import { STATIC_INSTITUTIONAL_DOCUMENTS } from "@/config/institutional-documents";
+
+export type StaffSectionMember = StaffSectionMembershipRow & { staff_member: StaffMemberRow };
+export type CourseTeamWithMembers = CourseTeamRow & {
+  members: (CourseTeamMemberRow & { staff_member: StaffMemberRow })[];
+};
+export type SubjectTeacherWithStaff = SubjectTeacherRow & { staff_member: StaffMemberRow };
 
 /**
  * Capa de acceso a datos del sitio público. Todas las funciones son
@@ -110,17 +128,51 @@ export async function getPublicDocuments(): Promise<DocumentRow[]> {
   }
 }
 
-export async function getStaffByArea(area: StaffMemberRow["area"]): Promise<StaffMemberRow[]> {
+/** Personas activas de una sección (Equipo Directivo / Equipo PIE / Asistentes
+ * de la Educación), con su registro central de persona (foto/nombre) unido. */
+export async function getStaffSection(section: StaffSection): Promise<StaffSectionMember[]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("staff_members")
-      .select("*")
-      .eq("area", area)
+      .from("staff_section_memberships")
+      .select("*, staff_member:staff_members(*)")
+      .eq("section", section)
       .eq("active", true)
       .order("order_index", { ascending: true });
     if (error) throw error;
-    return data ?? [];
+    return (data as unknown as StaffSectionMember[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Cursos activos con su docente de jefatura y, cuando corresponde, asistente de aula. */
+export async function getPublicCourseTeams(): Promise<CourseTeamWithMembers[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("course_teams")
+      .select("*, members:course_team_members(*, staff_member:staff_members(*))")
+      .eq("active", true)
+      .order("order_index", { ascending: true });
+    if (error) throw error;
+    return (data as unknown as CourseTeamWithMembers[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Docentes de asignatura activos (lista global, no atada a un curso). */
+export async function getSubjectTeachersPublic(): Promise<SubjectTeacherWithStaff[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("subject_teachers")
+      .select("*, staff_member:staff_members(*)")
+      .eq("active", true)
+      .order("order_index", { ascending: true });
+    if (error) throw error;
+    return (data as unknown as SubjectTeacherWithStaff[]) ?? [];
   } catch {
     return [];
   }

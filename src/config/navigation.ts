@@ -39,6 +39,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Calendario", href: "/plataforma/calendario", icon: "Calendar" },
   { label: "Noticias", href: "/plataforma/noticias", icon: "Newspaper" },
   { label: "Galería", href: "/plataforma/galeria", icon: "Images" },
+  { label: "Equipo institucional", href: "/plataforma/equipo-institucional", icon: "IdCard" },
   { label: "Reportes", href: "/plataforma/reportes", icon: "BarChart3", roles: ["director", "utp", "superadmin"] },
   { label: "Administración", href: "/plataforma/administracion", icon: "Settings", roles: ["director", "superadmin"] },
   { label: "Bitácora", href: "/plataforma/auditoria", icon: "History", roles: ["director", "superadmin"] },

@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/public/PageHeader";
 import { StaffPhotoCard } from "@/components/public/StaffPhotoCard";
-import { DIRECTIVE_TEAM } from "@/config/directive-team";
-import { photoExists } from "@/lib/staff-photo";
+import { getStaffSection } from "@/services/public-content";
+import { resolveStaffPhoto } from "@/lib/staff-photo";
 
 export const metadata: Metadata = { title: "Equipo Directivo" };
 
-export default function EquipoDirectivoPage() {
+export default async function EquipoDirectivoPage() {
+  const team = await getStaffSection("directivo");
+
   return (
     <>
       <PageHeader
@@ -24,15 +26,19 @@ export default function EquipoDirectivoPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {DIRECTIVE_TEAM.map((member) => (
-            <StaffPhotoCard
-              key={member.fullName}
-              fullName={member.fullName}
-              role={member.role}
-              photoSrc={member.photoSrc}
-              hasPhoto={photoExists(member.photoSrc)}
-            />
-          ))}
+          {team.map((member) => {
+            const { src, hasPhoto } = resolveStaffPhoto(member.staff_member.photo_url);
+            return (
+              <StaffPhotoCard
+                key={member.id}
+                fullName={member.staff_member.full_name}
+                role={member.role_title}
+                photoSrc={src}
+                hasPhoto={hasPhoto}
+                initials={member.staff_member.initials ?? undefined}
+              />
+            );
+          })}
         </div>
       </section>
     </>

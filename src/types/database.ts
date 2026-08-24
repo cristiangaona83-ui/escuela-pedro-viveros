@@ -363,10 +363,47 @@ export type StaffMemberRow = {
   id: string;
   profile_id: string | null;
   full_name: string;
-  role_title: string;
-  area: "directivo" | "pie" | "docente" | "convivencia" | "administrativo";
   photo_url: string | null;
+  initials: string | null;
   bio: string | null;
+  created_at: string;
+}
+
+export type StaffSection = "directivo" | "pie" | "asistente";
+
+export type StaffSectionMembershipRow = {
+  id: string;
+  staff_member_id: string;
+  section: StaffSection;
+  role_title: string;
+  category: string | null;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+}
+
+export type CourseTeamRow = {
+  id: string;
+  course_name: string;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+}
+
+export type CourseTeamMemberRow = {
+  id: string;
+  course_team_id: string;
+  staff_member_id: string;
+  role: "jefe" | "asistente";
+  role_title: string;
+  order_index: number;
+  created_at: string;
+}
+
+export type SubjectTeacherRow = {
+  id: string;
+  staff_member_id: string;
+  role_title: string;
   order_index: number;
   active: boolean;
   created_at: string;
@@ -686,6 +723,10 @@ export interface Database {
       classroom_observations: CrudTable<ClassroomObservationRow>;
       certificates: CrudTable<CertificateRow>;
       staff_members: CrudTable<StaffMemberRow>;
+      staff_section_memberships: CrudTable<StaffSectionMembershipRow>;
+      course_teams: CrudTable<CourseTeamRow>;
+      course_team_members: CrudTable<CourseTeamMemberRow>;
+      subject_teachers: CrudTable<SubjectTeacherRow>;
       news: CrudTable<NewsRow>;
       gallery: CrudTable<GalleryRow>;
       weekly_bulletins: CrudTable<WeeklyBulletinRow>;
