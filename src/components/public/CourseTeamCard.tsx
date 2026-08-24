@@ -12,11 +12,11 @@ function initials(fullName: string): string {
 export function PersonBlock({ member, hasPhoto }: { member: CourseTeamMember; hasPhoto: boolean }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100">
+      <div className="relative flex h-[115px] w-[115px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100">
         {hasPhoto ? (
-          <Image src={member.photoSrc} alt={member.fullName} fill sizes="96px" className="object-cover" />
+          <Image src={member.photoSrc} alt={member.fullName} fill sizes="115px" className="object-cover" />
         ) : (
-          <span className="text-xl font-semibold text-brand-700">{member.initials ?? initials(member.fullName)}</span>
+          <span className="text-2xl font-semibold text-brand-700">{member.initials ?? initials(member.fullName)}</span>
         )}
       </div>
       <p className="mt-2 text-sm font-semibold leading-snug text-slate-900">{member.fullName}</p>

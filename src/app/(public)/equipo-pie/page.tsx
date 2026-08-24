@@ -28,7 +28,7 @@ export default async function EquipoPiePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <h2 className="text-center font-heading text-2xl font-medium tracking-tight text-slate-900">Nuestro Equipo PIE</h2>
-        <div className="mt-8 grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {team.map((member) => {
             const { src, hasPhoto } = resolveStaffPhoto(member.staff_member.photo_url);
             return (

@@ -32,11 +32,11 @@ export function StaffPhotoCard({
 }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-7">
-      <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100 sm:h-36 sm:w-36">
+      <div className="relative flex h-[154px] w-[154px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100 sm:h-[173px] sm:w-[173px]">
         {hasPhoto ? (
-          <Image src={photoSrc} alt={fullName} fill sizes="(min-width: 640px) 144px, 128px" className="object-cover" />
+          <Image src={photoSrc} alt={fullName} fill sizes="(min-width: 640px) 173px, 154px" className="object-cover" />
         ) : (
-          <span className="text-2xl font-semibold text-brand-700 sm:text-3xl">{initials ?? defaultInitials(fullName)}</span>
+          <span className="text-3xl font-semibold text-brand-700 sm:text-4xl">{initials ?? defaultInitials(fullName)}</span>
         )}
       </div>
       <h3 className="mt-4 text-base font-semibold text-slate-900">{fullName}</h3>
