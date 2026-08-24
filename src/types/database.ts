@@ -408,9 +408,36 @@ export type WeeklyBulletinRow = {
   content: Record<string, unknown>;
   pdf_url: string | null;
   published: boolean;
+  email_scheduled_at: string | null;
+  email_sent_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type BulletinRecipientGroup = "general" | "direccion_copia";
+
+export type BulletinRecipientRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  group_name: BulletinRecipientGroup;
+  active: boolean;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BulletinEmailLogStatus = "pending" | "sent" | "failed";
+
+export type BulletinEmailLogRow = {
+  id: string;
+  bulletin_id: string;
+  recipient_email: string;
+  status: BulletinEmailLogStatus;
+  error: string | null;
+  created_at: string;
+  sent_at: string | null;
 }
 
 export type DocumentRow = {
@@ -662,6 +689,8 @@ export interface Database {
       news: CrudTable<NewsRow>;
       gallery: CrudTable<GalleryRow>;
       weekly_bulletins: CrudTable<WeeklyBulletinRow>;
+      bulletin_recipients: CrudTable<BulletinRecipientRow>;
+      bulletin_email_log: CrudTable<BulletinEmailLogRow>;
       documents: CrudTable<DocumentRow>;
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;

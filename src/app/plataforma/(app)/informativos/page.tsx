@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Newspaper, Pencil, Download } from "lucide-react";
+import { Newspaper, Pencil, Download, Users } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -29,7 +29,14 @@ export default async function InformativosAdminPage() {
           <h1 className="text-2xl font-semibold text-slate-900">Informativos Semanales</h1>
           <p className="mt-1 text-sm text-slate-500">Redacta y publica el informativo semanal de la escuela.</p>
         </div>
-        {allowedToWrite && <LinkButton href="/plataforma/informativos/nuevo">Nuevo informativo</LinkButton>}
+        {allowedToWrite && (
+          <div className="flex flex-wrap items-center gap-2">
+            <LinkButton href="/plataforma/informativos/destinatarios" variant="secondary">
+              <Users className="h-4 w-4" /> Destinatarios de correo
+            </LinkButton>
+            <LinkButton href="/plataforma/informativos/nuevo">Nuevo informativo</LinkButton>
+          </div>
+        )}
       </div>
 
       <Card className="mt-6">

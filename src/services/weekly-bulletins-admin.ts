@@ -24,3 +24,14 @@ export async function getNextBulletinNumber(): Promise<number> {
     .maybeSingle();
   return (data?.number ?? 0) + 1;
 }
+
+/** Resumen de envío por correo (cuántos destinatarios recibieron el informativo correctamente vs. fallaron). */
+export async function getBulletinEmailSummary(bulletinId: string): Promise<{ sent: number; failed: number } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("bulletin_email_log").select("status").eq("bulletin_id", bulletinId);
+  if (!data || data.length === 0) return null;
+  return {
+    sent: data.filter((r) => r.status === "sent").length,
+    failed: data.filter((r) => r.status === "failed").length,
+  };
+}

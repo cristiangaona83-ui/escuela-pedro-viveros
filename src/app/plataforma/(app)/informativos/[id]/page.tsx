@@ -5,7 +5,9 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { BulletinForm } from "@/features/weekly-bulletins/BulletinForm";
 import { DuplicateBulletinButton } from "@/features/weekly-bulletins/DuplicateBulletinButton";
 import { DeleteBulletinButton } from "@/features/weekly-bulletins/DeleteBulletinButton";
-import { getBulletinById } from "@/services/weekly-bulletins-admin";
+import { EmailScheduleCard } from "@/features/weekly-bulletins/EmailScheduleCard";
+import { getBulletinById, getBulletinEmailSummary } from "@/services/weekly-bulletins-admin";
+import { getActiveRecipientCount } from "@/services/bulletin-recipients-admin";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -19,6 +21,10 @@ export default async function EditarInformativoPage({ params }: { params: Promis
 
   if (!bulletin) notFound();
   if (!canWrite(session?.roles ?? [], [...WRITE_ROLES])) redirect("/plataforma/informativos");
+
+  const [activeRecipientCount, emailSummary] = bulletin.published
+    ? await Promise.all([getActiveRecipientCount(), getBulletinEmailSummary(bulletin.id)])
+    : [0, null];
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -37,6 +43,20 @@ export default async function EditarInformativoPage({ params }: { params: Promis
           <DeleteBulletinButton bulletinId={bulletin.id} title={bulletin.title} pdfUrl={bulletin.pdf_url} redirectTo="/plataforma/informativos" />
         </div>
       </div>
+
+      {bulletin.published && (
+        <div className="mt-6">
+          <EmailScheduleCard
+            bulletinId={bulletin.id}
+            bulletinNumber={bulletin.number}
+            emailScheduledAt={bulletin.email_scheduled_at}
+            emailSentAt={bulletin.email_sent_at}
+            activeRecipientCount={activeRecipientCount}
+            sentSummary={emailSummary}
+          />
+        </div>
+      )}
+
       <Card className="mt-6">
         <CardBody>
           <BulletinForm bulletin={bulletin} />
