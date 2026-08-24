@@ -9,6 +9,10 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function lowercaseFirst(text: string): string {
+  return text.length > 0 ? text[0].toLowerCase() + text.slice(1) : text;
+}
+
 /**
  * Correo institucional del Informativo Semanal — HTML basado en tablas con
  * estilos en línea (la única forma de layout que los clientes de correo
@@ -22,6 +26,7 @@ export function buildBulletinEmailHtml(params: { number: number; weekLabel: stri
   const viewUrl = `${SITE.domains.public}/documentos/informativos/${number}`;
   const pdfUrl = `${SITE.domains.public}/api/informativos/${number}/pdf`;
   const firstName = escapeHtml(recipientName.trim().split(/\s+/)[0] || recipientName);
+  const weekLabelLower = lowercaseFirst(weekLabel);
 
   return `<!doctype html>
 <html lang="es">
@@ -46,8 +51,8 @@ export function buildBulletinEmailHtml(params: { number: number; weekLabel: stri
               <td style="padding:20px 32px 8px 32px;">
                 <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#1c2624;">Estimado/a ${firstName},</p>
                 <p style="margin:0;font-size:14px;line-height:1.6;color:#1c2624;">
-                  Compartimos el Informativo Semanal N.º ${number} de la ${escapeHtml(SITE.name)}, correspondiente a
-                  ${escapeHtml(weekLabel)}. Puedes revisarlo en línea o descargar el PDF institucional.
+                  Compartimos el Informativo Semanal N.º ${number} de la ${escapeHtml(SITE.name)}, correspondiente a la
+                  ${escapeHtml(weekLabelLower)}. Puedes revisarlo en línea o descargar el PDF institucional.
                 </p>
               </td>
             </tr>
@@ -59,6 +64,7 @@ export function buildBulletinEmailHtml(params: { number: number; weekLabel: stri
             </tr>
             <tr>
               <td style="padding:20px 32px 28px 32px;border-top:1px solid #dce8e2;text-align:center;">
+                <p style="margin:16px 0 0 0;font-size:13px;color:#1c2624;">Saludos cordiales,<br />Dirección</p>
                 <p style="margin:16px 0 0 0;font-size:11px;font-style:italic;color:#5c6b66;">${escapeHtml(SITE.slogan)}</p>
               </td>
             </tr>
