@@ -93,14 +93,22 @@ export default async function DocumentosPage() {
                     {doc.description && <p className="mt-1 text-sm text-slate-500">{doc.description}</p>}
                   </div>
                 </div>
-                <a
-                  href={doc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 px-3.5 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
-                >
-                  <Download className="h-4 w-4" /> Descargar PDF
-                </a>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 px-3.5 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
+                  >
+                    <Eye className="h-4 w-4" /> Ver documento
+                  </a>
+                  <a
+                    href={`/api/documentos/${doc.id}/pdf`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    <Download className="h-4 w-4" /> Descargar PDF
+                  </a>
+                </div>
               </li>
             ))}
           </ul>
