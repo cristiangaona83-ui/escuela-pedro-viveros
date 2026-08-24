@@ -7,12 +7,11 @@ import { Save, Send, Eye, Pencil, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input } from "@/components/ui/Field";
 import { Card, CardBody } from "@/components/ui/Card";
-import { formatDate } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { BulletinEditor } from "./BulletinEditor";
 import { publishBulletin } from "./publish-bulletin";
 import { BulletinContent } from "@/components/public/BulletinContent";
-import { STARTER_BULLETIN_CONTENT } from "@/lib/bulletin-content";
+import { STARTER_BULLETIN_CONTENT, formatBulletinDate } from "@/lib/bulletin-content";
 import type { WeeklyBulletinRow } from "@/types/database";
 
 export function BulletinForm({ bulletin, suggestedNumber }: { bulletin?: WeeklyBulletinRow; suggestedNumber?: number }) {
@@ -163,7 +162,7 @@ export function BulletinForm({ bulletin, suggestedNumber }: { bulletin?: WeeklyB
             <h2 className="mt-2 font-heading text-xl font-medium text-slate-900">Informativo Semanal N.º {number || "—"}</h2>
             <p className="text-sm font-medium text-brand-700">{title}</p>
             <p className="mt-0.5 text-sm text-slate-500">
-              {weekLabel || "Semana sin definir"} · {publishDate ? formatDate(publishDate) : "—"}
+              {weekLabel || "Semana sin definir"} · {publishDate ? formatBulletinDate(publishDate) : "—"}
             </p>
             <div className="mt-6 border-t border-slate-100 pt-6">
               <BulletinContent content={content} />

@@ -4,7 +4,7 @@ import { FileText, Download, FolderOpen, Megaphone, Eye } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
-import { formatDate } from "@/lib/utils";
+import { formatBulletinDate } from "@/lib/bulletin-content";
 import { getPublicDocuments, getPublishedBulletins } from "@/services/public-content";
 
 export const metadata: Metadata = { title: "Documentos Institucionales" };
@@ -35,7 +35,7 @@ export default async function DocumentosPage() {
                 <div>
                   <p className="font-medium text-slate-900">Informativo Semanal N.º {b.number}</p>
                   <p className="mt-1 text-sm text-slate-500">
-                    {b.week_label} · {formatDate(b.publish_date)}
+                    {b.week_label} · {formatBulletinDate(b.publish_date)}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -47,9 +47,7 @@ export default async function DocumentosPage() {
                   </Link>
                   {b.pdf_url && (
                     <a
-                      href={b.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/api/informativos/${b.number}/pdf`}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                     >
                       <Download className="h-4 w-4" /> Descargar PDF

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Download, ArrowLeft } from "lucide-react";
 import { BulletinContent } from "@/components/public/BulletinContent";
-import { formatDate } from "@/lib/utils";
+import { formatBulletinDate } from "@/lib/bulletin-content";
 import { getPublishedBulletinByNumber } from "@/services/public-content";
 import type { JSONContent } from "@tiptap/core";
 
@@ -35,14 +35,12 @@ export default async function InformativoDetailPage({ params }: { params: Promis
           </h1>
           <p className="mt-1 text-sm font-medium text-brand-700">{bulletin.title}</p>
           <p className="mt-1 text-sm text-slate-500">
-            {bulletin.week_label} · {formatDate(bulletin.publish_date)}
+            {bulletin.week_label} · {formatBulletinDate(bulletin.publish_date)}
           </p>
         </div>
         {bulletin.pdf_url && (
           <a
-            href={bulletin.pdf_url}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`/api/informativos/${bulletin.number}/pdf`}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 px-3.5 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
           >
             <Download className="h-4 w-4" /> Descargar PDF

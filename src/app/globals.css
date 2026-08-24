@@ -61,7 +61,21 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Contenido de Informativos Semanales (editor y lectura pública) — estilos
    mínimos y explícitos en vez de instalar un plugin de tipografía solo para
-   esto. */
+   esto. Fondo blanco tipo hoja, ancho cómodo de lectura y separación clara
+   entre bloques. */
+.bulletin-content {
+  background: #ffffff;
+}
+.bulletin-content h1 {
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--color-brand-950);
+}
+.bulletin-content h1:first-child {
+  margin-top: 0;
+}
 .bulletin-content h2 {
   margin-top: 1.25em;
   margin-bottom: 0.4em;
@@ -88,6 +102,11 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 0 0.75em 1.25em;
   line-height: 1.7;
 }
+.bulletin-content li > ul,
+.bulletin-content li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
 .bulletin-content ul {
   list-style-type: disc;
 }
@@ -102,6 +121,56 @@ h1, h2, h3, h4, h5, h6 {
 .bulletin-content strong {
   font-weight: 600;
 }
+.bulletin-content mark {
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.bulletin-content hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid var(--color-brand-200);
+}
+.bulletin-content sub,
+.bulletin-content sup {
+  font-size: 0.75em;
+}
 .bulletin-content p:last-child {
   margin-bottom: 0;
+}
+
+.bulletin-content .bulletin-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.75em;
+}
+.bulletin-content table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9em;
+}
+.bulletin-content .bulletin-table-wrap table {
+  display: table;
+}
+.bulletin-content th,
+.bulletin-content td {
+  border: 1px solid var(--color-brand-200);
+  padding: 0.4em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}
+.bulletin-content th {
+  background: var(--color-brand-50);
+  font-weight: 600;
+  color: var(--color-brand-900);
+}
+.bulletin-content th p,
+.bulletin-content td p {
+  margin-bottom: 0;
+}
+
+/* Tabla del editor (editable, ProseMirror) — misma apariencia institucional
+   y celda seleccionada visible durante la edición. */
+.bulletin-content .selectedCell {
+  background: var(--color-brand-100);
 }

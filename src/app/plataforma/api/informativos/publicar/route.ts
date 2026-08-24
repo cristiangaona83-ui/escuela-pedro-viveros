@@ -39,7 +39,10 @@ export async function POST(request: Request) {
 
   const path = `informativos/${bulletin.id}.pdf`;
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, buffer, {
-    cacheControl: "3600",
+    // El PDF se sobrescribe en la misma ruta cada vez que se (re)publica —
+    // a diferencia de imágenes subidas por el usuario, aquí SÍ debe quedar
+    // sin caché para que una descarga nunca sirva una versión antigua.
+    cacheControl: "0",
     upsert: true,
     contentType: "application/pdf",
   });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { Download } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { BulletinForm } from "@/features/weekly-bulletins/BulletinForm";
 import { DuplicateBulletinButton } from "@/features/weekly-bulletins/DuplicateBulletinButton";
@@ -24,6 +25,14 @@ export default async function EditarInformativoPage({ params }: { params: Promis
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-900">Editar informativo</h1>
         <div className="flex items-center gap-1.5">
+          {bulletin.pdf_url && (
+            <a
+              href={`/api/informativos/${bulletin.number}/pdf`}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <Download className="h-3.5 w-3.5" /> Descargar PDF
+            </a>
+          )}
           <DuplicateBulletinButton bulletin={bulletin} />
           <DeleteBulletinButton bulletinId={bulletin.id} title={bulletin.title} pdfUrl={bulletin.pdf_url} redirectTo="/plataforma/informativos" />
         </div>
