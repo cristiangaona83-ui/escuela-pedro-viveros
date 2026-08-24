@@ -20,8 +20,12 @@ export function getLogoDataUri() {
 /** Cabecera institucional uniforme: logo + nombre + dirección del
  * establecimiento, iguales en todo documento generado desde la plataforma.
  * `folio` es opcional — solo los certificados con folio correlativo lo
- * muestran; reportes/listados/fichas no llevan folio y omiten esa columna. */
-export function DocumentHeader({ folio }: { folio?: string }) {
+ * muestran. `dateLabel` es opcional — una etiqueta libre alineada a la
+ * derecha (ej. "San Antonio, 24 de agosto de 2026"), usada por documentos
+ * que no llevan folio pero sí fecha de emisión visible, como los
+ * Informativos Semanales. Ambos comparten el mismo espacio a la derecha del
+ * encabezado; ningún documento existente pasa ambos a la vez. */
+export function DocumentHeader({ folio, dateLabel }: { folio?: string; dateLabel?: string }) {
   const logoDataUri = getLogoDataUri();
 
   return (
@@ -41,6 +45,7 @@ export function DocumentHeader({ folio }: { folio?: string }) {
         </View>
       </View>
       {folio && <Text style={pdfStyles.folio}>Folio {folio}</Text>}
+      {!folio && dateLabel && <Text style={pdfStyles.folio}>{dateLabel}</Text>}
     </View>
   );
 }

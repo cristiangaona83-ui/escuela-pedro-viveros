@@ -7,8 +7,7 @@ import { SITE } from "@/config/site";
 import { isSafeColor, isSafeUrl, safeAlignment, safeFontSizePx, formatBulletinDate, type BulletinAlignment } from "@/lib/bulletin-content";
 
 const bulletinStyles = StyleSheet.create({
-  subtitle: { fontSize: 11, fontFamily: "Helvetica-Bold", textAlign: "center", marginTop: -14, color: "#274a3a" },
-  meta: { fontSize: 9.5, textAlign: "center", marginTop: 4, marginBottom: 20, color: "#5c6b66" },
+  weekLine: { fontSize: 10.5, textAlign: "center", marginTop: -14, marginBottom: 20, color: "#5c6b66" },
   h1: { fontSize: 15, fontFamily: "Helvetica-Bold", color: "#0f1e18", marginTop: 16, marginBottom: 7 },
   h2: { fontSize: 13, fontFamily: "Helvetica-Bold", color: "#1c3229", marginTop: 14, marginBottom: 6 },
   h3: { fontSize: 11.5, fontFamily: "Helvetica-Bold", color: "#274a3a", marginTop: 10, marginBottom: 4 },
@@ -24,8 +23,7 @@ const bulletinStyles = StyleSheet.create({
   tableCellText: { fontSize: 9.5, lineHeight: 1.4, color: "#1c2624" },
   tableHeaderText: { fontFamily: "Helvetica-Bold", color: "#213c30" },
   footer: { marginTop: 32, borderTopWidth: 1, borderTopColor: "#dce8e2", paddingTop: 10 },
-  footerName: { fontSize: 9, textAlign: "center", fontFamily: "Helvetica-Bold", color: "#274a3a" },
-  footerSlogan: { fontSize: 8.5, textAlign: "center", color: "#5c6b66", marginTop: 2 },
+  footerSlogan: { fontSize: 9, textAlign: "center", fontFamily: "Helvetica-Oblique", color: "#5c6b66" },
 });
 
 const HEADING_STYLE: Record<number, Style> = { 1: bulletinStyles.h1, 2: bulletinStyles.h2, 3: bulletinStyles.h3 };
@@ -218,17 +216,13 @@ export function BulletinDocument({
   return (
     <Document title={`Informativo Semanal N.º ${number} - ${title}`}>
       <Page size="A4" style={pdfStyles.page} wrap>
-        <DocumentHeader />
+        <DocumentHeader dateLabel={`San Antonio, ${formatBulletinDate(publishDate)}`} />
         <Text style={pdfStyles.title}>INFORMATIVO SEMANAL N.º {number}</Text>
-        <Text style={bulletinStyles.subtitle}>{title}</Text>
-        <Text style={bulletinStyles.meta}>
-          {weekLabel} · {formatBulletinDate(publishDate)}
-        </Text>
+        <Text style={bulletinStyles.weekLine}>{weekLabel}</Text>
 
         <View>{renderBlocks(content?.content)}</View>
 
         <View style={bulletinStyles.footer}>
-          <Text style={bulletinStyles.footerName}>{SITE.name}</Text>
           <Text style={bulletinStyles.footerSlogan}>{SITE.slogan}</Text>
         </View>
       </Page>
