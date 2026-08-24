@@ -9,6 +9,26 @@ import { SITE } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { SchoolLogo } from "@/components/ui/SchoolLogo";
 
+const NAV_LINE_BREAKS: Record<string, [string, string]> = {
+  "Nuestra Escuela": ["Nuestra", "Escuela"],
+  "Proyecto Educativo": ["Proyecto", "Educativo"],
+  "Equipo Directivo": ["Equipo", "Directivo"],
+  "Equipo PIE": ["Equipo", "PIE"],
+  "Asistentes de la Educación": ["Asistentes de la", "Educación"],
+};
+
+function NavLabel({ label }: { label: string }) {
+  const lines = NAV_LINE_BREAKS[label];
+  if (!lines) return <>{label}</>;
+  return (
+    <>
+      {lines[0].split(/\s+/).join(String.fromCharCode(160))}
+      <br />
+      {lines[1]}
+    </>
+  );
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -28,27 +48,29 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white">
-      <div className="mx-auto grid h-20 max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-2 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <SchoolLogo size={32} />
-          <span className="hidden whitespace-nowrap text-[0.78rem] font-semibold tracking-tight text-brand-900 sm:block">
-            Escuela Pedro Viveros Ormeño
+      <div className="mx-auto grid h-24 max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-2 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <SchoolLogo size={38} />
+          <span className="hidden whitespace-nowrap text-[0.95rem] font-semibold leading-tight tracking-tight text-brand-900 sm:block">
+            Escuela Pedro
+            <br />
+            Viveros Ormeño
           </span>
         </Link>
 
-        <nav className="hidden items-center justify-center min-[1272px]:flex">
+        <nav className="hidden items-center justify-center min-[1180px]:flex">
           {PUBLIC_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "relative whitespace-nowrap px-1 py-2 text-[0.7rem] font-medium text-slate-600 transition-colors hover:text-brand-800",
+                "relative flex flex-col items-center justify-center px-1.5 py-2 text-center text-[15px] font-semibold leading-[1.2] text-slate-700 transition-colors hover:text-brand-800",
                 pathname === item.href && "text-brand-800"
               )}
             >
-              {item.label}
+              <NavLabel label={item.label} />
               {pathname === item.href && (
-                <span className="absolute inset-x-1 -bottom-[1px] h-[2px] rounded-full bg-brand-600" />
+                <span className="absolute inset-x-1.5 -bottom-[1px] h-[2px] rounded-full bg-brand-600" />
               )}
             </Link>
           ))}
@@ -66,7 +88,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="min-[1272px]:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700"
+            className="min-[1180px]:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
           >
@@ -76,7 +98,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto bg-white min-[1272px]:hidden">
+        <div className="fixed inset-x-0 top-24 bottom-0 z-40 overflow-y-auto bg-white min-[1180px]:hidden">
           <nav className="flex flex-col gap-1 px-4 py-4">
             {PUBLIC_NAV.map((item) => (
               <Link
