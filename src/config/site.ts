@@ -21,8 +21,8 @@ export const SITE = {
   },
   phone: "+56 44 367 0367",
   email: "epviveros@gmail.com",
+  rbd: "2024-9",
   // Pendiente de entrega oficial — no inventar.
-  rbd: null as string | null,
   schedule: null as string | null,
   socials: {
     facebook: "https://www.facebook.com/share/198W6ptond/",

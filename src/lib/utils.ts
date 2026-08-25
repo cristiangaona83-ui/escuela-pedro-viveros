@@ -31,6 +31,17 @@ export function telHref(phone: string) {
   return `tel:${phone.replace(/[^0-9+]/g, "")}`;
 }
 
+/** "12345678-9" (formato de almacenamiento, ver StudentForm) -> "12.345.678-9". */
+export function formatRun(run: string | null | undefined): string {
+  if (!run) return "—";
+  const clean = run.replace(/[.\s]/g, "").toUpperCase();
+  const dashIndex = clean.indexOf("-");
+  const body = dashIndex === -1 ? clean : clean.slice(0, dashIndex);
+  const dv = dashIndex === -1 ? "" : clean.slice(dashIndex + 1);
+  const withDots = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return dv ? `${withDots}-${dv}` : withDots;
+}
+
 export function slugify(value: string) {
   return value
     .normalize("NFD")

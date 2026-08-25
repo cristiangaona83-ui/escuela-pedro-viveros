@@ -39,7 +39,8 @@ export async function POST(request: Request) {
   if (!student || !year) return NextResponse.json({ error: "Estudiante o año no encontrado" }, { status: 404 });
 
   const course = (enrollment as unknown as { courses: { level: string; letter: string } | null } | null)?.courses;
-  const courseLabel = course ? `${course.level} ${course.letter}` : "Sin matrícula activa";
+  // Sin espacio ni separador colgante si el curso no tiene letra de paralelo.
+  const courseLabel = course ? [course.level, course.letter].filter(Boolean).join(" ") : "Sin matrícula activa";
 
   const { data: folio, error: folioError } = await supabase.rpc("next_certificate_folio", {
     p_cert_type: "alumno_regular",
