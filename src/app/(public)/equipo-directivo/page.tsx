@@ -25,7 +25,11 @@ export default async function EquipoDirectivoPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        {/* max-w-[90%] angosta la grilla ~10% respecto de Equipo PIE/Cursos/Asistentes
+            (que comparten StaffPhotoCard sin este límite) — la fotografía ocupa el 100%
+            de su tarjeta, así que angostar la grilla es la forma de achicar solo la foto
+            de esta página sin tocar el componente compartido. */}
+        <div className="mx-auto grid max-w-[90%] grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {team.map((member) => {
             const { src, hasPhoto } = resolveStaffPhoto(member.staff_member.photo_url);
             return (
