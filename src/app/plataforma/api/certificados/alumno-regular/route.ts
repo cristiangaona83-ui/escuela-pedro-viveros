@@ -4,7 +4,6 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { CertificateAlumnoRegular } from "@/lib/pdf/CertificateAlumnoRegular";
 import { getCertificateSignature } from "@/services/school-config";
-import { listStudentGuardiansFull } from "@/services/guardians";
 import { SITE } from "@/config/site";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -88,11 +87,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const [signature, guardians] = await Promise.all([
-    getCertificateSignature(),
-    listStudentGuardiansFull(student_id),
-  ]);
-  const primaryGuardian = guardians.find((g) => g.isPrimary) ?? guardians[0] ?? null;
+  const signature = await getCertificateSignature();
   // En producción el QR siempre debe apuntar al dominio institucional
   // definitivo (nunca a una URL de preview de Vercel u otro host temporal,
   // ya que el certificado impreso puede circular por años). En desarrollo
@@ -113,7 +108,6 @@ export async function POST(request: Request) {
       signatureTitle: signature.title,
       qrDataUrl,
       verificationCode: certificate.verification_code,
-      guardianName: primaryGuardian?.guardian.full_name ?? null,
     })
   );
 

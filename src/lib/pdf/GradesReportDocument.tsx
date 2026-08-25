@@ -21,7 +21,6 @@ export function GradesReportDocument({
   rows,
   generalAverage,
   signatures,
-  guardianName,
   disclaimer,
 }: {
   folio: string;
@@ -35,7 +34,6 @@ export function GradesReportDocument({
   rows: SubjectAverageRow[];
   generalAverage: number | null;
   signatures: SignatureEntry[];
-  guardianName?: string | null;
   disclaimer: string;
 }) {
   return (
@@ -81,7 +79,7 @@ export function GradesReportDocument({
           </View>
         </View>
 
-        <DocumentSignatures signatures={signatures} guardianName={guardianName} />
+        <DocumentSignatures signatures={signatures} />
 
         <Text style={pdfStyles.disclaimer}>
           Fecha de emisión: {formatDate(issuedAt)} · Folio {folio}. {disclaimer}

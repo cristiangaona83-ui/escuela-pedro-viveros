@@ -14,6 +14,7 @@ const NAV_LINE_BREAKS: Record<string, [string, string]> = {
   "Proyecto Educativo": ["Proyecto", "Educativo"],
   "Equipo Directivo": ["Equipo", "Directivo"],
   "Equipo PIE": ["Equipo", "PIE"],
+  "Docentes y Asistentes": ["Docentes y", "Asistentes"],
   "Asistentes de la Educación": ["Asistentes de la", "Educación"],
 };
 

@@ -1,7 +1,6 @@
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { DocumentHeader } from "./DocumentHeader";
-import { GuardianSignatureFields } from "./DocumentSignatures";
 import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/utils";
 
@@ -16,7 +15,6 @@ export function CertificateAlumnoRegular({
   signatureTitle,
   qrDataUrl,
   verificationCode,
-  guardianName,
 }: {
   folio: string;
   studentName: string;
@@ -28,7 +26,6 @@ export function CertificateAlumnoRegular({
   signatureTitle: string;
   qrDataUrl: string;
   verificationCode: string;
-  guardianName?: string | null;
 }) {
   return (
     <Document title={`Certificado de Alumno Regular - ${studentName}`}>
@@ -64,8 +61,6 @@ export function CertificateAlumnoRegular({
             <Text style={{ fontSize: 7, color: "#8a938f", marginTop: 4 }}>Verificar autenticidad</Text>
           </View>
         </View>
-
-        <GuardianSignatureFields guardianName={guardianName} />
 
         <Text style={pdfStyles.disclaimer}>
           Fecha de emisión: {formatDate(issuedAt)} · Folio {folio} · Documento emitido por la plataforma pedagógica del

@@ -139,15 +139,7 @@ export function EnrollmentRecordDocument(data: EnrollmentRecordData) {
         )}
 
         <View wrap={false}>
-          <View style={pdfStyles.footerRow}>
-            <View style={pdfStyles.signatureBlock}>
-              <Text style={{ fontSize: 8, color: "#5c6b66", marginBottom: 2 }}>
-                Nombre apoderado/a: {data.guardianName || "_______________________"}
-              </Text>
-              <View style={pdfStyles.signatureLine} />
-              <Text style={pdfStyles.signatureName}>Firma apoderado/a</Text>
-              <Text style={pdfStyles.signatureTitle}>Fecha: ______________________</Text>
-            </View>
+          <View style={[pdfStyles.footerRow, { justifyContent: "center" }]}>
             <View style={pdfStyles.signatureBlock}>
               <Text style={{ fontSize: 8, color: "#5c6b66", marginBottom: 2 }}>Funcionario responsable: _______________________</Text>
               <View style={pdfStyles.signatureLine} />

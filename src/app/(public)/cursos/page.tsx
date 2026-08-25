@@ -17,7 +17,7 @@ export default async function CursosPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Cursos" title="Nuestros Cursos" />
+      <PageHeader eyebrow="Docentes y Asistentes" title="Nuestros Cursos" />
 
       <section className="mx-auto max-w-4xl px-4 pt-14 sm:px-6 lg:px-8">
         <p className="text-justify text-[15px] leading-relaxed text-slate-600 sm:text-base">
