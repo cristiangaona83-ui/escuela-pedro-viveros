@@ -31,16 +31,26 @@ export function StaffPhotoCard({
   initials?: string;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-7">
-      <div className="relative flex h-[154px] w-[154px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100 sm:h-[173px] sm:w-[173px]">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white text-center shadow-sm">
+      <div className="relative aspect-[4/5] w-full bg-brand-50">
         {hasPhoto ? (
-          <Image src={photoSrc} alt={fullName} fill sizes="(min-width: 640px) 173px, 154px" className="object-cover" />
+          <Image
+            src={photoSrc}
+            alt={fullName}
+            fill
+            sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 28vw, (min-width: 640px) 45vw, 90vw"
+            className="object-cover object-top"
+          />
         ) : (
-          <span className="text-3xl font-semibold text-brand-700 sm:text-4xl">{initials ?? defaultInitials(fullName)}</span>
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="text-4xl font-semibold text-brand-700">{initials ?? defaultInitials(fullName)}</span>
+          </div>
         )}
       </div>
-      <h3 className="mt-4 text-base font-semibold text-slate-900">{fullName}</h3>
-      <p className="mt-1 text-sm font-medium text-brand-700">{role}</p>
+      <div className="px-4 py-4">
+        <h3 className="text-base font-semibold text-slate-900">{fullName}</h3>
+        <p className="mt-1 text-sm font-medium text-brand-700">{role}</p>
+      </div>
     </div>
   );
 }

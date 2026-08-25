@@ -12,11 +12,13 @@ function initials(fullName: string): string {
 export function PersonBlock({ member, hasPhoto }: { member: CourseTeamMember; hasPhoto: boolean }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="relative flex h-[115px] w-[115px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-brand-50">
         {hasPhoto ? (
-          <Image src={member.photoSrc} alt={member.fullName} fill sizes="115px" className="object-cover" />
+          <Image src={member.photoSrc} alt={member.fullName} fill sizes="(min-width: 1024px) 15vw, 40vw" className="object-cover object-top" />
         ) : (
-          <span className="text-2xl font-semibold text-brand-700">{member.initials ?? initials(member.fullName)}</span>
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="text-2xl font-semibold text-brand-700">{member.initials ?? initials(member.fullName)}</span>
+          </div>
         )}
       </div>
       <p className="mt-2 text-sm font-semibold leading-snug text-slate-900">{member.fullName}</p>
@@ -44,7 +46,7 @@ export function CourseTeamCard({
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="text-center text-lg font-semibold text-slate-900">{courseName}</h3>
-      <div className={cn("mt-5 grid gap-5", assistant ? "grid-cols-2" : "grid-cols-1 place-items-center")}>
+      <div className={cn("mt-5", assistant ? "grid grid-cols-2 gap-5" : "mx-auto w-full max-w-[60%]")}>
         <div>
           <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">Docente de jefatura</p>
           <PersonBlock member={homeroomTeacher} hasPhoto={homeroomHasPhoto} />
