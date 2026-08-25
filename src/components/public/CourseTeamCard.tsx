@@ -29,7 +29,9 @@ export function PersonBlock({ member, hasPhoto }: { member: CourseTeamMember; ha
 
 /** Tarjeta de un curso: docente de jefatura y, cuando corresponde,
  * asistente de aula — ambos dentro del mismo bloque visual para que quede
- * claro que pertenecen al mismo curso. */
+ * claro que pertenecen al mismo curso. Un solo encabezado de grupo ("Equipo
+ * de Aula") en vez de repetir un rótulo de cargo por persona: el cargo de
+ * cada integrante ya queda bajo su nombre (ver PersonBlock). */
 export function CourseTeamCard({
   courseName,
   homeroomTeacher,
@@ -46,17 +48,10 @@ export function CourseTeamCard({
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="text-center text-lg font-semibold text-slate-900">{courseName}</h3>
-      <div className={cn("mt-5", assistant ? "grid grid-cols-2 gap-5" : "mx-auto w-full max-w-[60%]")}>
-        <div>
-          <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">Docente de jefatura</p>
-          <PersonBlock member={homeroomTeacher} hasPhoto={homeroomHasPhoto} />
-        </div>
-        {assistant && (
-          <div>
-            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">Asistente de Aula</p>
-            <PersonBlock member={assistant} hasPhoto={Boolean(assistantHasPhoto)} />
-          </div>
-        )}
+      <p className="mt-1 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">Equipo de Aula</p>
+      <div className={cn("mt-4", assistant ? "grid grid-cols-2 gap-5" : "mx-auto w-full max-w-[60%]")}>
+        <PersonBlock member={homeroomTeacher} hasPhoto={homeroomHasPhoto} />
+        {assistant && <PersonBlock member={assistant} hasPhoto={Boolean(assistantHasPhoto)} />}
       </div>
     </div>
   );
