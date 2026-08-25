@@ -38,6 +38,8 @@ import {
 import { listTeacherAssignments } from "@/services/teacher-assignments";
 import { listAcademicYears } from "@/services/courses";
 import { getTeachableCourses } from "@/services/academic-scope";
+import { getStudentConvivenciaSummary } from "@/services/convivencia";
+import { CASE_STATUS_LABELS, CASE_STATUS_TONE } from "@/features/convivencia/labels";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -47,6 +49,7 @@ const WRITE_ROLES = ["director", "utp", "administrativo", "superadmin", "inspect
 const MANAGE_ROLES = ["director", "utp", "administrativo", "superadmin", "inspectoria_general", "convivencia"] as const;
 const GUARDIAN_FULL_ROLES = ["director", "utp", "administrativo", "convivencia", "superadmin"] as const;
 const PIE_ACCESS_ROLES = ["pie", "director", "utp", "superadmin"] as const; // igual que pie_records_select_scope
+const CONVIVENCIA_ACCESS_ROLES = ["director", "superadmin", "convivencia", "inspectoria_general"] as const; // igual que el módulo Convivencia Educativa (0026)
 const PICKUP_AUTH_READ_ROLES = ["director", "utp", "administrativo", "convivencia", "inspectoria_general", "superadmin"] as const;
 const PICKUP_AUTH_WRITE_ROLES = ["director", "utp", "inspectoria_general", "superadmin"] as const;
 const PICKUP_RESTRICTION_ROLES = ["director", "utp", "convivencia", "inspectoria_general", "superadmin"] as const;
@@ -60,6 +63,7 @@ const TABS: StudentTab[] = [
   { key: "asistencia", label: "Asistencia" },
   { key: "apoyos", label: "Apoyos" },
   { key: "pie", label: "PIE" },
+  { key: "convivencia", label: "Convivencia" },
   { key: "documentos", label: "Documentos" },
   { key: "historial", label: "Historial" },
 ];
@@ -119,6 +123,12 @@ export default async function EstudianteDetailPage({
 
   const pieRecords = hasPieAccess ? await listPieRecordsForStudent(student.id) : null;
   const pieActive = pieRecords?.some((r) => r.status === "activo") ?? false;
+
+  // Convivencia Educativa: pestaña y datos separados de PIE (nunca se
+  // mezclan), visibles solo para director/superadmin/convivencia/
+  // inspectoria_general -- mismo alcance que el módulo (0026_convivencia_educativa_module.sql).
+  const hasConvivenciaAccess = canWrite(roles, [...CONVIVENCIA_ACCESS_ROLES]);
+  const convivenciaSummary = hasConvivenciaAccess && tab === "convivencia" ? await getStudentConvivenciaSummary(student.id) : null;
 
   const needsAttendance = tab === "resumen" || tab === "asistencia";
   const attendance = needsAttendance ? await listAttendanceForStudent(student.id) : null;
@@ -262,7 +272,11 @@ export default async function EstudianteDetailPage({
         </Card>
       )}
 
-      <StudentTabsNav studentId={student.id} tabs={TABS} active={tab} />
+      <StudentTabsNav
+        studentId={student.id}
+        tabs={hasConvivenciaAccess ? TABS : TABS.filter((t) => t.key !== "convivencia")}
+        active={tab}
+      />
 
       <div className="mt-6">
         {tab === "resumen" && (
@@ -590,6 +604,52 @@ export default async function EstudianteDetailPage({
                 </ul>
               ) : (
                 <EmptyState icon={HeartHandshake} title="Sin registros PIE" description="No hay registros del Programa de Integración Escolar para este estudiante." />
+              )}
+            </CardBody>
+          </Card>
+        )}
+
+        {tab === "convivencia" && (
+          <Card>
+            <CardBody>
+              {!hasConvivenciaAccess ? (
+                <EmptyState icon={HeartHandshake} title="Sección no disponible" description="Tu rol no tiene acceso a la información de Convivencia Educativa." />
+              ) : convivenciaSummary && convivenciaSummary.cases.length > 0 ? (
+                <div className="space-y-4">
+                  <ul className="divide-y divide-slate-100">
+                    {convivenciaSummary.cases.map((c) => (
+                      <li key={c.id} className="flex items-center justify-between gap-2 py-3 text-sm">
+                        <div>
+                          <Link href={`/plataforma/convivencia/casos/${c.id}`} className="font-mono font-medium text-brand-700 hover:underline">
+                            {c.folio}
+                          </Link>
+                          <p className="text-xs text-slate-500">{c.title}</p>
+                        </div>
+                        <Badge tone={CASE_STATUS_TONE[c.status]}>{CASE_STATUS_LABELS[c.status] ?? c.status}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                  {convivenciaSummary.lastFollowups.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Últimos seguimientos</h3>
+                      <ul className="mt-2 space-y-1.5">
+                        {convivenciaSummary.lastFollowups.map((f, i) => (
+                          <li key={i} className="text-sm text-slate-600">
+                            {f.case_folio} · {formatDate(f.followup_date)} — {f.objective ?? "Sin objetivo registrado"}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <Link
+                    href={`/plataforma/convivencia/casos/${convivenciaSummary.cases[0].id}`}
+                    className="inline-block text-sm font-medium text-brand-700 hover:underline"
+                  >
+                    Ver en Convivencia Educativa →
+                  </Link>
+                </div>
+              ) : (
+                <EmptyState icon={HeartHandshake} title="Sin registros de Convivencia" description="Este estudiante no tiene casos de Convivencia Educativa registrados." />
               )}
             </CardBody>
           </Card>

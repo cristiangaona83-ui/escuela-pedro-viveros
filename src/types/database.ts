@@ -538,6 +538,265 @@ type CrudTable<Row> = {
   Relationships: [];
 };
 
+// ---------------------------------------------------------------------------
+// Convivencia Educativa (supabase/migrations/0026_convivencia_educativa_module.sql)
+// ---------------------------------------------------------------------------
+export type ConvivenciaCaseStatus =
+  | "abierto" | "en_evaluacion" | "protocolo_activo" | "en_seguimiento" | "pendiente_antecedentes" | "cerrado";
+export type ConvivenciaPriority = "baja" | "media" | "alta";
+export type ConvivenciaParticipantRole = "involucrado" | "afectado" | "testigo" | "otro";
+export type ConvivenciaEventType =
+  | "caso_creado" | "entrevista" | "contacto_apoderado" | "seguimiento" | "medida" | "acuerdo" | "derivacion" | "protocolo" | "caso_cerrado" | "otro";
+export type ConvivenciaInterviewParticipantType = "estudiante" | "apoderado" | "funcionario" | "otro";
+export type ConvivenciaMeasureStatus = "pendiente" | "en_curso" | "cumplido" | "no_cumplido" | "requiere_revision";
+export type ConvivenciaReferralType = "interna" | "externa";
+export type ConvivenciaReferralStatus = "pendiente" | "en_proceso" | "respondida" | "cerrada";
+export type ConvivenciaCommType = "llamada" | "correo" | "entrevista" | "citacion" | "otro";
+export type ConvivenciaFollowupStatus = "pendiente" | "realizado" | "cancelado";
+export type ConvivenciaPlanStatus = "planificada" | "en_ejecucion" | "finalizada" | "reprogramada";
+
+export type ConvivenciaCaseTypeRow = {
+  id: string;
+  code: string;
+  label: string;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+}
+
+export type ConvivenciaProtocolRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  reference_document_id: string | null;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+}
+
+export type ConvivenciaSituationRow = {
+  id: string;
+  case_id: string | null;
+  occurred_on: string;
+  occurred_time: string | null;
+  location: string | null;
+  case_type_id: string;
+  description: string;
+  people_present: string | null;
+  witnesses: string | null;
+  background: string | null;
+  immediate_action: string | null;
+  needs_followup: boolean;
+  needs_protocol: boolean;
+  observations: string | null;
+  reported_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaSituationStudentRow = {
+  id: string;
+  situation_id: string;
+  student_id: string;
+  role: ConvivenciaParticipantRole;
+}
+
+export type ConvivenciaCaseRow = {
+  id: string;
+  folio: string;
+  academic_year_id: string;
+  case_type_id: string;
+  title: string;
+  status: ConvivenciaCaseStatus;
+  priority: ConvivenciaPriority;
+  responsible_id: string;
+  opened_at: string;
+  closed_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaCaseClosureRow = {
+  case_id: string;
+  conclusion: string;
+  closed_by: string;
+  closed_at: string;
+}
+
+export type ConvivenciaCaseAssignmentRow = {
+  id: string;
+  case_id: string;
+  profile_id: string;
+  assigned_by: string;
+  assigned_at: string;
+}
+
+export type ConvivenciaCaseStudentRow = {
+  id: string;
+  case_id: string;
+  student_id: string;
+  role: ConvivenciaParticipantRole;
+}
+
+export type ConvivenciaEventRow = {
+  id: string;
+  case_id: string;
+  event_date: string;
+  event_time: string | null;
+  event_type: ConvivenciaEventType;
+  observation: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type ConvivenciaInterviewRow = {
+  id: string;
+  case_id: string;
+  interview_date: string;
+  interview_time: string | null;
+  participant_type: ConvivenciaInterviewParticipantType;
+  participant_student_id: string | null;
+  participant_guardian_id: string | null;
+  participant_other: string | null;
+  reason: string | null;
+  summary: string | null;
+  agreements: string | null;
+  commitments: string | null;
+  followup_date: string | null;
+  responsible_id: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaMeasureRow = {
+  id: string;
+  case_id: string;
+  description: string;
+  responsible_id: string;
+  start_date: string;
+  review_date: string | null;
+  status: ConvivenciaMeasureStatus;
+  result: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaReferralRow = {
+  id: string;
+  case_id: string;
+  referral_date: string;
+  referral_type: ConvivenciaReferralType;
+  institution: string;
+  reason: string;
+  responsible_id: string;
+  status: ConvivenciaReferralStatus;
+  followup: string | null;
+  response_received: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaCommunicationRow = {
+  id: string;
+  case_id: string;
+  comm_date: string;
+  comm_type: ConvivenciaCommType;
+  guardian_id: string;
+  staff_id: string;
+  reason: string | null;
+  result: string | null;
+  agreements: string | null;
+  next_action: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type ConvivenciaFollowupRow = {
+  id: string;
+  case_id: string;
+  followup_date: string;
+  responsible_id: string;
+  objective: string | null;
+  result: string | null;
+  next_date: string | null;
+  status: ConvivenciaFollowupStatus;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaCaseProtocolRow = {
+  id: string;
+  case_id: string;
+  protocol_id: string;
+  activated_at: string;
+  responsible_id: string;
+  stage: string | null;
+  actions_done: string | null;
+  actions_pending: string | null;
+  deadline: string | null;
+  closed_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaPreventiveActionRow = {
+  id: string;
+  activity: string;
+  objective: string | null;
+  responsible_id: string;
+  action_date: string;
+  participants: string | null;
+  evidence: string | null;
+  evaluation: string | null;
+  result: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaPreventiveActionCourseRow = {
+  id: string;
+  preventive_action_id: string;
+  course_id: string;
+}
+
+export type ConvivenciaManagementPlanRow = {
+  id: string;
+  academic_year_id: string;
+  action: string;
+  objective: string | null;
+  indicator: string | null;
+  responsible_id: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: ConvivenciaPlanStatus;
+  evidence: string | null;
+  progress_percent: number;
+  observations: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConvivenciaAttachmentRow = {
+  id: string;
+  case_id: string | null;
+  situation_id: string | null;
+  interview_id: string | null;
+  preventive_action_id: string | null;
+  storage_path: string;
+  file_name: string;
+  description: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
+
 export type VerifyCertificateResult = {
   valid: boolean;
   folio: string;
@@ -566,6 +825,14 @@ export interface Database {
       next_certificate_folio: {
         Args: { p_cert_type: string; p_year: number };
         Returns: string;
+      };
+      next_convivencia_folio: {
+        Args: { p_year: number };
+        Returns: string;
+      };
+      convivencia_case_assigned: {
+        Args: { p_case_id: string };
+        Returns: boolean;
       };
       log_audit: {
         Args: {
@@ -737,6 +1004,25 @@ export interface Database {
       contact_messages: CrudTable<ContactMessageRow>;
       school_config: CrudTable<SchoolConfigRow>;
       audit_logs: CrudTable<AuditLogRow>;
+      convivencia_case_types: CrudTable<ConvivenciaCaseTypeRow>;
+      convivencia_protocols: CrudTable<ConvivenciaProtocolRow>;
+      convivencia_situations: CrudTable<ConvivenciaSituationRow>;
+      convivencia_situation_students: CrudTable<ConvivenciaSituationStudentRow>;
+      convivencia_cases: CrudTable<ConvivenciaCaseRow>;
+      convivencia_case_closures: CrudTable<ConvivenciaCaseClosureRow>;
+      convivencia_case_assignments: CrudTable<ConvivenciaCaseAssignmentRow>;
+      convivencia_case_students: CrudTable<ConvivenciaCaseStudentRow>;
+      convivencia_events: CrudTable<ConvivenciaEventRow>;
+      convivencia_interviews: CrudTable<ConvivenciaInterviewRow>;
+      convivencia_measures: CrudTable<ConvivenciaMeasureRow>;
+      convivencia_referrals: CrudTable<ConvivenciaReferralRow>;
+      convivencia_communications: CrudTable<ConvivenciaCommunicationRow>;
+      convivencia_followups: CrudTable<ConvivenciaFollowupRow>;
+      convivencia_case_protocols: CrudTable<ConvivenciaCaseProtocolRow>;
+      convivencia_preventive_actions: CrudTable<ConvivenciaPreventiveActionRow>;
+      convivencia_preventive_action_courses: CrudTable<ConvivenciaPreventiveActionCourseRow>;
+      convivencia_management_plan: CrudTable<ConvivenciaManagementPlanRow>;
+      convivencia_attachments: CrudTable<ConvivenciaAttachmentRow>;
     };
   };
 }

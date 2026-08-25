@@ -32,6 +32,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "PIE", href: "/plataforma/pie", icon: "HeartHandshake", roles: ["director", "utp", "pie", "superadmin", "educadora_diferencial", "psicopedagoga", "fonoaudiologa", "psicologo"] },
   { label: "Seguimiento Pedagógico", href: "/plataforma/seguimiento", icon: "Activity", roles: ["director", "utp", "docente", "convivencia", "superadmin"] },
   { label: "Acompañamiento al Aula", href: "/plataforma/acompanamiento", icon: "Eye", roles: ["director", "utp", "superadmin", "docente"] },
+  { label: "Convivencia Educativa", href: "/plataforma/convivencia", icon: "ShieldCheck", roles: ["director", "superadmin", "convivencia", "inspectoria_general"] },
   { label: "Certificados", href: "/plataforma/certificados", icon: "Award", roles: ["director", "utp", "administrativo", "superadmin"] },
   { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "superadmin"] },
   { label: "Documentos", href: "/plataforma/documentos", icon: "FolderOpen" },
