@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveAcademicYear, levelSortIndex } from "@/services/courses";
 
 export async function listCertificates() {
   const supabase = await createClient();
@@ -28,28 +29,6 @@ export interface AlumnoRegularCourseFolder {
   students: { id: string; first_names: string; last_names: string; run: string }[];
 }
 
-// Orden pedagógico real (Prekínder → 8° Básico). `level` es texto libre en
-// courses, así que el orden alfabético no sirve ("Kínder" quedaría antes que
-// "Prekínder"). Cursos con un `level` fuera de esta lista (p. ej. Educación
-// Media, si se agrega en el futuro) se muestran al final, sin excluirse.
-const COURSE_LEVEL_ORDER = [
-  "Prekínder",
-  "Kínder",
-  "1° Básico",
-  "2° Básico",
-  "3° Básico",
-  "4° Básico",
-  "5° Básico",
-  "6° Básico",
-  "7° Básico",
-  "8° Básico",
-];
-
-function levelSortIndex(level: string): number {
-  const idx = COURSE_LEVEL_ORDER.indexOf(level);
-  return idx === -1 ? COURSE_LEVEL_ORDER.length : idx;
-}
-
 /**
  * Cursos del año académico activo con su nómina de matrícula vigente, para
  * la selección por curso del Certificado de Alumno Regular. Mismo criterio
@@ -65,7 +44,7 @@ export async function listAlumnoRegularCourseFolders(): Promise<{
 }> {
   const supabase = await createClient();
 
-  const { data: year } = await supabase.from("academic_years").select("id, year").eq("active", true).maybeSingle();
+  const year = await getActiveAcademicYear();
   if (!year) return { academicYearId: null, academicYear: null, folders: [] };
 
   const [{ data: courses }, { data: enrollments }] = await Promise.all([

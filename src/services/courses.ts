@@ -38,6 +38,35 @@ export async function listAcademicYears() {
   return data ?? [];
 }
 
+/** Año académico marcado como vigente (academic_years.active = true). */
+export async function getActiveAcademicYear(): Promise<{ id: string; year: number } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("academic_years").select("id, year").eq("active", true).maybeSingle();
+  return data ?? null;
+}
+
+// Orden pedagógico real (Prekínder → 8° Básico). `level` es texto libre en
+// courses, así que el orden alfabético no sirve ("Kínder" quedaría antes que
+// "Prekínder"). Cursos con un `level` fuera de esta lista (p. ej. Educación
+// Media, si se agrega en el futuro) se muestran al final, sin excluirse.
+export const COURSE_LEVEL_ORDER = [
+  "Prekínder",
+  "Kínder",
+  "1° Básico",
+  "2° Básico",
+  "3° Básico",
+  "4° Básico",
+  "5° Básico",
+  "6° Básico",
+  "7° Básico",
+  "8° Básico",
+];
+
+export function levelSortIndex(level: string): number {
+  const idx = COURSE_LEVEL_ORDER.indexOf(level);
+  return idx === -1 ? COURSE_LEVEL_ORDER.length : idx;
+}
+
 export async function listTeachers() {
   const supabase = await createClient();
   const { data } = await supabase
