@@ -4,9 +4,8 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/utils";
-import { listCertificates, listActiveStudents } from "@/services/certificates";
-import { listAcademicYears } from "@/services/courses";
-import { CertificateGenerator } from "@/features/certificates/CertificateGenerator";
+import { listCertificates, listAlumnoRegularCourseFolders } from "@/services/certificates";
+import { AlumnoRegularCourseBrowser } from "@/features/certificates/AlumnoRegularCourseBrowser";
 
 export const metadata: Metadata = { title: "Certificados" };
 
@@ -18,10 +17,9 @@ const CERT_LABELS: Record<string, string> = {
 };
 
 export default async function CertificadosPage() {
-  const [certificates, students, years] = await Promise.all([
+  const [certificates, { academicYearId, folders }] = await Promise.all([
     listCertificates(),
-    listActiveStudents(),
-    listAcademicYears(),
+    listAlumnoRegularCourseFolders(),
   ]);
 
   return (
@@ -29,10 +27,20 @@ export default async function CertificadosPage() {
       <h1 className="text-2xl font-semibold text-slate-900">Certificados</h1>
       <p className="mt-1 text-sm text-slate-500">Emisión de Certificado de Alumno Regular con folio único y verificación pública.</p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <Card>
-          <CardBody>
-            {certificates.length > 0 ? (
+      <Card className="mt-6">
+        <CardBody>
+          <h2 className="font-semibold text-slate-900">Certificado de Alumno Regular</h2>
+          <p className="mt-1 text-sm text-slate-500">Selecciona el curso del estudiante para generar el certificado.</p>
+          <div className="mt-4">
+            <AlumnoRegularCourseBrowser folders={folders} academicYearId={academicYearId} />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card className="mt-6">
+        <CardBody>
+          <h2 className="mb-4 font-semibold text-slate-900">Certificados emitidos</h2>
+          {certificates.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="text-xs uppercase tracking-wide text-slate-500">
@@ -70,18 +78,8 @@ export default async function CertificadosPage() {
             ) : (
               <EmptyState icon={Award} title="Sin certificados emitidos" description="Los certificados generados aparecerán aquí con su folio y estado." />
             )}
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <h2 className="font-semibold text-slate-900">Certificado de Alumno Regular</h2>
-            <div className="mt-4">
-              <CertificateGenerator students={students} academicYears={years} />
-            </div>
-          </CardBody>
-        </Card>
-      </div>
+        </CardBody>
+      </Card>
     </div>
   );
 }
