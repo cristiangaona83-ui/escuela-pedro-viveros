@@ -25,6 +25,7 @@ export const pdfStyles = StyleSheet.create({
   footerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: 48 },
   signatureBlock: { alignItems: "center", width: 200 },
   signatureLine: { borderTopWidth: 1, borderTopColor: "#1c2624", width: "100%", marginBottom: 4, marginTop: 40 },
+  directorSignatureImage: { width: 120, alignSelf: "center" },
   signatureName: { fontSize: 10, fontFamily: "Helvetica-Bold" },
   signatureTitle: { fontSize: 9, color: "#5c6b66" },
   qr: { width: 64, height: 64 },

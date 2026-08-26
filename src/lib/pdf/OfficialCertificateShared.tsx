@@ -21,6 +21,9 @@ export interface SubjectAverageRow {
 
 const info = SITE.officialRecognition;
 
+/** Alto de la zona reservada para la firma del Director sobre "Director" -- ver comentario en CertificateSignatureFooter. */
+const SIGNATURE_MARK_HEIGHT = 68;
+
 /** Párrafo compacto (interlineado y margen reducidos) para que los tres certificados quepan en una sola página A4. */
 export const compactParagraph = [pdfStyles.paragraph, { lineHeight: 1.3, marginBottom: 5 }];
 export const compactHeading = [pdfStyles.bold, { fontSize: 10.5, marginBottom: 3 }];
@@ -111,22 +114,39 @@ export function CertificateSignatureFooter({
   issuedAt,
   folio,
   verificationCode,
+  directorSignatureDataUri,
 }: {
   homeroomTeacherName: string | null;
   issuedAt: string;
   folio: string;
   verificationCode: string;
+  /** Data URI de la firma escaneada del Director (ver getDirectorSignatureDataUri). Si es null, se muestra solo la línea de firma en blanco. */
+  directorSignatureDataUri?: string | null;
 }) {
   return (
     <View wrap={false}>
-      <View style={[pdfStyles.footerRow, { marginTop: 14 }]}>
+      {/* alignItems "flex-start" (no el "flex-end" de pdfStyles.footerRow) + una zona reservada de la
+          misma altura en ambos bloques antes del nombre: así "Profesor(a) Jefe" y "Director" quedan a
+          la misma altura sin importar que el bloque del Director tenga una línea extra (nombre del
+          establecimiento) debajo. SIGNATURE_MARK_HEIGHT ~= alto de la firma a 130pt de ancho con la
+          proporción real del archivo (1672x941 -> ~73pt), con un pelo de margen. */}
+      <View style={[pdfStyles.footerRow, { marginTop: 8, alignItems: "flex-start" }]}>
         <View style={pdfStyles.signatureBlock}>
-          <View style={[pdfStyles.signatureLine, { marginTop: 10 }]} />
+          <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
+            <View style={[pdfStyles.signatureLine, { marginTop: 0 }]} />
+          </View>
           <Text style={pdfStyles.signatureName}>{homeroomTeacherName ?? "—"}</Text>
           <Text style={pdfStyles.signatureTitle}>Profesor(a) Jefe</Text>
         </View>
         <View style={pdfStyles.signatureBlock}>
-          <View style={[pdfStyles.signatureLine, { marginTop: 10 }]} />
+          <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
+            {directorSignatureDataUri ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
+              <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />
+            ) : (
+              <View style={[pdfStyles.signatureLine, { marginTop: 0 }]} />
+            )}
+          </View>
           <Text style={pdfStyles.signatureName}>{SITE.director}</Text>
           <Text style={pdfStyles.signatureTitle}>Director</Text>
           <Text style={pdfStyles.signatureTitle}>{SITE.name}</Text>

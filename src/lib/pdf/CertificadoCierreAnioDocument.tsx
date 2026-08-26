@@ -19,6 +19,7 @@ export function CertificadoCierreAnioDocument({
   homeroomTeacherName,
   issuedAt,
   verificationCode,
+  directorSignatureDataUri,
 }: {
   folio: string;
   studentName: string;
@@ -34,10 +35,11 @@ export function CertificadoCierreAnioDocument({
   homeroomTeacherName: string | null;
   issuedAt: string;
   verificationCode: string;
+  directorSignatureDataUri?: string | null;
 }) {
   return (
     <Document title={`Certificado de Cierre de Año Escolar - ${studentName}`}>
-      <Page size="A4" style={[pdfStyles.page, { padding: 36 }]}>
+      <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
         <CertificateInstitutionalHeader title="CERTIFICADO DE CIERRE DE AÑO ESCOLAR" year={year} />
 
         <Text style={compactParagraph}>
@@ -94,7 +96,13 @@ export function CertificadoCierreAnioDocument({
           </Text>
         </View>
 
-        <CertificateSignatureFooter homeroomTeacherName={homeroomTeacherName} issuedAt={issuedAt} folio={folio} verificationCode={verificationCode} />
+        <CertificateSignatureFooter
+          homeroomTeacherName={homeroomTeacherName}
+          issuedAt={issuedAt}
+          folio={folio}
+          verificationCode={verificationCode}
+          directorSignatureDataUri={directorSignatureDataUri}
+        />
       </Page>
     </Document>
   );

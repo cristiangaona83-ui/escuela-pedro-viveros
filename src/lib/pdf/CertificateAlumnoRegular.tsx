@@ -23,6 +23,7 @@ export function CertificateAlumnoRegular({
   signatureTitle,
   qrDataUrl,
   verificationCode,
+  directorSignatureDataUri,
 }: {
   folio: string;
   studentName: string;
@@ -34,6 +35,8 @@ export function CertificateAlumnoRegular({
   signatureTitle: string;
   qrDataUrl: string;
   verificationCode: string;
+  /** Data URI de la firma escaneada del Director (ver getDirectorSignatureDataUri). Si es null, se muestra solo la línea de firma en blanco. */
+  directorSignatureDataUri?: string | null;
 }) {
   const logoDataUri = getLogoDataUri();
   // SITE.address.city ya viene como "Llolleo, San Antonio" (para el
@@ -41,6 +44,9 @@ export function CertificateAlumnoRegular({
   // comuna aparte ("comuna de San Antonio"), así que aquí solo se usa la
   // localidad.
   const locality = SITE.address.city.split(",")[0].trim();
+  const resolvedSignatureName = signatureName || SITE.director;
+  // La firma escaneada es la del Director -- si school_config tiene configurado un firmante distinto, se omite la imagen para no atribuirle una firma que no es la suya.
+  const showDirectorSignatureImage = Boolean(directorSignatureDataUri) && resolvedSignatureName === SITE.director;
 
   return (
     <Document title={`Certificado de Alumno Regular - ${studentName}`}>
@@ -84,8 +90,13 @@ export function CertificateAlumnoRegular({
 
         <View style={pdfStyles.footerRow}>
           <View style={pdfStyles.signatureBlock}>
-            <View style={pdfStyles.signatureLine} />
-            <Text style={pdfStyles.signatureName}>{signatureName || SITE.director}</Text>
+            {showDirectorSignatureImage ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
+              <Image src={directorSignatureDataUri!} style={[pdfStyles.directorSignatureImage, { marginTop: 4 }]} />
+            ) : (
+              <View style={pdfStyles.signatureLine} />
+            )}
+            <Text style={pdfStyles.signatureName}>{resolvedSignatureName}</Text>
             <Text style={pdfStyles.signatureTitle}>{signatureTitle || "Director"}</Text>
             <Text style={pdfStyles.signatureTitle}>{SITE.name}</Text>
           </View>
