@@ -520,6 +520,24 @@ export type SchoolConfigRow = {
   updated_by: string | null;
 }
 
+export type InstitutionalSignatureKind = "director" | "teacher" | "other";
+
+export type InstitutionalSignatureRow = {
+  id: string;
+  kind: InstitutionalSignatureKind;
+  staff_member_id: string | null;
+  display_name: string;
+  title: string;
+  bucket: string;
+  storage_path: string;
+  active: boolean;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export type AuditLogRow = {
   id: string;
   user_id: string | null;
@@ -752,9 +770,11 @@ export type ConvivenciaPreventiveActionRow = {
   responsible_id: string;
   action_date: string;
   participants: string | null;
+  participants_count: number | null;
   evidence: string | null;
   evaluation: string | null;
   result: string | null;
+  document_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -779,9 +799,74 @@ export type ConvivenciaManagementPlanRow = {
   evidence: string | null;
   progress_percent: number;
   observations: string | null;
+  document_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Articulación PME (supabase/migrations/0031_pme_convivencia_articulacion.sql)
+// Deliberadamente separado del motor normativo: el PME es gestión
+// estratégica, no fuente jurídica.
+// ---------------------------------------------------------------------------
+export type PmePlanRow = {
+  id: string;
+  academic_year_id: string;
+  title: string;
+  document_id: string | null;
+  file_url: string | null;
+  source_note: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type PmeActionRow = {
+  id: string;
+  pme_plan_id: string;
+  dimension: string;
+  subdimension: string | null;
+  objective: string | null;
+  strategy: string | null;
+  name: string;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  program: string | null;
+  responsible: string | null;
+  resources: string | null;
+  verification_means: string | null;
+  amount_total: number | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type PmeIndicatorRow = {
+  id: string;
+  pme_plan_id: string;
+  related_action_id: string | null;
+  dimension: string;
+  strategy: string | null;
+  name: string;
+  goal: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type ConvivenciaManagementPlanPmeLinkRow = {
+  id: string;
+  management_plan_id: string;
+  pme_action_id: string;
+  created_by: string;
+  created_at: string;
+}
+
+export type ConvivenciaPreventiveActionPmeLinkRow = {
+  id: string;
+  preventive_action_id: string;
+  pme_action_id: string;
+  created_by: string;
+  created_at: string;
 }
 
 export type ConvivenciaAttachmentRow = {
@@ -795,6 +880,93 @@ export type ConvivenciaAttachmentRow = {
   description: string | null;
   uploaded_by: string;
   created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Actas de Caso e Informes Profesionales del Psicólogo
+// (supabase/migrations/0032_case_minutes_and_psychologist_reports.sql)
+// ---------------------------------------------------------------------------
+export type CaseMinuteModule = "convivencia" | "inspectoria";
+export type CaseMinuteType = "entrevista" | "reunion";
+export type CaseMinuteStatus = "borrador" | "finalizada";
+
+export type CaseMinuteRow = {
+  id: string;
+  case_id: string;
+  module: CaseMinuteModule;
+  minute_type: CaseMinuteType;
+  status: CaseMinuteStatus;
+  occurred_on: string;
+  occurred_time: string | null;
+  location: string | null;
+  guardian_id: string | null;
+  staff_present: string | null;
+  reason: string | null;
+  background: string | null;
+  facts_description: string | null;
+  guardian_version: string | null;
+  agreements: string | null;
+  school_commitments: string | null;
+  guardian_commitments: string | null;
+  measures: string | null;
+  responsible_id: string | null;
+  followup_date: string | null;
+  observations: string | null;
+  finalized_at: string | null;
+  finalized_by: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CaseMinuteStudentRow = {
+  id: string;
+  minute_id: string;
+  student_id: string;
+}
+
+export type CaseMinuteAttachmentRow = {
+  id: string;
+  minute_id: string;
+  storage_path: string;
+  file_name: string;
+  content_type: "application/pdf" | "image/jpeg" | "image/png";
+  uploaded_by: string;
+  created_at: string;
+}
+
+export type PsychologistReportStatus = "borrador" | "finalizada";
+
+export type PsychologistReportTypeRow = {
+  id: string;
+  code: string;
+  label: string;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+}
+
+export type PsychologistReportRow = {
+  id: string;
+  report_type_id: string;
+  student_id: string;
+  case_id: string | null;
+  professional_id: string;
+  report_date: string;
+  reason: string | null;
+  background: string | null;
+  actions_taken: string | null;
+  professional_observations: string | null;
+  agreements: string | null;
+  institutional_recommendations: string | null;
+  followup: string | null;
+  next_review_date: string | null;
+  status: PsychologistReportStatus;
+  finalized_at: string | null;
+  finalized_by: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type VerifyCertificateResult = {
@@ -1003,6 +1175,7 @@ export interface Database {
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;
       school_config: CrudTable<SchoolConfigRow>;
+      institutional_signatures: CrudTable<InstitutionalSignatureRow>;
       audit_logs: CrudTable<AuditLogRow>;
       convivencia_case_types: CrudTable<ConvivenciaCaseTypeRow>;
       convivencia_protocols: CrudTable<ConvivenciaProtocolRow>;
@@ -1023,6 +1196,16 @@ export interface Database {
       convivencia_preventive_action_courses: CrudTable<ConvivenciaPreventiveActionCourseRow>;
       convivencia_management_plan: CrudTable<ConvivenciaManagementPlanRow>;
       convivencia_attachments: CrudTable<ConvivenciaAttachmentRow>;
+      pme_plans: CrudTable<PmePlanRow>;
+      pme_actions: CrudTable<PmeActionRow>;
+      pme_indicators: CrudTable<PmeIndicatorRow>;
+      convivencia_management_plan_pme_links: CrudTable<ConvivenciaManagementPlanPmeLinkRow>;
+      convivencia_preventive_action_pme_links: CrudTable<ConvivenciaPreventiveActionPmeLinkRow>;
+      case_minutes: CrudTable<CaseMinuteRow>;
+      case_minute_students: CrudTable<CaseMinuteStudentRow>;
+      case_minute_attachments: CrudTable<CaseMinuteAttachmentRow>;
+      psychologist_report_types: CrudTable<PsychologistReportTypeRow>;
+      psychologist_reports: CrudTable<PsychologistReportRow>;
     };
   };
 }

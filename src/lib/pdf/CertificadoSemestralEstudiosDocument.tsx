@@ -2,9 +2,9 @@ import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { CertificateInstitutionalHeader, GradesWordsTable, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
-import { SITE } from "@/config/site";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
+import type { InstitutionalProfile } from "@/services/school-config";
 
 export function CertificadoSemestralEstudiosDocument({
   folio,
@@ -20,6 +20,7 @@ export function CertificadoSemestralEstudiosDocument({
   issuedAt,
   verificationCode,
   directorSignatureDataUri,
+  profile,
 }: {
   folio: string;
   studentName: string;
@@ -34,23 +35,24 @@ export function CertificadoSemestralEstudiosDocument({
   issuedAt: string;
   verificationCode: string;
   directorSignatureDataUri?: string | null;
+  profile: InstitutionalProfile;
 }) {
   return (
     <Document title={`Certificado Semestral de Estudios - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
-        <CertificateInstitutionalHeader title="CERTIFICADO SEMESTRAL DE ESTUDIOS" year={year} />
+        <CertificateInstitutionalHeader title="CERTIFICADO SEMESTRAL DE ESTUDIOS" year={year} profile={profile} />
 
         <Text style={compactParagraph}>
-          La {SITE.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
-          {SITE.officialRecognition.recofi}, RBD {SITE.rbd}, certifica que:
+          La {profile.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
+          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que:
         </Text>
         <Text style={compactParagraph}>
           <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>, RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>,
         </Text>
         <Text style={compactParagraph}>
           estudiante de <Text style={pdfStyles.bold}>{courseFormalName}</Text>, registra las siguientes calificaciones correspondientes al{" "}
-          {periodName} del año escolar {year}, de acuerdo con el Plan y Programas de Estudio aprobado por {SITE.officialRecognition.planDecree}{" "}
-          y con las normas de evaluación, calificación y promoción escolar establecidas en el {SITE.officialRecognition.evaluationDecree}.
+          {periodName} del año escolar {year}, de acuerdo con el Plan y Programas de Estudio aprobado por {profile.officialRecognition.planDecree}{" "}
+          y con las normas de evaluación, calificación y promoción escolar establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación" />
@@ -70,7 +72,7 @@ export function CertificadoSemestralEstudiosDocument({
           <Text style={compactHeading}>Observaciones</Text>
           <Text style={compactParagraph}>
             Las calificaciones consignadas corresponden al período académico señalado y han sido registradas conforme a las disposiciones
-            establecidas en el {SITE.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del
+            establecidas en el {profile.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del
             establecimiento.
           </Text>
           <Text style={compactParagraph}>
@@ -84,6 +86,7 @@ export function CertificadoSemestralEstudiosDocument({
           folio={folio}
           verificationCode={verificationCode}
           directorSignatureDataUri={directorSignatureDataUri}
+          profile={profile}
         />
       </Page>
     </Document>

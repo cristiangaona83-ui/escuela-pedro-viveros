@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Users, CalendarRange, Settings2, ArrowRight } from "lucide-react";
+import { Users, CalendarRange, Settings2, PenTool, ArrowRight } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 
 export const metadata: Metadata = { title: "Administración" };
@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: "Administración" };
 const SECTIONS = [
   { title: "Usuarios y roles", description: "Asigna roles del sistema a cada cuenta del equipo.", href: "/plataforma/administracion/usuarios", icon: Users },
   { title: "Años académicos", description: "Crea años, cursos base y administra la apertura/cierre de períodos.", href: "/plataforma/administracion/anios", icon: CalendarRange },
-  { title: "Configuración institucional", description: "Escala de notas, redondeo, firma para certificados y datos base.", href: "/plataforma/administracion/configuracion", icon: Settings2 },
+  { title: "Configuración institucional", description: "Nombre, RBD, dirección, reconocimiento oficial, escala de notas y redondeo.", href: "/plataforma/administracion/configuracion", icon: Settings2 },
+  { title: "Firmas institucionales", description: "Firma del Director y de profesores/as jefes para certificados e informes.", href: "/plataforma/administracion/firmas", icon: PenTool },
 ];
 
 export default function AdministracionPage() {

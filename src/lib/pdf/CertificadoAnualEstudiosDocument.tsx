@@ -2,9 +2,9 @@ import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { CertificateInstitutionalHeader, GradesWordsTable, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
-import { SITE } from "@/config/site";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
+import type { InstitutionalProfile } from "@/services/school-config";
 
 export function CertificadoAnualEstudiosDocument({
   folio,
@@ -20,6 +20,7 @@ export function CertificadoAnualEstudiosDocument({
   issuedAt,
   verificationCode,
   directorSignatureDataUri,
+  profile,
 }: {
   folio: string;
   studentName: string;
@@ -34,15 +35,16 @@ export function CertificadoAnualEstudiosDocument({
   issuedAt: string;
   verificationCode: string;
   directorSignatureDataUri?: string | null;
+  profile: InstitutionalProfile;
 }) {
   return (
     <Document title={`Certificado Anual de Estudios - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
-        <CertificateInstitutionalHeader title="CERTIFICADO ANUAL DE ESTUDIOS" year={year} />
+        <CertificateInstitutionalHeader title="CERTIFICADO ANUAL DE ESTUDIOS" year={year} profile={profile} />
 
         <Text style={compactParagraph}>
-          La {SITE.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
-          {SITE.officialRecognition.recofi}, RBD {SITE.rbd}, otorga el presente Certificado Anual de Estudios, correspondiente a las
+          La {profile.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
+          {profile.officialRecognition.recofi}, RBD {profile.rbd}, otorga el presente Certificado Anual de Estudios, correspondiente a las
           calificaciones anuales y situación final de:
         </Text>
         <Text style={compactParagraph}>
@@ -50,8 +52,8 @@ export function CertificadoAnualEstudiosDocument({
         </Text>
         <Text style={compactParagraph}>
           estudiante de <Text style={pdfStyles.bold}>{courseFormalName}</Text>, de acuerdo con el Plan y Programas de Estudio aprobado por{" "}
-          {SITE.officialRecognition.planDecree} y con las normas de evaluación, calificación y promoción escolar establecidas en el{" "}
-          {SITE.officialRecognition.evaluationDecree}.
+          {profile.officialRecognition.planDecree} y con las normas de evaluación, calificación y promoción escolar establecidas en el{" "}
+          {profile.officialRecognition.evaluationDecree}.
         </Text>
 
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación final" />
@@ -75,7 +77,7 @@ export function CertificadoAnualEstudiosDocument({
         <View style={{ marginTop: 0 }}>
           <Text style={compactHeading}>Observaciones</Text>
           <Text style={compactParagraph}>
-            La situación final ha sido determinada conforme a las disposiciones establecidas en el {SITE.officialRecognition.evaluationDecree}{" "}
+            La situación final ha sido determinada conforme a las disposiciones establecidas en el {profile.officialRecognition.evaluationDecree}{" "}
             y en el Reglamento de Evaluación y Promoción Escolar del establecimiento.
           </Text>
         </View>
@@ -86,6 +88,7 @@ export function CertificadoAnualEstudiosDocument({
           folio={folio}
           verificationCode={verificationCode}
           directorSignatureDataUri={directorSignatureDataUri}
+          profile={profile}
         />
       </Page>
     </Document>

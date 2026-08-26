@@ -1,9 +1,9 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { CertificateInstitutionalHeader, GradesWordsTable, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
-import { SITE } from "@/config/site";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
+import type { InstitutionalProfile } from "@/services/school-config";
 
 export function CertificadoCierreAnioDocument({
   folio,
@@ -20,6 +20,7 @@ export function CertificadoCierreAnioDocument({
   issuedAt,
   verificationCode,
   directorSignatureDataUri,
+  profile,
 }: {
   folio: string;
   studentName: string;
@@ -36,15 +37,16 @@ export function CertificadoCierreAnioDocument({
   issuedAt: string;
   verificationCode: string;
   directorSignatureDataUri?: string | null;
+  profile: InstitutionalProfile;
 }) {
   return (
     <Document title={`Certificado de Cierre de Año Escolar - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
-        <CertificateInstitutionalHeader title="CERTIFICADO DE CIERRE DE AÑO ESCOLAR" year={year} />
+        <CertificateInstitutionalHeader title="CERTIFICADO DE CIERRE DE AÑO ESCOLAR" year={year} profile={profile} />
 
         <Text style={compactParagraph}>
-          La {SITE.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
-          {SITE.officialRecognition.recofi}, RBD {SITE.rbd}, certifica que:
+          La {profile.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
+          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que:
         </Text>
         <Text style={compactParagraph}>
           <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>, RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>,
@@ -52,7 +54,7 @@ export function CertificadoCierreAnioDocument({
         <Text style={compactParagraph}>
           estudiante de <Text style={pdfStyles.bold}>{courseFormalName}</Text>, ha finalizado el año escolar {year}, registrando las
           siguientes calificaciones finales, asistencia y situación de promoción, de acuerdo con el Plan y Programas de Estudio aprobado
-          por {SITE.officialRecognition.planDecree} y con las normas establecidas en el {SITE.officialRecognition.evaluationDecree}.
+          por {profile.officialRecognition.planDecree} y con las normas establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
         <GradesWordsTable rows={rows} showWords={false} scoreColumnLabel="Calificación final" />
@@ -88,7 +90,7 @@ export function CertificadoCierreAnioDocument({
           <Text style={compactHeading}>Observaciones</Text>
           <Text style={compactParagraph}>
             El proceso académico correspondiente al año escolar {year} ha finalizado, conforme a las disposiciones establecidas en el{" "}
-            {SITE.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del establecimiento.
+            {profile.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del establecimiento.
           </Text>
           <Text style={compactParagraph}>
             Se extiende el presente certificado para dejar constancia del cierre de su proceso académico correspondiente al año escolar
@@ -102,6 +104,7 @@ export function CertificadoCierreAnioDocument({
           folio={folio}
           verificationCode={verificationCode}
           directorSignatureDataUri={directorSignatureDataUri}
+          profile={profile}
         />
       </Page>
     </Document>

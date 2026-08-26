@@ -3,8 +3,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { CertificateAlumnoRegular } from "@/lib/pdf/CertificateAlumnoRegular";
-import { getCertificateSignature } from "@/services/school-config";
-import { getDirectorSignatureDataUri } from "@/lib/pdf/director-signature";
+import { getCertificateSignature, getInstitutionalProfile } from "@/services/school-config";
+import { getDirectorSignatureDataUri } from "@/lib/pdf/institutional-signatures";
 import { SITE } from "@/config/site";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -89,7 +89,11 @@ export async function POST(request: Request) {
     });
   }
 
-  const [signature, directorSignatureDataUri] = await Promise.all([getCertificateSignature(), getDirectorSignatureDataUri()]);
+  const [signature, directorSignatureDataUri, profile] = await Promise.all([
+    getCertificateSignature(),
+    getDirectorSignatureDataUri(),
+    getInstitutionalProfile(),
+  ]);
   // En producción el QR siempre debe apuntar al dominio institucional
   // definitivo (nunca a una URL de preview de Vercel u otro host temporal,
   // ya que el certificado impreso puede circular por años). En desarrollo
@@ -111,6 +115,7 @@ export async function POST(request: Request) {
       qrDataUrl,
       verificationCode: certificate.verification_code,
       directorSignatureDataUri,
+      profile,
     })
   );
 

@@ -4,6 +4,7 @@ import { getLogoDataUri } from "./DocumentHeader";
 import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/utils";
 import { gradeToWords } from "./academic-certificate-wording";
+import type { InstitutionalProfile } from "@/services/school-config";
 
 export interface SubjectAverageRow {
   subjectName: string;
@@ -17,9 +18,12 @@ export interface SubjectAverageRow {
  * los tres, para no repetir la maquetación tres veces. El párrafo de
  * cuerpo y la sección de situación/observaciones, que sí difieren entre
  * documentos, se arman en cada archivo de certificado por separado.
+ *
+ * Los datos institucionales (nombre, RBD, RECOFI, decretos, Director) se
+ * reciben como prop `profile` (ver getInstitutionalProfile()) en vez de
+ * importarse de SITE directamente -- así son editables desde
+ * Administración → Configuración institucional sin tocar código.
  */
-
-const info = SITE.officialRecognition;
 
 /** Alto de la zona reservada para la firma del Director sobre "Director" -- ver comentario en CertificateSignatureFooter. */
 const SIGNATURE_MARK_HEIGHT = 68;
@@ -28,8 +32,9 @@ const SIGNATURE_MARK_HEIGHT = 68;
 export const compactParagraph = [pdfStyles.paragraph, { lineHeight: 1.3, marginBottom: 5 }];
 export const compactHeading = [pdfStyles.bold, { fontSize: 10.5, marginBottom: 3 }];
 
-export function CertificateInstitutionalHeader({ title, year }: { title: string; year: number }) {
+export function CertificateInstitutionalHeader({ title, year, profile }: { title: string; year: number; profile: InstitutionalProfile }) {
   const logoDataUri = getLogoDataUri();
+  const info = profile.officialRecognition;
 
   return (
     <View>
@@ -43,7 +48,7 @@ export function CertificateInstitutionalHeader({ title, year }: { title: string;
           </View>
         )}
         <View>
-          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#213c30" }}>{SITE.name.toUpperCase()}</Text>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#213c30" }}>{profile.name.toUpperCase()}</Text>
           <Text style={{ fontSize: 8, color: "#5c6b66", marginTop: 2 }}>
             <Text style={pdfStyles.bold}>Región: </Text>
             {info.region}
@@ -58,7 +63,7 @@ export function CertificateInstitutionalHeader({ title, year }: { title: string;
           </Text>
           <Text style={{ fontSize: 8, color: "#5c6b66", marginTop: 0.5 }}>
             <Text style={pdfStyles.bold}>RBD: </Text>
-            {SITE.rbd}
+            {profile.rbd}
           </Text>
           <Text style={{ fontSize: 8, color: "#5c6b66", marginTop: 0.5 }}>
             <Text style={pdfStyles.bold}>Resolución RECOFI </Text>
@@ -115,6 +120,7 @@ export function CertificateSignatureFooter({
   folio,
   verificationCode,
   directorSignatureDataUri,
+  profile,
 }: {
   homeroomTeacherName: string | null;
   issuedAt: string;
@@ -122,6 +128,7 @@ export function CertificateSignatureFooter({
   verificationCode: string;
   /** Data URI de la firma escaneada del Director (ver getDirectorSignatureDataUri). Si es null, se muestra solo la línea de firma en blanco. */
   directorSignatureDataUri?: string | null;
+  profile: InstitutionalProfile;
 }) {
   return (
     <View wrap={false}>
@@ -147,9 +154,9 @@ export function CertificateSignatureFooter({
               <View style={[pdfStyles.signatureLine, { marginTop: 0 }]} />
             )}
           </View>
-          <Text style={pdfStyles.signatureName}>{SITE.director}</Text>
-          <Text style={pdfStyles.signatureTitle}>Director</Text>
-          <Text style={pdfStyles.signatureTitle}>{SITE.name}</Text>
+          <Text style={pdfStyles.signatureName}>{profile.director}</Text>
+          <Text style={pdfStyles.signatureTitle}>{profile.directorTitle}</Text>
+          <Text style={pdfStyles.signatureTitle}>{profile.name}</Text>
         </View>
       </View>
 
@@ -161,7 +168,7 @@ export function CertificateSignatureFooter({
       <Text style={{ fontSize: 7.5, color: "#5c6b66", marginTop: 2 }}>Código de verificación: {verificationCode}</Text>
 
       <Text style={[pdfStyles.disclaimer, { marginTop: 6 }]}>
-        Documento emitido electrónicamente por la plataforma institucional de la {SITE.name}. Verifique su autenticidad en{" "}
+        Documento emitido electrónicamente por la plataforma institucional de la {profile.name}. Verifique su autenticidad en{" "}
         {SITE.domains.public}/verificar.
       </Text>
     </View>

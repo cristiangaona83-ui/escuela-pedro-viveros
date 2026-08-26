@@ -5,18 +5,21 @@ import { createClient } from "@/lib/supabase/client";
 export const PUBLIC_BUCKET = "archivos-publicos";
 export const PRIVATE_BUCKET = "archivos-internos";
 
-export type FileKind = "document" | "image";
+export type FileKind = "document" | "image" | "signature";
 
 export class FileValidationError extends Error {}
 
 const MAX_SIZE_BYTES: Record<FileKind, number> = {
   document: 15 * 1024 * 1024, // 15 MB
   image: 5 * 1024 * 1024, // 5 MB
+  signature: 2 * 1024 * 1024, // 2 MB -- imagen pequeña, escaneada
 };
 
 const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   document: ["application/pdf"],
   image: ["image/jpeg", "image/png", "image/webp"],
+  // Sin JPEG: una firma sin canal alfa se ve con fondo blanco/recuadro sobre el documento.
+  signature: ["image/png", "image/webp"],
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -61,9 +64,12 @@ async function validateFile(file: File, kind: FileKind): Promise<string> {
   const realType = await detectRealMimeType(file);
   const allowed = ALLOWED_MIME_BY_KIND[kind];
   if (!realType || !allowed.includes(realType)) {
-    throw new FileValidationError(
-      kind === "document" ? "Solo se aceptan archivos PDF." : "Solo se aceptan imágenes JPG, PNG o WEBP."
-    );
+    const messages: Record<FileKind, string> = {
+      document: "Solo se aceptan archivos PDF.",
+      image: "Solo se aceptan imágenes JPG, PNG o WEBP.",
+      signature: "Solo se aceptan imágenes PNG o WEBP (con fondo transparente).",
+    };
+    throw new FileValidationError(messages[kind]);
   }
 
   return EXTENSION_BY_MIME[realType];
