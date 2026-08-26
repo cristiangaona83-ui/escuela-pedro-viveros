@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
-import type { SubjectAverageRow } from "@/lib/pdf/GradesReportDocument";
+import type { SubjectAverageRow } from "@/lib/pdf/OfficialCertificateShared";
 
 export interface StudentReportData {
   studentName: string;
   studentRun: string;
   courseLabel: string;
+  courseLevel: string;
+  courseLetter: string;
   courseId: string;
   rows: SubjectAverageRow[];
   generalAverage: number | null;
@@ -69,6 +71,8 @@ export async function getStudentSubjectAverages(
     studentName: `${student.first_names} ${student.last_names}`,
     studentRun: student.run,
     courseLabel: `${course.level} ${course.letter}`,
+    courseLevel: course.level,
+    courseLetter: course.letter,
     courseId: course.id,
     rows,
     generalAverage,

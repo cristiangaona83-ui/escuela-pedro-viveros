@@ -22,6 +22,17 @@ export const SITE = {
   phone: "+56 44 367 0367",
   email: "epviveros@gmail.com",
   rbd: "2024-9",
+  // Datos oficiales para certificados académicos formales (Certificado
+  // Anual/Semestral de Estudios, Certificado de Cierre de Año Escolar).
+  // Entregados directamente por la dirección del establecimiento.
+  officialRecognition: {
+    region: "Valparaíso",
+    province: "San Antonio",
+    commune: "San Antonio",
+    recofi: "N° 1594, de fecha 31 de marzo de 1982",
+    planDecree: "Decreto N° 2960 de 2012",
+    evaluationDecree: "Decreto N° 67 de 2018",
+  },
   // Pendiente de entrega oficial — no inventar.
   schedule: null as string | null,
   socials: {

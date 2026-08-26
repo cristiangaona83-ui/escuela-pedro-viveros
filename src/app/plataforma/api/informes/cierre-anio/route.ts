@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
-import { GradesReportDocument } from "@/lib/pdf/GradesReportDocument";
+import { CertificadoCierreAnioDocument } from "@/lib/pdf/CertificadoCierreAnioDocument";
+import { formalCourseName, nextFormalCourseName, isEnsenanzaBasica } from "@/lib/pdf/academic-certificate-wording";
 import { getStudentSubjectAverages } from "@/services/report-data";
 import { getHomeroomTeacherName } from "@/services/students";
+import { getStudentAttendanceRate } from "@/services/student-attendance";
 import { DEFAULT_GRADING_CONFIG } from "@/config/grading";
-import { SITE } from "@/config/site";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   const session = await getSessionContext();
   if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   if (!canWrite(session.roles, [...ALLOWED_ROLES])) {
-    return NextResponse.json({ error: "No tienes permiso para emitir este informe" }, { status: 403 });
+    return NextResponse.json({ error: "No tienes permiso para emitir este certificado" }, { status: 403 });
   }
   const supabase = await createClient();
 
@@ -29,13 +30,12 @@ export async function POST(request: Request) {
 
   const report = await getStudentSubjectAverages(student_id, academic_year_id);
   if (!report) return NextResponse.json({ error: "El estudiante no tiene matrícula en ese año" }, { status: 404 });
+  if (!isEnsenanzaBasica(report.courseLevel)) {
+    return NextResponse.json({ error: "El Certificado de Cierre de Año Escolar aplica solo a cursos de Enseñanza Básica (1° a 8° Básico)" }, { status: 400 });
+  }
 
-  const situation =
-    report.generalAverage !== null && report.generalAverage >= DEFAULT_GRADING_CONFIG.approvalMinimum
-      ? "Promovido(a)"
-      : report.generalAverage !== null
-        ? "Con observación académica"
-        : "Sin información suficiente";
+  const promoted = report.generalAverage !== null && report.generalAverage >= DEFAULT_GRADING_CONFIG.approvalMinimum;
+  const situation = report.generalAverage === null ? "sin_informacion" : promoted ? "promovido" : "no_promovido";
 
   const { data: folio, error: folioError } = await supabase.rpc("next_certificate_folio", {
     p_cert_type: "cierre_anio",
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       code: insertError?.code, message: insertError?.message, details: insertError?.details, hint: insertError?.hint,
       student_id, academic_year_id, folio,
     });
-    const friendly = insertError?.code === "23505" ? "Ya existe un informe con ese folio. Vuelve a intentarlo." : "No se pudo registrar el informe";
+    const friendly = insertError?.code === "23505" ? "Ya existe un certificado con ese folio. Vuelve a intentarlo." : "No se pudo registrar el certificado";
     return NextResponse.json({ error: friendly }, { status: 500 });
   }
 
@@ -77,38 +77,38 @@ export async function POST(request: Request) {
     p_details: { folio, cert_type: "cierre_anio", student_id },
   });
   if (auditError) {
-    console.error("[informes/cierre-anio] log_audit error (informe ya registrado, no se interrumpe la emisión)", {
+    console.error("[informes/cierre-anio] log_audit error (certificado ya registrado, no se interrumpe la emisión)", {
       code: auditError.code, message: auditError.message,
     });
   }
 
-  const homeroomTeacher = await getHomeroomTeacherName(report.courseId);
+  const [homeroomTeacher, attendanceRate] = await Promise.all([
+    getHomeroomTeacherName(report.courseId),
+    getStudentAttendanceRate(student_id, report.courseId, `${year.year}-01-01`, `${year.year}-12-31`),
+  ]);
 
   const buffer = await renderToBuffer(
-    GradesReportDocument({
+    CertificadoCierreAnioDocument({
       folio,
-      title: "Informe de Cierre de Año",
-      subtitle: `Año académico ${year.year} · Situación final: ${situation}`,
       studentName: report.studentName,
       studentRun: report.studentRun,
-      courseLabel: report.courseLabel,
+      courseFormalName: formalCourseName(report.courseLevel, report.courseLetter),
+      nextCourseFormalName: nextFormalCourseName(report.courseLevel),
       year: year.year,
-      issuedAt: certificate.issued_at,
       rows: report.rows,
       generalAverage: report.generalAverage,
-      signatures: [
-        { name: homeroomTeacher ?? "—", title: "Profesor(a) Jefe" },
-        { name: SITE.director, title: "Director" },
-      ],
-      disclaimer:
-        "Informe de Cierre de Año / Informe Anual del Establecimiento. Este documento NO reemplaza el Certificado Anual de Estudios oficial emitido por el MINEDUC.",
+      attendanceRate,
+      promoted,
+      homeroomTeacherName: homeroomTeacher,
+      issuedAt: certificate.issued_at,
+      verificationCode: certificate.verification_code,
     })
   );
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="cierre-anio-${folio}.pdf"`,
+      "Content-Disposition": `inline; filename="certificado-cierre-anio-${folio}.pdf"`,
     },
   });
 }
