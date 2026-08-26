@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Equipo institucional" };
 const SECTIONS = [
   { title: "Equipo Directivo", description: "Nombre, cargo, fotografía, orden y visibilidad.", href: "/plataforma/equipo-institucional/directivo", icon: Landmark },
   { title: "Equipo PIE", description: "Nombre, cargo, fotografía, orden y visibilidad.", href: "/plataforma/equipo-institucional/pie", icon: HeartHandshake },
-  { title: "Cursos", description: "Docente de jefatura, asistente de aula y docentes de asignatura.", href: "/plataforma/equipo-institucional/cursos", icon: School },
+  { title: "Docentes y Asistentes", description: "Profesor(a) jefe, asistente de aula y docentes de asignatura.", href: "/plataforma/equipo-institucional/cursos", icon: School },
   { title: "Asistentes de la Educación", description: "Nombre, cargo, categoría, fotografía, orden y visibilidad.", href: "/plataforma/equipo-institucional/asistentes", icon: UserCog },
 ];
 

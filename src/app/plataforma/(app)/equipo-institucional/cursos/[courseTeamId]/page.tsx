@@ -38,7 +38,7 @@ export default async function EditarCursoEquipoPage({ params }: { params: Promis
             id={course.id}
             label={course.course_name}
             auditModule="equipo-institucional"
-            confirmMessage={`¿Eliminar el curso "${course.course_name}" de la página pública de Cursos? También se quitan las asignaciones de jefatura y asistente de este curso.`}
+            confirmMessage={`¿Eliminar el curso "${course.course_name}" de la página pública de Docentes y Asistentes? También se quitan las asignaciones de jefatura y asistente de este curso.`}
             redirectTo={LIST_HREF}
           />
         </div>

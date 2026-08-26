@@ -12,7 +12,7 @@ import { listCourseTeamsAdmin, listSubjectTeachersAdmin } from "@/services/staff
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
-export const metadata: Metadata = { title: "Cursos — Equipo institucional" };
+export const metadata: Metadata = { title: "Docentes y Asistentes — Equipo institucional" };
 
 const WRITE_ROLES = ["director", "utp", "superadmin"] as const;
 
@@ -26,9 +26,9 @@ export default async function CursosEquipoAdminPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Cursos</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Docentes y Asistentes</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Docente de jefatura, asistente de aula y docentes de asignatura mostrados en la página pública de Cursos.
+        Profesor(a) jefe, asistente de aula y docentes de asignatura mostrados en la página pública de Docentes y Asistentes.
       </p>
 
       <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_400px]" : ""}`}>
