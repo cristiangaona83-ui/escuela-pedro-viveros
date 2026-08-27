@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 export const PUBLIC_BUCKET = "archivos-publicos";
 export const PRIVATE_BUCKET = "archivos-internos";
 
-export type FileKind = "document" | "image" | "signature";
+export type FileKind = "document" | "image" | "signature" | "video";
 
 export class FileValidationError extends Error {}
 
@@ -13,6 +13,9 @@ const MAX_SIZE_BYTES: Record<FileKind, number> = {
   document: 15 * 1024 * 1024, // 15 MB
   image: 5 * 1024 * 1024, // 5 MB
   signature: 2 * 1024 * 1024, // 2 MB -- imagen pequeña, escaneada
+  // Coincide con el límite de video ya optimizado (ver lib/video/compressVideo.ts)
+  // -- esta es la última barrera antes de Storage, no el límite que ve el usuario.
+  video: 30 * 1024 * 1024,
 };
 
 const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
@@ -20,6 +23,8 @@ const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   image: ["image/jpeg", "image/png", "image/webp"],
   // Sin JPEG: una firma sin canal alfa se ve con fondo blanco/recuadro sobre el documento.
   signature: ["image/png", "image/webp"],
+  // Solo MP4: el video que se sube aquí ya salió de compressVideo() como MP4/H.264.
+  video: ["video/mp4"],
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -27,6 +32,7 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "video/mp4": "mp4",
 };
 
 /**
@@ -52,6 +58,9 @@ async function detectRealMimeType(file: File): Promise<string | null> {
   ) {
     return "image/webp";
   }
+  if (head[4] === 0x66 && head[5] === 0x74 && head[6] === 0x79 && head[7] === 0x70) {
+    return "video/mp4"; // caja "ftyp" del contenedor MP4/ISO-BMFF (bytes 4-7)
+  }
   return null;
 }
 
@@ -68,6 +77,7 @@ async function validateFile(file: File, kind: FileKind): Promise<string> {
       document: "Solo se aceptan archivos PDF.",
       image: "Solo se aceptan imágenes JPG, PNG o WEBP.",
       signature: "Solo se aceptan imágenes PNG o WEBP (con fondo transparente).",
+      video: "El video optimizado no es un MP4 válido.",
     };
     throw new FileValidationError(messages[kind]);
   }

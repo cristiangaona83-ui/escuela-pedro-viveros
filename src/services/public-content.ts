@@ -70,6 +70,7 @@ export async function getGallery(): Promise<GalleryRow[]> {
       .from("gallery")
       .select("*")
       .eq("published", true)
+      .order("order_index", { ascending: true })
       .order("event_date", { ascending: false });
     if (error) throw error;
     return data ?? [];

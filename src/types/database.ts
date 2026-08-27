@@ -425,15 +425,29 @@ export type NewsRow = {
   updated_at: string;
 }
 
+export type GalleryMediaType = "image" | "video" | "youtube";
+
 export type GalleryRow = {
   id: string;
   title: string;
   category: string;
   description: string | null;
+  /** Miniatura para cualquier media_type: la foto (image), el fotograma subido (video), o la miniatura pública de YouTube (youtube). */
   image_url: string;
   event_date: string | null;
   published: boolean;
   created_at: string;
+  media_type: GalleryMediaType;
+  video_url: string | null;
+  mime_type: string | null;
+  duration_seconds: number | null;
+  resolution: string | null;
+  original_size_bytes: number | null;
+  optimized_size_bytes: number | null;
+  savings_percent: number | null;
+  youtube_id: string | null;
+  youtube_url: string | null;
+  order_index: number;
 }
 
 export type WeeklyBulletinRow = {

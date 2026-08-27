@@ -19,8 +19,8 @@ export default async function GaleriaPage() {
         ) : (
           <EmptyState
             icon={ImageIcon}
-            title="Aún no hay imágenes publicadas"
-            description="Las fotografías de actividades y eventos se publicarán aquí, organizadas por categoría."
+            title="Aún no hay contenido publicado"
+            description="Las fotografías y videos de actividades y eventos se publicarán aquí, organizados por categoría."
           />
         )}
       </section>

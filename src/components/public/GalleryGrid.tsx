@@ -2,9 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
+import { youtubeEmbedUrl } from "@/lib/video/youtube";
 import type { GalleryRow } from "@/types/database";
+
+function formatDuration(seconds: number | null): string | null {
+  if (!seconds || seconds <= 0) return null;
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 export function GalleryGrid({ items }: { items: GalleryRow[] }) {
   const categories = useMemo(() => {
@@ -16,6 +24,9 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const filtered = category === "Todas" ? items : items.filter((i) => i.category === category);
+  const photoCount = filtered.filter((i) => i.media_type === "image").length;
+  const videoCount = filtered.filter((i) => i.media_type !== "image").length;
+  const active = activeIndex !== null ? filtered[activeIndex] : null;
 
   return (
     <div>
@@ -35,27 +46,48 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {filtered.map((item, i) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setActiveIndex(i)}
-            className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100"
-          >
-            <Image
-              src={item.image_url}
-              alt={item.title}
-              fill
-              loading="lazy"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(min-width:1024px) 25vw, 50vw"
-            />
-          </button>
-        ))}
+      <p className="mt-3 text-sm text-slate-500">
+        {photoCount} fotografía{photoCount === 1 ? "" : "s"}
+        {videoCount > 0 && ` · ${videoCount} video${videoCount === 1 ? "" : "s"}`}
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {filtered.map((item, i) => {
+          const duration = formatDuration(item.duration_seconds);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100"
+            >
+              <Image
+                src={item.image_url}
+                alt={item.title}
+                fill
+                loading="lazy"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(min-width:1024px) 25vw, 50vw"
+              />
+              {item.media_type !== "image" && (
+                <>
+                  <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/30" />
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-brand-800 shadow-sm">
+                      <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />
+                    </span>
+                  </span>
+                  {duration && (
+                    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-medium text-white">{duration}</span>
+                  )}
+                </>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {activeIndex !== null && filtered[activeIndex] && (
+      {active && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true">
           <button
             type="button"
@@ -66,7 +98,7 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
             <X className="h-5 w-5" />
           </button>
 
-          {activeIndex > 0 && (
+          {activeIndex! > 0 && (
             <button
               type="button"
               onClick={() => setActiveIndex((v) => (v !== null ? v - 1 : v))}
@@ -76,7 +108,7 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
               <ChevronLeft className="h-6 w-6" />
             </button>
           )}
-          {activeIndex < filtered.length - 1 && (
+          {activeIndex! < filtered.length - 1 && (
             <button
               type="button"
               onClick={() => setActiveIndex((v) => (v !== null ? v + 1 : v))}
@@ -87,19 +119,45 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
             </button>
           )}
 
-          <div className="max-h-[85vh] max-w-3xl">
-            <div className="relative aspect-[4/3] w-full max-h-[70vh]">
-              <Image
-                src={filtered[activeIndex].image_url}
-                alt={filtered[activeIndex].title}
-                fill
-                className="object-contain"
-                sizes="90vw"
-              />
-            </div>
+          <div className="max-h-[85vh] w-full max-w-3xl">
+            {active.media_type === "image" && (
+              <div className="relative aspect-[4/3] max-h-[70vh] w-full">
+                <Image src={active.image_url} alt={active.title} fill className="object-contain" sizes="90vw" />
+              </div>
+            )}
+
+            {active.media_type === "video" && active.video_url && (
+              <div className="aspect-video max-h-[70vh] w-full overflow-hidden rounded-lg bg-black">
+                <video
+                  key={active.id}
+                  src={active.video_url}
+                  poster={active.image_url}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  className="h-full w-full object-contain"
+                >
+                  Tu navegador no puede reproducir este video.
+                </video>
+              </div>
+            )}
+
+            {active.media_type === "youtube" && active.youtube_id && (
+              <div className="aspect-video max-h-[70vh] w-full overflow-hidden rounded-lg bg-black">
+                <iframe
+                  key={active.id}
+                  src={youtubeEmbedUrl(active.youtube_id)}
+                  title={active.title}
+                  className="h-full w-full"
+                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
             <p className="mt-3 text-center text-sm text-white/80">
-              {filtered[activeIndex].title}
-              {filtered[activeIndex].event_date && ` — ${formatDate(filtered[activeIndex].event_date)}`}
+              {active.title}
+              {active.event_date && ` — ${formatDate(active.event_date)}`}
             </p>
           </div>
         </div>
