@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { FormField, Input, Textarea, Select } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import { uploadPublicFile, deletePublicFile, pathFromPublicUrl, FileValidationError } from "@/lib/supabase/storage";
-import { compressVideo, VideoTooLargeError, MAX_OPTIMIZED_SIZE_BYTES, type CompressVideoResult } from "@/lib/video/compressVideo";
+import { compressVideo, VideoTooLargeError, CompressVideoError, MAX_OPTIMIZED_SIZE_BYTES, type CompressVideoResult } from "@/lib/video/compressVideo";
 import { parseYouTubeUrl } from "@/lib/video/youtube";
 import type { GalleryRow, GalleryMediaType } from "@/types/database";
 
@@ -51,8 +51,11 @@ export function GalleryForm({ item }: { item?: GalleryRow }) {
     } catch (err) {
       if (err instanceof VideoTooLargeError) {
         setVideoState({ phase: "too_large", sizeBytes: err.sizeBytes });
+      } else if (err instanceof CompressVideoError) {
+        setVideoState({ phase: "error", message: err.message });
       } else {
-        setVideoState({ phase: "error", message: "No pudimos optimizar este video. Prueba con otro archivo." });
+        console.error("[GalleryForm] error inesperado al optimizar video", err);
+        setVideoState({ phase: "error", message: "Ocurrió un error inesperado al optimizar este video. Prueba con otro archivo." });
       }
     }
   }
@@ -252,7 +255,7 @@ export function GalleryForm({ item }: { item?: GalleryRow }) {
                 <div className="flex items-start gap-2 text-emerald-700">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
-                    <p className="font-medium">Video optimizado</p>
+                    <p className="font-medium">{videoState.result.skippedRecompression ? "Video ya optimizado — se sube sin recomprimir" : "Video optimizado"}</p>
                     <p className="text-xs text-slate-600">
                       Original: {formatMb(videoState.result.originalSizeBytes)} · Optimizado: {formatMb(videoState.result.optimizedSizeBytes)} · Ahorro: {videoState.result.savingsPercent}%
                       {videoState.result.resolution && ` · ${videoState.result.resolution}`}
