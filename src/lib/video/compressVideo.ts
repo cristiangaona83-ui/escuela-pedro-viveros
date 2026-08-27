@@ -1,16 +1,25 @@
 /**
  * Compresión de video en el navegador con ffmpeg.wasm -- se importa
- * dinámicamente (ver la llamada a `import()` más abajo), nunca en el bundle
- * principal ni siquiera del admin: solo se descarga cuando alguien
- * efectivamente selecciona un video para subir a Galería.
+ * dinámicamente (ver la llamada a `import()` más abajo) SOLO cuando de
+ * verdad hace falta, nunca en el bundle principal ni siquiera del admin.
+ *
+ * VÍA RÁPIDA (sin FFmpeg): un MP4 <=30 MB que el propio navegador ya puede
+ * reproducir en <=1080p se sube tal cual, usando únicamente APIs nativas
+ * (<video> + loadedmetadata + videoWidth/videoHeight + canvas para la
+ * miniatura). FFmpeg.wasm es pesado y, sobre todo, su límite de memoria en
+ * el entorno WASM de un solo hilo puede fallar de forma críptica incluso
+ * con archivos de tamaño moderado (~24 MB) -- cargarlo innecesariamente
+ * para un video que el navegador ya reproduce sin problema es el riesgo
+ * que esta vía rápida evita. Ver `compressVideo` para el detalle exacto de
+ * cuándo se toma cada camino.
  *
  * Vercel es serverless (límites de tiempo/memoria por función); comprimir
  * ahí un video de varios minutos es frágil. Comprimir en el navegador del
  * administrador evita depender de esa infraestructura por completo.
  *
- * El original NUNCA se sube a Supabase -- solo el resultado de esta función
- * (MP4 optimizado + miniatura), o el archivo original tal cual cuando ya
- * cumple los límites (ver `compressVideo`), sale de esta pestaña.
+ * El original NUNCA se sube a Supabase modificado -- o se sube tal cual
+ * (vía rápida, bit a bit idéntico) o se sube el resultado de FFmpeg (MP4
+ * optimizado + miniatura). Nunca se sube el original cuando supera 30 MB.
  *
  * NOTA IMPORTANTE sobre bundling: el worker interno de @ffmpeg/ffmpeg
  * (dist/esm/worker.js) carga el core con un `import(_coreURL)` totalmente
@@ -34,6 +43,16 @@ const FFMPEG_CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.9/dist/esm";
 const MAX_WIDTH = 1920;
 const MAX_HEIGHT = 1080;
 export const MAX_OPTIMIZED_SIZE_BYTES = 30 * 1024 * 1024;
+/**
+ * Límite de ENTRADA para siquiera intentar procesar con FFmpeg en el
+ * navegador (no confundir con MAX_OPTIMIZED_SIZE_BYTES, que es el límite de
+ * SALIDA hacia Storage). Un MP4 de 40-60 MB sigue siendo razonable de
+ * procesar -- solo se rechaza sin intentar cuando supera este umbral, muy
+ * por encima de lo que un usuario subiría por error, pensado para evitar
+ * que el navegador quede colgado varios minutos en un intento condenado a
+ * fallar por memoria.
+ */
+export const MAX_INPUT_SIZE_FOR_COMPRESSION_BYTES = 300 * 1024 * 1024;
 /** Codecs que el navegador ya reproduce nativamente en un <video> -- si el archivo ya viene en uno de estos, no hace falta recodificar. */
 const WEB_READY_VIDEO_CODECS = new Set(["h264", "avc", "avc1"]);
 
@@ -71,8 +90,12 @@ export interface CompressVideoResult {
   durationSeconds: number | null;
   resolution: string | null;
   mimeType: "video/mp4";
-  /** true si el archivo ya cumplía los límites y se subió tal cual, sin recodificar. */
+  /** true si el archivo ya cumplía los límites y se subió tal cual, sin pasar por FFmpeg. */
   skippedRecompression: boolean;
+}
+
+function formatMb(bytes: number): string {
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
 
 function computeScaledDimensions(width: number, height: number): { width: number; height: number } {
@@ -100,10 +123,132 @@ function extensionOf(fileName: string): string {
   return match ? match[0] : ".mp4";
 }
 
-/** Bytes "ftyp" del contenedor MP4/MOV/ISO-BMFF en la posición 4-7 -- misma firma que storage.ts. */
+/** Bytes "ftyp" del contenedor MP4/MOV/ISO-BMFF en la posición 4-7 -- misma firma que storage.ts. Más confiable que confiar en `file.type`, que el sistema operativo/navegador puede reportar vacío o incorrecto. */
 async function looksLikeMp4Container(file: File): Promise<boolean> {
   const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   return head[4] === 0x66 && head[5] === 0x74 && head[6] === 0x79 && head[7] === 0x70;
+}
+
+// Tolerancia de redondeo: muchos codificadores rellenan (pad) el frame al
+// múltiplo de 16 más cercano (macrobloque de H.264) y `videoWidth`/
+// `videoHeight` reportan ese tamaño decodificado, no el "display size"
+// lógico -- un video 1080p real puede reportar 1088 (1080 redondeado a
+// múltiplo de 16), o simplemente 1081 por un recorte no exacto. Sin esta
+// tolerancia, un video legítimamente 1080p cae innecesariamente a FFmpeg.
+const RESOLUTION_TOLERANCE_PX = 16;
+
+/** Resolución <=1920x1080 (con tolerancia de redondeo) sin importar orientación (vertical u horizontal). */
+function isWithinNativeResolution(width: number, height: number): boolean {
+  const long = Math.max(width, height);
+  const short = Math.min(width, height);
+  return long <= MAX_WIDTH + RESOLUTION_TOLERANCE_PX && short <= MAX_HEIGHT + RESOLUTION_TOLERANCE_PX;
+}
+
+/** Chequeo de capacidad del navegador (no depende del archivo) -- barato, sin cargar nada. */
+function browserCanPlayMp4(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.createElement("video").canPlayType("video/mp4") !== "";
+}
+
+interface NativeProbeResult {
+  width: number;
+  height: number;
+  durationSeconds: number | null;
+}
+
+/**
+ * Analiza el video con el propio decodificador del navegador (<video> +
+ * loadedmetadata) -- sin FFmpeg. Si el navegador logra reportar dimensiones
+ * reales, es prueba directa de que puede reproducir este archivo concreto
+ * (más confiable que adivinar el codec por nombre).
+ */
+function probeVideoNatively(file: File, timeoutMs = 8000): Promise<NativeProbeResult | null> {
+  return new Promise((resolve) => {
+    if (typeof document === "undefined") {
+      resolve(null);
+      return;
+    }
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    const url = URL.createObjectURL(file);
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      video.removeAttribute("src");
+      video.load();
+    };
+    const finish = (result: NativeProbeResult | null) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    video.onloadedmetadata = () => {
+      const { videoWidth, videoHeight, duration } = video;
+      if (!videoWidth || !videoHeight) {
+        finish(null);
+        return;
+      }
+      finish({ width: videoWidth, height: videoHeight, durationSeconds: Number.isFinite(duration) ? duration : null });
+    };
+    video.onerror = () => finish(null);
+    video.src = url;
+  });
+}
+
+/** Captura un frame real (decodificado por el navegador) a un <canvas> -- confirma que el video no solo reporta metadata sino que efectivamente decodifica, y sirve de miniatura sin usar FFmpeg. */
+function captureThumbnailNatively(file: File, atSeconds = 0.5, timeoutMs = 8000): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    if (typeof document === "undefined") {
+      resolve(null);
+      return;
+    }
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    const url = URL.createObjectURL(file);
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      video.removeAttribute("src");
+      video.load();
+    };
+    const finish = (blob: Blob | null) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(blob);
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    video.onloadedmetadata = () => {
+      const target = Math.min(atSeconds, Math.max(0, (video.duration || atSeconds) - 0.05));
+      video.currentTime = target;
+    };
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx || canvas.width === 0 || canvas.height === 0) {
+          finish(null);
+          return;
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => finish(blob), "image/jpeg", 0.85);
+      } catch {
+        finish(null);
+      }
+    };
+    video.onerror = () => finish(null);
+    video.src = url;
+  });
 }
 
 function isOutOfMemoryError(text: string): boolean {
@@ -123,6 +268,48 @@ export async function compressVideo(
   file: File,
   onProgress: (progress: CompressVideoProgress) => void
 ): Promise<CompressVideoResult> {
+  const originalSizeBytes = file.size;
+  const originalWithinCap = originalSizeBytes <= MAX_OPTIMIZED_SIZE_BYTES;
+
+  // --- VÍA RÁPIDA: MP4 <=30 MB que el navegador ya reproduce en <=1080p ---
+  // No se carga FFmpeg en ningún momento para tomar ni ejecutar esta
+  // decisión -- solo file.size, la firma de bytes del contenedor,
+  // canPlayType y <video>+loadedmetadata/canvas.
+  if (originalWithinCap && browserCanPlayMp4() && (await looksLikeMp4Container(file))) {
+    onProgress({ phase: "loading", percent: 0 });
+    const probe = await probeVideoNatively(file);
+    if (probe && isWithinNativeResolution(probe.width, probe.height)) {
+      onProgress({ phase: "thumbnail", percent: 0 });
+      const thumbnailBlob = await captureThumbnailNatively(file, 0.5);
+      if (thumbnailBlob) {
+        return {
+          videoBlob: file,
+          thumbnailBlob,
+          originalSizeBytes,
+          optimizedSizeBytes: originalSizeBytes,
+          savingsPercent: 0,
+          durationSeconds: probe.durationSeconds,
+          resolution: `${probe.width}x${probe.height}`,
+          mimeType: "video/mp4",
+          skippedRecompression: true,
+        };
+      }
+      // La miniatura nativa falló (raro, ej. decodificador con soporte
+      // parcial) -- no se sube sin miniatura, se sigue a FFmpeg abajo.
+    }
+    // Metadata no disponible o resolución fuera de rango -- sigue a FFmpeg.
+  }
+
+  // --- VÍA FFMPEG: todo lo que no calificó arriba (>30MB, >1080p, formato
+  // que el navegador no reproduce directamente, o donde la vía rápida no
+  // pudo confirmar reproducción real) ---
+  if (originalSizeBytes > MAX_INPUT_SIZE_FOR_COMPRESSION_BYTES) {
+    throw new CompressVideoError(
+      "out_of_memory",
+      `Este video es demasiado grande para procesarlo en este navegador (máximo ${formatMb(MAX_INPUT_SIZE_FOR_COMPRESSION_BYTES)} de entrada). Prueba con una versión ya comprimida o usa un enlace de YouTube.`
+    );
+  }
+
   const { FFmpeg } = await import("@ffmpeg/ffmpeg");
   const { fetchFile, toBlobURL } = await import("@ffmpeg/util");
 
@@ -134,9 +321,6 @@ export async function compressVideo(
   ffmpeg.on("progress", ({ progress }) => {
     onProgress({ phase: "compressing", percent: Math.min(100, Math.max(0, Math.round(progress * 100))) });
   });
-
-  const originalSizeBytes = file.size;
-  const originalWithinCap = originalSizeBytes <= MAX_OPTIMIZED_SIZE_BYTES;
 
   try {
     onProgress({ phase: "loading", percent: 0 });
@@ -167,10 +351,14 @@ export async function compressVideo(
 
     const isMp4Container = await looksLikeMp4Container(file);
     const isWebReadyCodec = WEB_READY_VIDEO_CODECS.has(probe.codec.toLowerCase());
-    const isWithinResolution = probe.width <= MAX_WIDTH && probe.height <= MAX_HEIGHT;
-    const alreadyOptimized = isMp4Container && isWebReadyCodec && isWithinResolution && originalWithinCap;
+    const isWithinResolution = isWithinNativeResolution(probe.width, probe.height);
+    // La vía rápida ya cubre el caso común -- esto solo aplica cuando esa
+    // vía no pudo confirmar reproducción nativa pero FFmpeg, ya cargado,
+    // confirma que en realidad no hacía falta recodificar (evita una
+    // recompresión con pérdida innecesaria).
+    const ffmpegConfirmedOptimized = isMp4Container && isWebReadyCodec && isWithinResolution && originalWithinCap;
 
-    if (alreadyOptimized) {
+    if (ffmpegConfirmedOptimized) {
       // No se recodifica (mismo video/audio, sin pérdida de calidad), pero sí
       // se remuxea con "-c copy" -- una copia de contenedor casi instantánea,
       // no una recompresión -- para dos motivos: (1) el archivo original de

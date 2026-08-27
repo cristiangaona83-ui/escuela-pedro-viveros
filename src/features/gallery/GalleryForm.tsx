@@ -255,7 +255,7 @@ export function GalleryForm({ item }: { item?: GalleryRow }) {
                 <div className="flex items-start gap-2 text-emerald-700">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
-                    <p className="font-medium">{videoState.result.skippedRecompression ? "Video ya optimizado — se sube sin recomprimir" : "Video optimizado"}</p>
+                    <p className="font-medium">{videoState.result.skippedRecompression ? "El video ya está optimizado para la web. Se subirá directamente." : "Video optimizado"}</p>
                     <p className="text-xs text-slate-600">
                       Original: {formatMb(videoState.result.originalSizeBytes)} · Optimizado: {formatMb(videoState.result.optimizedSizeBytes)} · Ahorro: {videoState.result.savingsPercent}%
                       {videoState.result.resolution && ` · ${videoState.result.resolution}`}
