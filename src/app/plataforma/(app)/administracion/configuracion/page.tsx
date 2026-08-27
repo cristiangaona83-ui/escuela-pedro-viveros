@@ -3,6 +3,7 @@ import { Settings2 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { getGradingConfig, getCertificateSignature, getInstitutionalProfile } from "@/services/school-config";
 import { GradingScaleForm, SignatureForm, InstitutionalProfileForm } from "@/features/admin/ConfigForms";
+import { ContactExtrasForm } from "@/features/content/ContactExtrasForm";
 import { SITE } from "@/config/site";
 
 export const metadata: Metadata = { title: "Configuración institucional" };
@@ -33,6 +34,16 @@ export default async function ConfiguracionPage() {
             </p>
             <div className="mt-4">
               <InstitutionalProfileForm profile={institutionalProfile} />
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardBody>
+            <h2 className="font-semibold text-slate-900">Redes sociales y horario de atención</h2>
+            <p className="mt-1 text-xs text-slate-500">Se muestran en la página pública de Contacto.</p>
+            <div className="mt-4">
+              <ContactExtrasForm profile={institutionalProfile} />
             </div>
           </CardBody>
         </Card>

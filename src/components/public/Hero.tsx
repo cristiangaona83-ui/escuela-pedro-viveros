@@ -3,7 +3,7 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 import { LinkButton } from "@/components/ui/Button";
 import { SITE } from "@/config/site";
 
-export function Hero() {
+export function Hero({ name, slogan }: { name: string; slogan: string }) {
   return (
     <section className="relative isolate flex min-h-[560px] items-end overflow-hidden bg-brand-950 sm:min-h-[640px] lg:min-h-[720px]">
       <Image
@@ -24,9 +24,9 @@ export function Hero() {
             Tejas Verdes, Llolleo — San Antonio
           </span>
           <h1 className="mt-5 font-heading text-4xl font-medium leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {SITE.name}
+            {name}
           </h1>
-          <p className="mt-5 max-w-lg text-lg text-white/85">{SITE.slogan}</p>
+          <p className="mt-5 max-w-lg text-lg text-white/85">{slogan}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <LinkButton href="/nuestra-escuela" variant="accent" size="lg">
               Conoce nuestra escuela

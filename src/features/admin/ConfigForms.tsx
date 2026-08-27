@@ -126,7 +126,13 @@ export function InstitutionalProfileForm({ profile }: { profile: InstitutionalPr
     const form = new FormData(event.currentTarget);
     const str = (name: string) => String(form.get(name) || "").trim();
 
+    // Se sube el perfil COMPLETO (spread de `profile`, que ya trae fusionados
+    // schedule/mapsQuery/socials de ContactExtrasForm) y se pisan solo los
+    // campos que este formulario gestiona -- si solo mandáramos estos
+    // campos, el upsert reemplazaría toda la fila y borraría lo que
+    // ContactExtrasForm guardó por separado.
     const value = {
+      ...profile,
       name: str("name"),
       rbd: str("rbd"),
       director: str("director"),
@@ -141,7 +147,12 @@ export function InstitutionalProfileForm({ profile }: { profile: InstitutionalPr
         country: profile.address.country,
         full: [str("street"), str("neighborhood"), str("city"), str("region"), profile.address.country].filter(Boolean).join(", "),
       },
+      // officialRecognition.recofi (computado) queda pisado por el spread de
+      // abajo con valores obsoletos, sin problema: getInstitutionalProfile()
+      // siempre lo recalcula desde recofiNumber/recofiDate al leer, nunca se
+      // usa el valor guardado directamente.
       officialRecognition: {
+        ...profile.officialRecognition,
         region: str("orRegion"),
         province: str("orProvince"),
         commune: str("orCommune"),
@@ -152,10 +163,12 @@ export function InstitutionalProfileForm({ profile }: { profile: InstitutionalPr
       },
     };
 
+    // is_public: true -- nada aquí es sensible (ya está en los certificados
+    // públicos y en el sitio); Contacto/Inicio/Nuestra Escuela lo leen sin sesión.
     const supabase = createClient();
     const { error: dbError } = await supabase
       .from("school_config")
-      .upsert({ key: "institutional_profile", value, is_public: false }, { onConflict: "key" });
+      .upsert({ key: "institutional_profile", value, is_public: true }, { onConflict: "key" });
 
     if (!dbError) {
       await supabase.rpc("log_audit", { p_action: "actualizar_datos_institucionales", p_module: "configuracion", p_entity: "school_config", p_entity_id: "institutional_profile" });

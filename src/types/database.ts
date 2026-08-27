@@ -520,6 +520,21 @@ export type SchoolConfigRow = {
   updated_by: string | null;
 }
 
+export type ContentCardSection = "inicio_destacados" | "nuestra_escuela_sellos" | "nuestra_escuela_valores";
+
+export type ContentCardRow = {
+  id: string;
+  section: ContentCardSection;
+  title: string;
+  description: string;
+  icon: string | null;
+  href: string | null;
+  order_index: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export type InstitutionalSignatureKind = "director" | "teacher" | "other";
 
 export type InstitutionalSignatureRow = {
@@ -1176,6 +1191,7 @@ export interface Database {
       contact_messages: CrudTable<ContactMessageRow>;
       school_config: CrudTable<SchoolConfigRow>;
       institutional_signatures: CrudTable<InstitutionalSignatureRow>;
+      content_cards: CrudTable<ContentCardRow>;
       audit_logs: CrudTable<AuditLogRow>;
       convivencia_case_types: CrudTable<ConvivenciaCaseTypeRow>;
       convivencia_protocols: CrudTable<ConvivenciaProtocolRow>;

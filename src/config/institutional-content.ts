@@ -32,60 +32,37 @@ export const MISSION: string | null =
 export const VISION: string | null =
   "Ser un establecimiento educativo inclusivo que valora la diversidad y fomenta el espíritu crítico, la creatividad y la formación integral, garantizando una educación de calidad. Aspiramos a formar ciudadanos conscientes, comprometidos con el desarrollo y la construcción de una sociedad justa y equitativa.";
 
-export const EDUCATIONAL_SEALS: { title: string; description: string }[] = [
-  {
-    title: "Formación Integral",
-    description: "Promover el desarrollo armónico de las dimensiones intelectual, emocional, social y física de los estudiantes.",
-  },
-  {
-    title: "Educación Inclusiva y Equitativa",
-    description: "Garantizar el acceso, la permanencia y el éxito educativo de todos los estudiantes, respetando la diversidad.",
-  },
-  {
-    title: "Bienestar y Vida Saludable",
-    description: "Fomentar hábitos de vida saludable, autocuidado y bienestar emocional para un desarrollo equilibrado.",
-  },
-  {
-    title: "Ciudadanía y Convivencia Democrática",
-    description: "Desarrollar valores como el respeto, la empatía y la participación activa en la comunidad.",
-  },
-];
-
-export const VALUES: { title: string; description: string }[] = [
-  {
-    title: "Inclusión",
-    description: "Promovemos la participación activa de todas y todos, procurando que cada integrante de la comunidad se sienta valorado y parte fundamental de ella.",
-  },
-  {
-    title: "Compromiso",
-    description: "Asumimos nuestras responsabilidades con participación, constancia y disposición para contribuir al desarrollo de nuestra comunidad educativa.",
-  },
-  {
-    title: "Creatividad",
-    description: "Valoramos la capacidad de proponer ideas nuevas, expresar el pensamiento y buscar distintas soluciones frente a los desafíos.",
-  },
-  {
-    title: "Equidad",
-    description: "Reconocemos y respetamos las diferencias individuales, procurando entregar a cada persona las oportunidades y apoyos que necesita para desarrollarse plenamente.",
-  },
-  {
-    title: "Solidaridad",
-    description: "Promovemos la colaboración, la generosidad y la preocupación genuina por el bienestar de quienes forman parte de nuestra comunidad.",
-  },
-  {
-    title: "Tolerancia",
-    description: "Escuchamos y respetamos las distintas opiniones, experiencias y puntos de vista, favoreciendo el diálogo y la sana convivencia.",
-  },
-  {
-    title: "Empatía",
-    description: "Procuramos comprender las emociones y necesidades de los demás, actuando con respeto, amabilidad y consideración.",
-  },
-  {
-    title: "Resiliencia",
-    description: "Enfrentamos las dificultades con perseverancia y una actitud constructiva, aprendiendo de los errores y desafíos para continuar avanzando.",
-  },
-  {
-    title: "Integridad",
-    description: "Actuamos con honestidad, responsabilidad y coherencia, respetando nuestros principios y las normas de convivencia.",
-  },
-];
+/**
+ * Respaldo estático de las tres listas de tarjetas que ahora viven en la
+ * tabla `content_cards` (migración 0034) -- se usa únicamente si la
+ * consulta a Supabase falla o todavía no existe la migración/semilla, para
+ * que el sitio nunca se quede sin este contenido. El mismo texto se
+ * insertó como semilla de la tabla.
+ */
+export const STATIC_CONTENT_CARDS: Record<
+  "inicio_destacados" | "nuestra_escuela_sellos" | "nuestra_escuela_valores",
+  { title: string; description: string; icon?: string; href?: string }[]
+> = {
+  inicio_destacados: [
+    { title: "Proyecto Educativo", description: "Nuestra propuesta pedagógica, sellos institucionales y forma de acompañar a cada estudiante.", icon: "BookOpen", href: "/proyecto-educativo" },
+    { title: "Programa de Integración Escolar", description: "Un equipo especializado que apoya a estudiantes y familias con trabajo colaborativo.", icon: "HeartHandshake", href: "/equipo-pie" },
+    { title: "Equipo Directivo", description: "Conoce a quienes lideran la gestión pedagógica y administrativa de la escuela.", icon: "Users2", href: "/equipo-directivo" },
+  ],
+  nuestra_escuela_sellos: [
+    { title: "Formación Integral", description: "Promover el desarrollo armónico de las dimensiones intelectual, emocional, social y física de los estudiantes." },
+    { title: "Educación Inclusiva y Equitativa", description: "Garantizar el acceso, la permanencia y el éxito educativo de todos los estudiantes, respetando la diversidad." },
+    { title: "Bienestar y Vida Saludable", description: "Fomentar hábitos de vida saludable, autocuidado y bienestar emocional para un desarrollo equilibrado." },
+    { title: "Ciudadanía y Convivencia Democrática", description: "Desarrollar valores como el respeto, la empatía y la participación activa en la comunidad." },
+  ],
+  nuestra_escuela_valores: [
+    { title: "Inclusión", description: "Promovemos la participación activa de todas y todos, procurando que cada integrante de la comunidad se sienta valorado y parte fundamental de ella." },
+    { title: "Compromiso", description: "Asumimos nuestras responsabilidades con participación, constancia y disposición para contribuir al desarrollo de nuestra comunidad educativa." },
+    { title: "Creatividad", description: "Valoramos la capacidad de proponer ideas nuevas, expresar el pensamiento y buscar distintas soluciones frente a los desafíos." },
+    { title: "Equidad", description: "Reconocemos y respetamos las diferencias individuales, procurando entregar a cada persona las oportunidades y apoyos que necesita para desarrollarse plenamente." },
+    { title: "Solidaridad", description: "Promovemos la colaboración, la generosidad y la preocupación genuina por el bienestar de quienes forman parte de nuestra comunidad." },
+    { title: "Tolerancia", description: "Escuchamos y respetamos las distintas opiniones, experiencias y puntos de vista, favoreciendo el diálogo y la sana convivencia." },
+    { title: "Empatía", description: "Procuramos comprender las emociones y necesidades de los demás, actuando con respeto, amabilidad y consideración." },
+    { title: "Resiliencia", description: "Enfrentamos las dificultades con perseverancia y una actitud constructiva, aprendiendo de los errores y desafíos para continuar avanzando." },
+    { title: "Integridad", description: "Actuamos con honestidad, responsabilidad y coherencia, respetando nuestros principios y las normas de convivencia." },
+  ],
+};

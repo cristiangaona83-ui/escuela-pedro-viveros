@@ -1,46 +1,26 @@
 import Link from "next/link";
-import {
-  BookOpen,
-  HeartHandshake,
-  Users2,
-  ArrowRight,
-  Newspaper,
-  Clock,
-} from "lucide-react";
+import { ArrowRight, Newspaper, Clock } from "lucide-react";
 import { Hero } from "@/components/public/Hero";
 import { NewsCard } from "@/components/public/NewsCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
-import { getPublishedNews } from "@/services/public-content";
+import { getPublishedNews, getContentCards } from "@/services/public-content";
+import { getInstitutionalProfile, getHomeAdmissionContent, getHomeScheduleContent } from "@/services/school-config";
+import { resolveContentCardIcon } from "@/config/content-icons";
 import { SITE } from "@/config/site";
 
-const HIGHLIGHTS = [
-  {
-    icon: BookOpen,
-    title: "Proyecto Educativo",
-    description: "Nuestra propuesta pedagógica, sellos institucionales y forma de acompañar a cada estudiante.",
-    href: "/proyecto-educativo",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Programa de Integración Escolar",
-    description: "Un equipo especializado que apoya a estudiantes y familias con trabajo colaborativo.",
-    href: "/equipo-pie",
-  },
-  {
-    icon: Users2,
-    title: "Equipo Directivo",
-    description: "Conoce a quienes lideran la gestión pedagógica y administrativa de la escuela.",
-    href: "/equipo-directivo",
-  },
-];
-
 export default async function HomePage() {
-  const news = await getPublishedNews(3);
+  const [news, profile, admission, schedule, highlights] = await Promise.all([
+    getPublishedNews(3),
+    getInstitutionalProfile(),
+    getHomeAdmissionContent(),
+    getHomeScheduleContent(),
+    getContentCards("inicio_destacados"),
+  ]);
 
   return (
     <>
-      <Hero />
+      <Hero name={profile.name} slogan={profile.slogan} />
 
       <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 rounded-2xl border border-brand-100 bg-white px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:gap-6 sm:px-6">
@@ -51,99 +31,77 @@ export default async function HomePage() {
             <h2 className="font-heading text-lg font-medium tracking-tight text-slate-900">Horario de estudiantes</h2>
           </div>
           <div className="grid flex-1 grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-            <div>
-              <p className="text-sm font-semibold text-brand-700">Lunes a jueves</p>
-              <p className="mt-1 text-sm text-slate-600">
-                Entrada: <span className="font-medium text-slate-900">08:15 hrs.</span>
-              </p>
-              <p className="text-sm text-slate-600">
-                Salida: <span className="font-medium text-slate-900">15:30 hrs.</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-brand-700">Viernes</p>
-              <p className="mt-1 text-sm text-slate-600">
-                Entrada: <span className="font-medium text-slate-900">08:15 hrs.</span>
-              </p>
-              <p className="text-sm text-slate-600">
-                Salida: <span className="font-medium text-slate-900">13:15 hrs.</span>
-              </p>
-            </div>
+            {schedule.blocks.map((block) => (
+              <div key={block.label}>
+                <p className="text-sm font-semibold text-brand-700">{block.label}</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Entrada: <span className="font-medium text-slate-900">{block.entrada}</span>
+                </p>
+                <p className="text-sm text-slate-600">
+                  Salida: <span className="font-medium text-slate-900">{block.salida}</span>
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
         <div className="space-y-6">
-          {/* Postulaciones SAE 2027 — bloque principal */}
+          {/* Postulaciones — bloque principal */}
           <div className="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-10 sm:px-10 sm:py-12">
             <div className="mx-auto max-w-3xl text-center">
               <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
-                Admisión 2027
+                {admission.sae.badge}
               </span>
               <h2 className="mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
-                ¡Postulaciones SAE 2027 abiertas! 🏫✨
+                {admission.sae.title}
               </h2>
               <div className="mx-auto mt-4 max-w-2xl space-y-3 text-left leading-relaxed text-slate-600">
-                <p>
-                  Ya se encuentra abierto el Periodo Principal de Postulación del Sistema de Admisión Escolar
-                  (SAE) para el año 2027.
-                </p>
-                <p>
-                  Las familias tienen plazo hasta el <strong>jueves 27 de agosto a las 14:00 horas</strong> para
-                  revisar establecimientos, ordenar sus preferencias y enviar su postulación.
-                </p>
-                <p>
-                  <strong>Recuerda:</strong> el proceso no es por orden de llegada. Puedes realizar tu
-                  postulación con calma dentro del plazo establecido; el día y la hora en que la envíes no
-                  influyen en el resultado.
-                </p>
+                {admission.sae.paragraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
               </div>
+              {admission.sae.deadlineLabel && (
+                <p className="mt-4 inline-flex items-center rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
+                  {admission.sae.deadlineLabel}
+                </p>
+              )}
 
               <div className="mx-auto mt-8 max-w-xl rounded-xl bg-white/70 px-5 py-6">
-                <p className="font-semibold text-slate-900">
-                  ¿Quieres ser parte de la Escuela Profesor Pedro Viveros Ormeño en 2027?
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  Ingresa al Sistema de Admisión Escolar y realiza tu postulación dentro del plazo.
-                </p>
+                <p className="font-semibold text-slate-900">{admission.sae.ctaBoxTitle}</p>
+                <p className="mt-1 text-sm text-slate-600">{admission.sae.ctaBoxText}</p>
                 <div className="mt-5">
-                  <LinkButton href="https://www.sistemadeadmisionescolar.cl/" target="_blank" rel="noopener noreferrer" size="lg">
-                    Postular en SAE
+                  <LinkButton href={admission.sae.ctaHref} target="_blank" rel="noopener noreferrer" size="lg">
+                    {admission.sae.ctaText}
                   </LinkButton>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Vacantes 2026 — bloque secundario, visualmente distinto */}
+          {/* Vacantes — bloque secundario, visualmente distinto */}
           <div className="rounded-2xl border border-slate-200 bg-white px-6 py-8 sm:px-10">
             <div className="mx-auto max-w-3xl text-center">
               <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Vacantes 2026
+                {admission.vacantes.badge}
               </span>
               <h3 className="mt-3 font-heading text-xl font-medium tracking-tight text-slate-900">
-                ¿Necesitas una vacante para este año?
+                {admission.vacantes.title}
               </h3>
               <div className="mx-auto mt-3 max-w-2xl space-y-2 text-justify text-sm leading-relaxed text-slate-600">
-                <p>
-                  Si necesitas matrícula durante el año escolar 2026 o no obtuviste un cupo mediante el proceso
-                  regular, puedes utilizar Anótate en la Lista, plataforma oficial del Ministerio de Educación
-                  para solicitar vacantes disponibles.
-                </p>
-                <p>
-                  Las solicitudes se realizan en línea y las vacantes disponibles se gestionan respetando el
-                  orden de llegada registrado en la plataforma.
-                </p>
+                {admission.vacantes.paragraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
               </div>
               <div className="mt-5">
                 <LinkButton
-                  href="https://www.sistemadeadmisionescolar.cl/"
+                  href={admission.vacantes.ctaHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   variant="secondary"
                 >
-                  Anótate en la Lista
+                  {admission.vacantes.ctaText}
                 </LinkButton>
               </div>
             </div>
@@ -153,22 +111,25 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-6 md:grid-cols-3">
-          {HIGHLIGHTS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="group rounded-xl border border-slate-200 bg-white p-6 transition-colors hover:border-brand-200"
-            >
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                <item.icon className="h-5 w-5" strokeWidth={1.75} />
-              </span>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>
-              <p className="mt-2 text-sm text-slate-500">{item.description}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
-                Ver más <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          ))}
+          {highlights.map((item) => {
+            const Icon = resolveContentCardIcon(item.icon);
+            return (
+              <Link
+                key={item.id}
+                href={item.href ?? "#"}
+                className="group rounded-xl border border-slate-200 bg-white p-6 transition-colors hover:border-brand-200"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                  <Icon className="h-5 w-5" strokeWidth={1.75} />
+                </span>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-500">{item.description}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                  Ver más <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -207,7 +168,7 @@ export default async function HomePage() {
           <h2 className="font-heading text-2xl font-medium tracking-tight text-white sm:text-3xl">¿Formas parte de nuestra comunidad?</h2>
           <p className="mx-auto mt-3 max-w-xl text-brand-100/90">
             Docentes, equipo directivo y profesionales PIE acceden a la gestión académica desde la Plataforma
-            Pedagógica {SITE.name}.
+            Pedagógica {profile.name}.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <LinkButton href="/contacto" variant="outline" size="lg">

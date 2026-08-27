@@ -4,14 +4,15 @@ import { PageHeader } from "@/components/public/PageHeader";
 import { ContactForm } from "@/components/public/ContactForm";
 import { Card, CardBody } from "@/components/ui/Card";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
-import { SITE } from "@/config/site";
 import { telHref } from "@/lib/utils";
+import { getInstitutionalProfile } from "@/services/school-config";
 
 export const metadata: Metadata = { title: "Contacto" };
 
-export default function ContactoPage() {
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SITE.mapsQuery)}`;
-  const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(SITE.mapsQuery)}&output=embed`;
+export default async function ContactoPage() {
+  const profile = await getInstitutionalProfile();
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.mapsQuery)}`;
+  const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(profile.mapsQuery)}&output=embed`;
 
   return (
     <>
@@ -25,15 +26,15 @@ export default function ContactoPage() {
                 <div className="flex gap-3">
                   <MapPin className="h-5 w-5 shrink-0 text-brand-700" />
                   <div>
-                    <p className="font-medium text-slate-900">{SITE.name}</p>
-                    <p className="text-sm text-slate-500">{SITE.address.full}</p>
+                    <p className="font-medium text-slate-900">{profile.name}</p>
+                    <p className="text-sm text-slate-500">{profile.address.full}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <Phone className="h-5 w-5 shrink-0 text-brand-700" />
-                  {SITE.phone ? (
-                    <a href={telHref(SITE.phone)} className="text-sm text-slate-500 hover:text-brand-700">
-                      {SITE.phone}
+                  {profile.phone ? (
+                    <a href={telHref(profile.phone)} className="text-sm text-slate-500 hover:text-brand-700">
+                      {profile.phone}
                     </a>
                   ) : (
                     <p className="text-sm text-slate-500">Teléfono por confirmar</p>
@@ -41,9 +42,9 @@ export default function ContactoPage() {
                 </div>
                 <div className="flex gap-3">
                   <Mail className="h-5 w-5 shrink-0 text-brand-700" />
-                  {SITE.email ? (
-                    <a href={`mailto:${SITE.email}`} className="text-sm text-slate-500 hover:text-brand-700">
-                      {SITE.email}
+                  {profile.email ? (
+                    <a href={`mailto:${profile.email}`} className="text-sm text-slate-500 hover:text-brand-700">
+                      {profile.email}
                     </a>
                   ) : (
                     <p className="text-sm text-slate-500">Correo por confirmar</p>
@@ -51,7 +52,7 @@ export default function ContactoPage() {
                 </div>
                 <div className="flex gap-3">
                   <Clock className="h-5 w-5 shrink-0 text-brand-700" />
-                  <p className="text-sm text-slate-500">{SITE.schedule ?? "Horario de atención por confirmar"}</p>
+                  <p className="text-sm text-slate-500">{profile.schedule || "Horario de atención por confirmar"}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -62,9 +63,9 @@ export default function ContactoPage() {
                   >
                     <Navigation className="h-4 w-4" /> Cómo llegar
                   </a>
-                  {SITE.socials.facebook && (
+                  {profile.socials.facebook && (
                     <a
-                      href={SITE.socials.facebook}
+                      href={profile.socials.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-brand-200 hover:bg-brand-50"

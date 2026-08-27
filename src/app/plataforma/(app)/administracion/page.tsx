@@ -13,6 +13,7 @@ import {
   Globe,
   LayoutDashboard,
   ArrowRight,
+  LayoutTemplate,
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { getSessionContext } from "@/features/auth/session";
@@ -35,6 +36,7 @@ type Section = {
 const SECTIONS: Section[] = [
   { title: "Ver sitio público", description: "Abre la página pública en una pestaña nueva.", href: SITE.domains.public, icon: Globe, external: true },
   { title: "Configuración institucional", description: "Nombre, RBD, dirección, reconocimiento oficial, escala de notas y redondeo.", href: "/plataforma/administracion/configuracion", icon: Settings2 },
+  { title: "Sitio Web", description: "Inicio, Nuestra Escuela y Proyecto Educativo: textos, sellos, valores y tarjetas destacadas.", href: "/plataforma/administracion/sitio-web", icon: LayoutTemplate },
   { title: "Firmas institucionales", description: "Firma del Director y de profesores/as jefes para certificados e informes.", href: "/plataforma/administracion/firmas", icon: PenTool, roles: ["director", "superadmin"] },
   { title: "Equipo institucional", description: "Directivo, PIE y Asistentes de la Educación: nombre, cargo, foto, orden y visibilidad.", href: "/plataforma/equipo-institucional", icon: Users2 },
   { title: "Docentes y Asistentes", description: "Profesor(a) jefe, asistente de aula y docentes de asignatura por curso.", href: "/plataforma/equipo-institucional/cursos", icon: GraduationCap },

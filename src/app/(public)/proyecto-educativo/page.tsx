@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { FileText, ArrowRight, Download } from "lucide-react";
 import { PageHeader } from "@/components/public/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
-import { PEI_INTRO } from "@/config/institutional-content";
 import { getPublicDocuments } from "@/services/public-content";
+import { getProyectoEducativoContent } from "@/services/school-config";
 
 export const metadata: Metadata = { title: "Proyecto Educativo Institucional" };
 
 export default async function ProyectoEducativoPage() {
-  const documents = await getPublicDocuments();
+  const [documents, content] = await Promise.all([getPublicDocuments(), getProyectoEducativoContent()]);
   const peiDocument = documents.find((doc) => doc.category === "PEI");
 
   return (
@@ -26,7 +26,7 @@ export default async function ProyectoEducativoPage() {
         </div>
 
         <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-slate-600 sm:text-base">
-          {PEI_INTRO.paragraphs.map((p, i) => (
+          {content.introParagraphs.map((p, i) => (
             <p key={i} className="text-justify">{p}</p>
           ))}
         </div>

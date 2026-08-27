@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
+  ContentCardRow,
+  ContentCardSection,
   CourseRow,
   CourseTeamMemberRow,
   CourseTeamRow,
@@ -13,6 +15,7 @@ import type {
   WeeklyBulletinRow,
 } from "@/types/database";
 import { STATIC_INSTITUTIONAL_DOCUMENTS } from "@/config/institutional-documents";
+import { STATIC_CONTENT_CARDS } from "@/config/institutional-content";
 
 export type StaffSectionMember = StaffSectionMembershipRow & { staff_member: StaffMemberRow };
 export type CourseTeamWithMembers = CourseTeamRow & {
@@ -192,6 +195,36 @@ export async function getPublicCourses(): Promise<(CourseRow & { homeroom_teache
   } catch {
     return [];
   }
+}
+
+/** Tarjetas activas de una sección (Destacados de Inicio, Sellos o Valores de Nuestra Escuela). Respaldo estático si la tabla falla o está vacía. */
+export async function getContentCards(section: ContentCardSection): Promise<ContentCardRow[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("content_cards")
+      .select("*")
+      .eq("section", section)
+      .eq("active", true)
+      .order("order_index", { ascending: true });
+    if (error) throw error;
+    if (data && data.length > 0) return data;
+  } catch {
+    // sigue al respaldo estático
+  }
+  const now = new Date(0).toISOString();
+  return STATIC_CONTENT_CARDS[section].map((c, i) => ({
+    id: `static-${section}-${i}`,
+    section,
+    title: c.title,
+    description: c.description,
+    icon: c.icon ?? null,
+    href: c.href ?? null,
+    order_index: i,
+    active: true,
+    created_at: now,
+    updated_at: now,
+  }));
 }
 
 export async function submitContactMessage(input: {
