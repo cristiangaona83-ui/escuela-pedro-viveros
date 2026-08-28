@@ -3,11 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Save, AlertCircle } from "lucide-react";
+import type { JSONContent } from "@tiptap/core";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input, Textarea } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import { uploadPublicFile, deletePublicFile, pathFromPublicUrl, FileValidationError } from "@/lib/supabase/storage";
 import { slugify } from "@/lib/utils";
+import { NewsEditor } from "@/features/news/NewsEditor";
+import { parseNewsContent, isNewsContentEmpty, EMPTY_NEWS_CONTENT } from "@/lib/news-content";
 import type { NewsRow } from "@/types/database";
 
 const FOLDER = "noticias";
@@ -17,6 +20,7 @@ export function NewsForm({ news }: { news?: NewsRow }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [published, setPublished] = useState(news?.published ?? false);
+  const [content, setContent] = useState<JSONContent>(() => (news?.content ? parseNewsContent(news.content) : EMPTY_NEWS_CONTENT));
   const isEdit = Boolean(news);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -43,6 +47,12 @@ export function NewsForm({ news }: { news?: NewsRow }) {
       return;
     }
 
+    if (isNewsContentEmpty(content)) {
+      setLoading(false);
+      setError("Escribe el contenido de la noticia.");
+      return;
+    }
+
     const title = String(form.get("title") || "").trim();
 
     const payload = {
@@ -50,7 +60,7 @@ export function NewsForm({ news }: { news?: NewsRow }) {
       slug: news?.slug ?? slugify(title),
       category: String(form.get("category") || "General").trim() || "General",
       summary: String(form.get("summary") || "").trim(),
-      content: String(form.get("content") || "").trim(),
+      content: JSON.stringify(content),
       cover_image_url: coverImageUrl,
       published,
       published_at: published ? news?.published_at ?? new Date().toISOString() : news?.published_at ?? null,
@@ -97,7 +107,7 @@ export function NewsForm({ news }: { news?: NewsRow }) {
         <Textarea id="summary" name="summary" required defaultValue={news?.summary} />
       </FormField>
       <FormField label="Contenido" htmlFor="content" required>
-        <Textarea id="content" name="content" required rows={10} defaultValue={news?.content} className="min-h-56" />
+        <NewsEditor content={content} onChange={setContent} />
       </FormField>
       <FormField
         label="Imagen destacada"

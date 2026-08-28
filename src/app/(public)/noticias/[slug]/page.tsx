@@ -5,6 +5,7 @@ import { ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { getNewsBySlug } from "@/services/public-content";
+import { parseNewsContent, renderNewsHTML } from "@/lib/news-content";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -40,7 +41,18 @@ export default async function NoticiaDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="prose prose-slate mt-8 max-w-none whitespace-pre-line text-slate-700">{news.content}</div>
+      {/*
+        Sin @tailwindcss/typography en el proyecto (verificado: no está en
+        package.json ni registrado en globals.css) -- "prose" no generaría
+        ningún estilo. Se define el formato directamente con selectores de
+        hijo, acotado a este contenedor, para que negrita/cursiva/subrayado/
+        alineación/listas/enlaces se vean igual que en el editor de
+        administración sin agregar una dependencia nueva.
+      */}
+      <div
+        className="mt-8 max-w-none text-slate-700 [&_a]:text-brand-700 [&_a]:underline [&_a:hover]:text-brand-800 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:text-slate-900 [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:font-heading [&_h3]:text-xl [&_h3]:font-medium [&_h3]:text-slate-900 [&_li]:mb-1 [&_li_p]:my-0 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_p:first-child]:mt-0 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
+        dangerouslySetInnerHTML={{ __html: renderNewsHTML(parseNewsContent(news.content)) }}
+      />
 
       {news.gallery_urls.length > 0 && (
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
