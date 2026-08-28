@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
-import { CalendarCheck, BarChart3 } from "lucide-react";
+import { CalendarCheck, BarChart3, CalendarOff } from "lucide-react";
 import { AttendanceGrid } from "@/features/attendance/AttendanceGrid";
 import { getTeachableCourses } from "@/services/academic-scope";
 import { getSessionContext } from "@/features/auth/session";
@@ -27,11 +27,18 @@ export default async function AsistenciaPage() {
             Registro diario de presente, ausente, atraso y retiro por curso.
           </p>
         </div>
-        {allowedReports && (
-          <LinkButton href="/plataforma/asistencia/reportes" variant="secondary" size="sm">
-            <BarChart3 className="h-4 w-4" /> Ver reportes
-          </LinkButton>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {allowedReports && (
+            <LinkButton href="/plataforma/asistencia/reportes" variant="secondary" size="sm">
+              <BarChart3 className="h-4 w-4" /> Ver reportes
+            </LinkButton>
+          )}
+          {allowedReports && (
+            <LinkButton href="/plataforma/asistencia/administracion" variant="secondary" size="sm">
+              <CalendarOff className="h-4 w-4" /> Administrar calendario
+            </LinkButton>
+          )}
+        </div>
       </div>
 
       <Card className="mt-6">

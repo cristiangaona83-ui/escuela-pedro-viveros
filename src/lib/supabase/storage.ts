@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 export const PUBLIC_BUCKET = "archivos-publicos";
 export const PRIVATE_BUCKET = "archivos-internos";
 
-export type FileKind = "document" | "image" | "signature" | "video" | "case_attachment";
+export type FileKind = "document" | "image" | "signature" | "video" | "case_attachment" | "suspension_document";
 
 export class FileValidationError extends Error {}
 
@@ -19,6 +19,9 @@ const MAX_SIZE_BYTES: Record<FileKind, number> = {
   // Actas/documentos adjuntos de caso (Convivencia) -- puede ser un PDF
   // escaneado de varias páginas, mismo límite que "document".
   case_attachment: 15 * 1024 * 1024,
+  // Documento/resolución de respaldo de una suspensión de clases -- mismo
+  // límite y formatos que case_attachment.
+  suspension_document: 15 * 1024 * 1024,
 };
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -31,6 +34,7 @@ const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   // Solo MP4: el video que se sube aquí ya salió de compressVideo() como MP4/H.264.
   video: ["video/mp4"],
   case_attachment: ["application/pdf", DOCX_MIME, "image/jpeg", "image/png"],
+  suspension_document: ["application/pdf", DOCX_MIME, "image/jpeg", "image/png"],
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -94,6 +98,7 @@ async function validateFile(file: File, kind: FileKind): Promise<string> {
       signature: "Solo se aceptan imágenes PNG o WEBP (con fondo transparente).",
       video: "El video optimizado no es un MP4 válido.",
       case_attachment: "Solo se aceptan archivos PDF, DOCX, JPG o PNG.",
+      suspension_document: "Solo se aceptan archivos PDF, DOCX, JPG o PNG.",
     };
     throw new FileValidationError(messages[kind]);
   }

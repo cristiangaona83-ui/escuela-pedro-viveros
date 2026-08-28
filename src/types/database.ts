@@ -1024,6 +1024,51 @@ export type VerifyCertificateResult = {
   institution: string;
 }
 
+// ---------------------------------------------------------------------------
+// Calendario de asistencia: suspensiones y recuperaciones
+// (supabase/migrations/0037_class_suspensions.sql)
+// ---------------------------------------------------------------------------
+export type ClassSuspensionKind = "suspension" | "recuperacion";
+export type ClassSuspensionScope = "escuela" | "cursos";
+export type ClassSuspensionReasonType =
+  | "suspension_clases"
+  | "interrupcion_jornada"
+  | "jornada_sin_estudiantes"
+  | "emergencia"
+  | "corte_servicios"
+  | "clima"
+  | "actividad_institucional"
+  | "otro";
+export type ClassSuspensionStatus = "activa" | "anulada";
+
+export type ClassSuspensionRow = {
+  id: string;
+  suspension_date: string;
+  kind: ClassSuspensionKind;
+  scope: ClassSuspensionScope;
+  reason_type: ClassSuspensionReasonType | null;
+  full_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  description: string | null;
+  observation: string | null;
+  supporting_document_path: string | null;
+  recovery_of_id: string | null;
+  status: ClassSuspensionStatus;
+  created_by: string;
+  created_at: string;
+  updated_by: string | null;
+  updated_at: string;
+  voided_by: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+}
+
+export type ClassSuspensionCourseRow = {
+  suspension_id: string;
+  course_id: string;
+}
+
 export interface Database {
   public: {
     Views: {
@@ -1252,6 +1297,8 @@ export interface Database {
       case_minute_attachments: CrudTable<CaseMinuteAttachmentRow>;
       psychologist_report_types: CrudTable<PsychologistReportTypeRow>;
       psychologist_reports: CrudTable<PsychologistReportRow>;
+      class_suspensions: CrudTable<ClassSuspensionRow>;
+      class_suspension_courses: CrudTable<ClassSuspensionCourseRow>;
     };
   };
 }

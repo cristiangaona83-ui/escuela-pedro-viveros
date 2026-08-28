@@ -14,6 +14,7 @@ import {
 } from "@/lib/attendance/calc";
 import { getPeriodRange, getPreviousPeriodRange, type DateRange, type PeriodKey } from "@/lib/attendance/periods";
 import { getActiveAcademicYear } from "@/services/courses";
+import { getExcludedDatesByCourse, getRecoveredDatesByCourse } from "@/services/class-suspensions";
 
 const PAGE_SIZE = 1000;
 
@@ -117,6 +118,18 @@ async function fetchAttendanceRows(
   return all;
 }
 
+/**
+ * Descarta filas de attendance cuya fecha cae en una suspensión de jornada
+ * completa activa para ese curso (class_suspensions vía class-suspensions.ts).
+ * Nunca borra ni edita las filas en la base -- solo las excluye de este
+ * cálculo, así que una suspensión registrada hoy sobre una fecha pasada
+ * recalcula el % automáticamente la próxima vez que se pida el reporte.
+ */
+function filterExcludedRows(rows: RawAttendanceRow[], excludedByCourse: Map<string, Set<string>>): RawAttendanceRow[] {
+  if (excludedByCourse.size === 0) return rows;
+  return rows.filter((r) => !excludedByCourse.get(r.course_id)?.has(r.date));
+}
+
 function groupByCourse(rows: RawAttendanceRow[]): Map<string, { counts: AttendanceCounts; dates: Set<string> }> {
   const byCourse = new Map<string, { counts: AttendanceCounts; dates: Set<string> }>();
   for (const r of rows) {
@@ -193,12 +206,18 @@ export async function getSchoolAttendanceOverview(
     };
   }
 
-  const [{ data: courses }, { data: enrollmentRows }, currentRows, previousRows] = await Promise.all([
+  const unionFrom = range.from < previousRange.from ? range.from : previousRange.from;
+  const unionTo = range.to > previousRange.to ? range.to : previousRange.to;
+
+  const [{ data: courses }, { data: enrollmentRows }, rawCurrentRows, rawPreviousRows, excludedByCourse] = await Promise.all([
     supabase.from("courses").select("id, level, letter").in("id", courseIds),
     supabase.from("enrollments").select("course_id").eq("status", "activa").in("course_id", courseIds),
     fetchAttendanceRows(supabase, { courseIds, from: range.from, to: range.to }),
     fetchAttendanceRows(supabase, { courseIds, from: previousRange.from, to: previousRange.to }),
+    getExcludedDatesByCourse(courseIds, unionFrom, unionTo),
   ]);
+  const currentRows = filterExcludedRows(rawCurrentRows, excludedByCourse);
+  const previousRows = filterExcludedRows(rawPreviousRows, excludedByCourse);
 
   const matriculaByCourse = new Map<string, number>();
   for (const e of enrollmentRows ?? []) {
@@ -356,13 +375,23 @@ export async function getCourseAttendanceDetail(
   if (!course) return null;
   const teacher = course.profiles as unknown as { full_name: string } | null;
 
-  const [{ data: enrollments }, currentRows, previousRows, yearRows] = await Promise.all([
+  const previousRangeForCourse = getPreviousPeriodRange(range);
+  const yearFrom = `${range.to.slice(0, 4)}-01-01`;
+  const yearTo = `${range.to.slice(0, 4)}-12-31`;
+  const unionFrom = [range.from, previousRangeForCourse.from, yearFrom].sort()[0];
+  const unionTo = [range.to, previousRangeForCourse.to, yearTo].sort().at(-1)!;
+
+  const [{ data: enrollments }, rawCurrentRows, rawPreviousRows, rawYearRows, excludedByCourse] = await Promise.all([
     supabase.from("enrollments").select("student_id, students(id, first_names, last_names, run)").eq("course_id", courseId).eq("status", "activa"),
     fetchAttendanceRows(supabase, { courseIds: [courseId], from: range.from, to: range.to }),
-    fetchAttendanceRows(supabase, { courseIds: [courseId], from: getPreviousPeriodRange(range).from, to: getPreviousPeriodRange(range).to }),
+    fetchAttendanceRows(supabase, { courseIds: [courseId], from: previousRangeForCourse.from, to: previousRangeForCourse.to }),
     // Evolución mensual siempre sobre el año calendario del filtro, para que tenga sentido aunque el período activo sea "semana" o "mes".
-    fetchAttendanceRows(supabase, { courseIds: [courseId], from: `${range.to.slice(0, 4)}-01-01`, to: `${range.to.slice(0, 4)}-12-31` }),
+    fetchAttendanceRows(supabase, { courseIds: [courseId], from: yearFrom, to: yearTo }),
+    getExcludedDatesByCourse([courseId], unionFrom, unionTo),
   ]);
+  const currentRows = filterExcludedRows(rawCurrentRows, excludedByCourse);
+  const previousRows = filterExcludedRows(rawPreviousRows, excludedByCourse);
+  const yearRows = filterExcludedRows(rawYearRows, excludedByCourse);
 
   const byStudent = groupByStudent(currentRows);
   const prevByStudent = groupByStudent(previousRows);
@@ -424,7 +453,7 @@ export interface StudentAttendanceDetail {
   monthRate: number | null;
   weekRate: number | null;
   counts: AttendanceCounts; // del año en curso
-  history: { date: string; status: AttendanceStatus; observation: string | null }[]; // del rango seleccionado
+  history: { date: string; status: AttendanceStatus; observation: string | null; excluded: boolean }[]; // del rango seleccionado -- excluded=true si ese día fue una suspensión institucional (queda en el historial para trazabilidad, pero no cuenta en los % de arriba)
   monthlyEvolution: MonthPoint[];
   trend: number | null; // últimos 30 días vs los 30 anteriores
   lastAbsence: string | null;
@@ -458,13 +487,25 @@ export async function getStudentAttendanceDetail(studentId: string, range: DateR
   prev30Start.setDate(prev30Start.getDate() - 29);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [yearRows, historyRows, last30Rows, prev30Rows, observationRows] = await Promise.all([
+  const [rawYearRows, historyRows, rawLast30Rows, rawPrev30Rows, observationRows] = await Promise.all([
     fetchAttendanceRows(supabase, { studentId, from: `${year}-01-01`, to: `${year}-12-31` }),
     fetchAttendanceRows(supabase, { studentId, from: range.from, to: range.to }),
     fetchAttendanceRows(supabase, { studentId, from: iso(last30Start), to: range.to }),
     fetchAttendanceRows(supabase, { studentId, from: iso(prev30Start), to: iso(prev30End) }),
     supabase.from("attendance").select("date, status, observation").eq("student_id", studentId).gte("date", range.from).lte("date", range.to).order("date", { ascending: false }),
   ]);
+
+  // El alcance de exclusión es el curso actual del estudiante -- si no tiene
+  // matrícula activa (retirado), no hay curso al que atar una suspensión y
+  // no se filtra nada (conservador: no se inventa un curso).
+  const excludedByCourse = enrollment?.course_id
+    ? await getExcludedDatesByCourse([enrollment.course_id], `${year}-01-01`, `${year}-12-31`)
+    : new Map<string, Set<string>>();
+  const excludedDates = excludedByCourse.get(enrollment?.course_id ?? "") ?? new Set<string>();
+
+  const yearRows = filterExcludedRows(rawYearRows, excludedByCourse);
+  const last30Rows = filterExcludedRows(rawLast30Rows, excludedByCourse);
+  const prev30Rows = filterExcludedRows(rawPrev30Rows, excludedByCourse);
 
   const yearCounts = yearRows.reduce((acc, r) => addCount(acc, r.status), EMPTY_COUNTS);
   const monthCounts = yearRows.filter((r) => new Date(r.date + "T00:00:00") >= monthStart).reduce((acc, r) => addCount(acc, r.status), EMPTY_COUNTS);
@@ -476,7 +517,7 @@ export async function getStudentAttendanceDetail(studentId: string, range: DateR
 
   const observationByDate = new Map((observationRows.data ?? []).map((r) => [r.date, r.observation]));
   const history = historyRows
-    .map((r) => ({ date: r.date, status: r.status, observation: observationByDate.get(r.date) ?? null }))
+    .map((r) => ({ date: r.date, status: r.status, observation: observationByDate.get(r.date) ?? null, excluded: excludedDates.has(r.date) }))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const rate = computeRate(yearCounts);
@@ -535,10 +576,12 @@ export async function getFollowupList(courseIds: string[], range: DateRange, thr
   if (courseIds.length === 0) return [];
   const supabase = await createClient();
 
-  const [{ data: courses }, rows] = await Promise.all([
+  const [{ data: courses }, rawRows, excludedByCourse] = await Promise.all([
     supabase.from("courses").select("id, level, letter").in("id", courseIds),
     fetchAttendanceRows(supabase, { courseIds, from: range.from, to: range.to }),
+    getExcludedDatesByCourse(courseIds, range.from, range.to),
   ]);
+  const rows = filterExcludedRows(rawRows, excludedByCourse);
   const courseLabelById = new Map((courses ?? []).map((c) => [c.id, `${c.level} ${c.letter}`.trim()]));
 
   const byStudent = groupByStudent(rows);
@@ -578,4 +621,42 @@ export async function getFollowupList(courseIds: string[], range: DateRange, thr
   }
 
   return result.sort((a, b) => (a.rate ?? 0) - (b.rate ?? 0));
+}
+
+// ---------------------------------------------------------------------------
+// Resumen para "Administrar calendario" (asistencia/administracion)
+// ---------------------------------------------------------------------------
+export interface AttendanceCalendarSummary {
+  diasLectivosProgramados: number; // trabajados + suspendidos (lo que el calendario efectivo registra para el período)
+  diasTrabajados: number;
+  diasSuspendidos: number;
+  diasRecuperados: number;
+}
+
+export async function getAttendanceCalendarSummary(courseIds: string[], range: DateRange): Promise<AttendanceCalendarSummary> {
+  if (courseIds.length === 0) return { diasLectivosProgramados: 0, diasTrabajados: 0, diasSuspendidos: 0, diasRecuperados: 0 };
+  const supabase = await createClient();
+
+  const [rawRows, excludedByCourse, recoveredDates] = await Promise.all([
+    fetchAttendanceRows(supabase, { courseIds, from: range.from, to: range.to }),
+    getExcludedDatesByCourse(courseIds, range.from, range.to),
+    getRecoveredDatesByCourse(courseIds, range.from, range.to),
+  ]);
+
+  const workedDates = new Set<string>();
+  for (const r of rawRows) {
+    if (!excludedByCourse.get(r.course_id)?.has(r.date)) workedDates.add(r.date);
+  }
+
+  const suspendedDates = new Set<string>();
+  for (const set of excludedByCourse.values()) {
+    for (const d of set) suspendedDates.add(d);
+  }
+
+  return {
+    diasLectivosProgramados: new Set([...workedDates, ...suspendedDates]).size,
+    diasTrabajados: workedDates.size,
+    diasSuspendidos: suspendedDates.size,
+    diasRecuperados: recoveredDates.size,
+  };
 }

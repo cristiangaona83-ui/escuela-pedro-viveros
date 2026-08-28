@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
-import { formatDate, formatRun } from "@/lib/utils";
+import { Badge } from "@/components/ui/Badge";
+import { formatDate, formatRun, cn } from "@/lib/utils";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import { getTeachableCourses } from "@/services/academic-scope";
@@ -120,10 +121,17 @@ export default async function StudentAttendanceReportPage({
               </thead>
               <tbody>
                 {detail.history.map((h, i) => (
-                  <tr key={`${h.date}-${i}`} className="border-b border-slate-100 last:border-0">
+                  <tr key={`${h.date}-${i}`} className={cn("border-b border-slate-100 last:border-0", h.excluded && "opacity-60")}>
                     <td className="py-2 pr-3 text-slate-700">{formatDate(h.date)}</td>
                     <td className="py-2 pr-3 text-slate-700">{STATUS_LABEL[h.status] ?? h.status}</td>
-                    <td className="py-2 pr-3 text-slate-500">{h.observation ?? "—"}</td>
+                    <td className="py-2 pr-3 text-slate-500">
+                      {h.observation ?? "—"}
+                      {h.excluded && (
+                        <Badge tone="neutral" className="ml-2">
+                          Excluido del cálculo — suspensión institucional
+                        </Badge>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getExcludedDatesByCourse } from "@/services/class-suspensions";
 
 export interface AttendanceReportRow {
   studentName: string;
@@ -30,12 +31,16 @@ export async function getAttendanceReport(
   const { data: course } = await supabase.from("courses").select("level, letter").eq("id", courseId).maybeSingle();
   if (!course) return null;
 
-  const { data: attendance } = await supabase
-    .from("attendance")
-    .select("student_id, status, students(first_names, last_names, run)")
-    .eq("course_id", courseId)
-    .gte("date", dateFrom)
-    .lte("date", dateTo);
+  const [{ data: attendance }, excludedByCourse] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select("date, student_id, status, students(first_names, last_names, run)")
+      .eq("course_id", courseId)
+      .gte("date", dateFrom)
+      .lte("date", dateTo),
+    getExcludedDatesByCourse([courseId], dateFrom, dateTo),
+  ]);
+  const excludedDates = excludedByCourse.get(courseId);
 
   const byStudent = new Map<
     string,
@@ -44,11 +49,16 @@ export async function getAttendanceReport(
 
   for (const row of attendance ?? []) {
     const r = row as unknown as {
+      date: string;
       student_id: string;
       status: "presente" | "ausente" | "atraso" | "retiro";
       students: { first_names: string; last_names: string; run: string } | null;
     };
     if (!r.students) continue;
+    // Excluye fechas con suspensión institucional de jornada completa del
+    // denominador -- nunca borra ni edita la fila de attendance, solo la
+    // deja fuera de este conteo (class-suspensions.ts).
+    if (excludedDates?.has(r.date)) continue;
     const entry = byStudent.get(r.student_id) ?? {
       name: `${r.students.last_names}, ${r.students.first_names}`,
       run: r.students.run,
