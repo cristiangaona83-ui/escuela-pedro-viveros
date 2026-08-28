@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock, MessageSquare, ClipboardCheck, Send, ShieldCheck, Paperclip, CalendarClock } from "lucide-react";
+import { Clock, MessageSquare, ClipboardCheck, Send, ShieldCheck, CalendarClock } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,7 +21,7 @@ import {
 import { listStudentGuardiansFull } from "@/services/guardians";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
-import { CASE_STATUS_LABELS, CASE_STATUS_TONE, PRIORITY_LABELS, PRIORITY_TONE, EVENT_TYPE_LABELS, MEASURE_STATUS_LABELS, MEASURE_STATUS_TONE, REFERRAL_TYPE_LABELS, REFERRAL_STATUS_LABELS, COMM_TYPE_LABELS, INTERVIEW_PARTICIPANT_LABELS, ATTACHMENT_DOCUMENT_TYPE_LABELS, ATTACHMENT_STATUS_LABELS, ATTACHMENT_STATUS_TONE } from "@/features/convivencia/labels";
+import { CASE_STATUS_LABELS, CASE_STATUS_TONE, PRIORITY_LABELS, PRIORITY_TONE, EVENT_TYPE_LABELS, MEASURE_STATUS_LABELS, MEASURE_STATUS_TONE, REFERRAL_TYPE_LABELS, REFERRAL_STATUS_LABELS, COMM_TYPE_LABELS, INTERVIEW_PARTICIPANT_LABELS } from "@/features/convivencia/labels";
 import { CaseTabs, type CaseTab } from "@/features/convivencia/CaseTabs";
 import { EventForm } from "@/features/convivencia/EventForm";
 import { InterviewForm, type GuardianOption } from "@/features/convivencia/InterviewForm";
@@ -32,10 +32,7 @@ import { FollowupForm } from "@/features/convivencia/FollowupForm";
 import { CaseProtocolForm } from "@/features/convivencia/CaseProtocolForm";
 import { CaseStatusForm } from "@/features/convivencia/CaseStatusForm";
 import { CaseAssignmentForm } from "@/features/convivencia/CaseAssignmentForm";
-import { ViewCaseAttachmentButton } from "@/features/convivencia/ViewCaseAttachmentButton";
-import { CaseAttachmentUploadForm } from "@/features/convivencia/CaseAttachmentUploadForm";
-import { CaseAttachmentSignedUpload } from "@/features/convivencia/CaseAttachmentSignedUpload";
-import { ArchiveCaseAttachmentButton } from "@/features/convivencia/ArchiveCaseAttachmentButton";
+import { CaseAttachmentsPanel } from "@/features/convivencia/CaseAttachmentsPanel";
 
 export const metadata: Metadata = { title: "Caso — Convivencia Educativa" };
 
@@ -47,11 +44,6 @@ const OPERATE_ROLES = ["director", "superadmin", "convivencia", "inspectoria_gen
 // muestra la pestaña/formularios; el filtrado real de qué casos/filas ve
 // cada quien lo hace RLS, no esta comprobación de rol.
 const ATTACHMENT_ROLES = ["director", "superadmin", "convivencia", "inspectoria_general", "psicologo"] as const;
-
-function formatFileSize(bytes: number | null): string {
-  if (!bytes) return "—";
-  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
-}
 
 export default async function CasoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -207,6 +199,17 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
     },
   ];
 
+  // Cerca del inicio de la barra de pestañas a propósito (que puede
+  // desbordar horizontalmente en casos con muchas pestañas) para que sea
+  // fácil de encontrar.
+  if (canViewAttachments) {
+    tabs.push({
+      key: "documentos",
+      label: "Actas y documentos",
+      content: <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} attachments={attachments} />,
+    });
+  }
+
   if (canManage) {
     tabs.push({
       key: "medidas",
@@ -328,47 +331,6 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
             </ul>
           ) : (
             <EmptyState icon={ShieldCheck} title="Sin protocolos activados" />
-          )}
-        </div>
-      ),
-    });
-  }
-
-  if (canViewAttachments) {
-    tabs.push({
-      key: "documentos",
-      label: "Actas y documentos",
-      content: (
-        <div className="space-y-4">
-          <CaseAttachmentUploadForm caseId={caseDetail.id} />
-          {attachments.length > 0 ? (
-            <ul className="space-y-2">
-              {attachments.map((a) => (
-                <li key={a.id} className="rounded-lg border border-slate-200 p-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-800">{a.file_name}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        {a.document_type ? ATTACHMENT_DOCUMENT_TYPE_LABELS[a.document_type] : "—"} · {formatDate(a.created_at)} · {a.uploaded_by_name} · {formatFileSize(a.file_size_bytes)}
-                      </p>
-                      {a.description && <p className="mt-1 text-sm text-slate-600">{a.description}</p>}
-                    </div>
-                    <Badge tone={ATTACHMENT_STATUS_TONE[a.status]}>{ATTACHMENT_STATUS_LABELS[a.status]}</Badge>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <ViewCaseAttachmentButton storagePath={a.storage_path} />
-                    {a.document_type !== "acta_firmada" && (
-                      <CaseAttachmentSignedUpload caseId={caseDetail.id} originalAttachmentId={a.id} />
-                    )}
-                    {canManage && a.status !== "archivada" && (
-                      <ArchiveCaseAttachmentButton attachmentId={a.id} fileName={a.file_name} />
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState icon={Paperclip} title="Sin actas ni documentos adjuntos" description="Sube el primer acta o documento de este caso." />
           )}
         </div>
       ),
