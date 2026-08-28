@@ -12,7 +12,7 @@ export default async function GaleriaPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Vida escolar" title="Galería de fotografías" />
+      <PageHeader eyebrow="Vida escolar" title="Galería" />
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         {items.length > 0 ? (
           <GalleryGrid items={items} />
