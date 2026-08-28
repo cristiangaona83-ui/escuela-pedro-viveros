@@ -339,17 +339,20 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      {/* DIAGNÓSTICO TEMPORAL -- visible solo para director, eliminar apenas se confirme la causa real de que "Actas y documentos" no aparece. */}
-      {session?.roles.includes("director") && (
-        <div className="mb-3 rounded-lg border-2 border-red-500 bg-red-50 p-3 font-mono text-xs text-red-900">
-          <p>DIAGNÓSTICO TEMPORAL (solo director)</p>
-          <p>session.roles: {JSON.stringify(session?.roles ?? null)}</p>
-          <p>canViewAttachments: {String(canViewAttachments)}</p>
-          <p>tabs.length: {tabs.length}</p>
-          <p>tabs keys: {tabs.map((t) => `${t.key}:${t.label}`).join(" | ")}</p>
-          <p>includes documentos: {String(tabs.some((t) => t.key === "documentos"))}</p>
-        </div>
-      )}
+      {/* DIAGNÓSTICO TEMPORAL -- sin gate de rol a propósito: si session.roles
+          está fallando en runtime, un diagnóstico gateado por rol también
+          quedaría oculto. Visible para cualquier usuario autenticado que
+          logre abrir esta página. Eliminar apenas se confirme la causa. */}
+      <div className="mb-3 rounded-lg border-2 border-red-500 bg-red-50 p-3 font-mono text-xs text-red-900">
+        <p className="font-bold">DIAGNOSTICO CASO - commit 81b15ae+</p>
+        <p>email: {session?.profile?.email ?? "(sin perfil)"}</p>
+        <p>user_id: {session?.userId ?? "(sin sesión)"}</p>
+        <p>session.roles: {JSON.stringify(session?.roles ?? null)}</p>
+        <p>canViewAttachments: {String(canViewAttachments)}</p>
+        <p>tabs.length: {tabs.length}</p>
+        <p>tabs keys: {tabs.map((t) => `${t.key}:${t.label}`).join(" | ")}</p>
+        <p>documentos presente: {String(tabs.some((t) => t.key === "documentos"))}</p>
+      </div>
 
       <Link href="/plataforma/convivencia/casos" className="text-xs font-medium text-brand-700 hover:underline">
         ← Casos
