@@ -93,12 +93,13 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ATTACHMENT_DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  acta_entrevista: "Acta de entrevista",
+  acta_reunion: "Acta de reunión",
   acta_apoderado: "Acta con apoderado",
   acta_estudiante: "Acta con estudiante",
-  acta_reunion: "Acta de reunión",
+  acta_funcionarios: "Acta con funcionarios",
   acta_seguimiento: "Acta de seguimiento",
   acta_firmada: "Acta firmada",
+  acta_entrevista: "Acta de entrevista",
   otro: "Otro",
 };
 

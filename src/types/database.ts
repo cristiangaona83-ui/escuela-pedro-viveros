@@ -902,6 +902,7 @@ export type ConvivenciaAttachmentDocumentType =
   | "acta_entrevista"
   | "acta_apoderado"
   | "acta_estudiante"
+  | "acta_funcionarios"
   | "acta_reunion"
   | "acta_seguimiento"
   | "acta_firmada"
@@ -925,6 +926,7 @@ export type ConvivenciaAttachmentRow = {
   mime_type: string | null;
   file_size_bytes: number | null;
   related_attachment_id: string | null;
+  document_date: string | null;
 }
 
 // ---------------------------------------------------------------------------

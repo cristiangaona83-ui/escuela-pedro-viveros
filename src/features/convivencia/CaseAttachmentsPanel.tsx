@@ -12,6 +12,7 @@ import { uploadPrivateFile, FileValidationError } from "@/lib/supabase/storage";
 import { formatDate } from "@/lib/utils";
 import { ATTACHMENT_DOCUMENT_TYPE_LABELS, ATTACHMENT_STATUS_LABELS, ATTACHMENT_STATUS_TONE } from "@/features/convivencia/labels";
 import { ViewCaseAttachmentButton } from "@/features/convivencia/ViewCaseAttachmentButton";
+import { DownloadCaseAttachmentButton } from "@/features/convivencia/DownloadCaseAttachmentButton";
 import { CaseAttachmentSignedUpload } from "@/features/convivencia/CaseAttachmentSignedUpload";
 import { ArchiveCaseAttachmentButton } from "@/features/convivencia/ArchiveCaseAttachmentButton";
 import type { ConvivenciaAttachmentDocumentType, ConvivenciaAttachmentStatus } from "@/types/database";
@@ -25,10 +26,12 @@ function formatFileSize(bytes: number | null): string {
 }
 
 /**
- * Sección completa "Actas y documentos" del caso: botón principal para
- * adjuntar (abre el formulario), formulario de carga y listado con
- * acciones. Todo en un solo componente cliente para que el botón del
- * encabezado y el del estado vacío compartan el mismo estado de
+ * Sección completa "Actas de reunión y documentos" del caso -- se usa tanto
+ * en el bloque visible de la ficha del caso como en la pestaña "Actas y
+ * documentos" (misma lista, mismo componente, sin duplicar lógica). Botón
+ * principal para adjuntar (abre el formulario), formulario de carga y
+ * listado con acciones. Todo en un solo componente cliente para que el
+ * botón del encabezado y el del estado vacío compartan el mismo estado de
  * abierto/cerrado del formulario.
  */
 export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseId: string; canManage: boolean; attachments: CaseAttachmentListItem[] }) {
@@ -45,9 +48,14 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
     const documentType = String(form.get("document_type") || "otro") as ConvivenciaAttachmentDocumentType;
     const status = String(form.get("status") || "finalizada") as ConvivenciaAttachmentStatus;
     const description = String(form.get("description") || "").trim() || null;
+    const documentDate = String(form.get("document_date") || "") || null;
 
     if (!file || file.size === 0) {
       setError("Selecciona un archivo.");
+      return;
+    }
+    if (!documentDate) {
+      setError("Indica la fecha del acta.");
       return;
     }
 
@@ -74,6 +82,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
           file_name: file.name,
           description,
           document_type: documentType,
+          document_date: documentDate,
           status,
           mime_type: file.type || null,
           file_size_bytes: file.size,
@@ -104,8 +113,8 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
     <div className="space-y-4">
       {!formOpen && (
         <div className="flex justify-end">
-          <Button type="button" size="sm" onClick={() => setFormOpen(true)}>
-            <Upload className="h-4 w-4" /> + Adjuntar acta o documento
+          <Button type="button" onClick={() => setFormOpen(true)}>
+            <Upload className="h-4 w-4" /> + Adjuntar acta escaneada
           </Button>
         </div>
       )}
@@ -113,30 +122,33 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
       {formOpen && (
         <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-slate-200 p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">Adjuntar acta o documento</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Adjuntar acta escaneada</h3>
             <button type="button" onClick={() => setFormOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Cerrar">
               <X className="h-4 w-4" />
             </button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Tipo de documento" htmlFor="document_type" required>
-              <Select id="document_type" name="document_type" defaultValue="otro" required>
+            <FormField label="Tipo" htmlFor="document_type" required>
+              <Select id="document_type" name="document_type" defaultValue="acta_reunion" required>
                 {DOCUMENT_TYPES.map((t) => (
                   <option key={t} value={t}>{ATTACHMENT_DOCUMENT_TYPE_LABELS[t]}</option>
                 ))}
               </Select>
             </FormField>
-            <FormField label="Estado" htmlFor="status" required>
-              <Select id="status" name="status" defaultValue="finalizada" required>
-                <option value="borrador">Borrador</option>
-                <option value="finalizada">Finalizada</option>
-              </Select>
+            <FormField label="Fecha del acta" htmlFor="document_date" required>
+              <Input id="document_date" name="document_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
             </FormField>
           </div>
-          <FormField label="Descripción" htmlFor="description" hint="Opcional">
+          <FormField label="Descripción o asunto" htmlFor="description" hint='Ej: "Reunión con apoderado por situación ocurrida el 27/08/2026"'>
             <Textarea id="description" name="description" />
           </FormField>
-          <FormField label="Seleccionar archivo" htmlFor="file" required hint="PDF, DOCX, JPG o PNG, máximo 15 MB.">
+          <FormField label="Estado" htmlFor="status" required>
+            <Select id="status" name="status" defaultValue="finalizada" required>
+              <option value="borrador">Borrador</option>
+              <option value="finalizada">Finalizada</option>
+            </Select>
+          </FormField>
+          <FormField label="Archivo" htmlFor="file" required hint="PDF, JPG, JPEG, PNG o DOCX, máximo 15 MB.">
             <Input id="file" name="file" type="file" accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required />
           </FormField>
           {error && (
@@ -144,7 +156,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
               <AlertCircle className="h-4 w-4 shrink-0" /> {error}
             </div>
           )}
-          <Button type="submit" size="sm" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             <Upload className="h-4 w-4" /> {loading ? "Guardando…" : "Guardar acta"}
           </Button>
         </form>
@@ -158,7 +170,9 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-800">{a.file_name}</p>
                   <p className="mt-0.5 text-xs text-slate-400">
-                    {a.document_type ? ATTACHMENT_DOCUMENT_TYPE_LABELS[a.document_type] : "—"} · {formatDate(a.created_at)} · {a.uploaded_by_name} · {formatFileSize(a.file_size_bytes)}
+                    {a.document_type ? ATTACHMENT_DOCUMENT_TYPE_LABELS[a.document_type] : "—"}
+                    {a.document_date && <> · Fecha del acta: {formatDate(a.document_date)}</>}
+                    {" "}· Subido {formatDate(a.created_at)} por {a.uploaded_by_name} · {formatFileSize(a.file_size_bytes)}
                   </p>
                   {a.description && <p className="mt-1 text-sm text-slate-600">{a.description}</p>}
                 </div>
@@ -166,6 +180,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <ViewCaseAttachmentButton storagePath={a.storage_path} />
+                <DownloadCaseAttachmentButton storagePath={a.storage_path} fileName={a.file_name} />
                 {a.document_type !== "acta_firmada" && (
                   <CaseAttachmentSignedUpload caseId={caseId} originalAttachmentId={a.id} />
                 )}
@@ -179,9 +194,9 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
       ) : (
         !formOpen && (
           <div>
-            <EmptyState icon={Paperclip} title="Aún no hay actas o documentos adjuntos a este caso." />
+            <EmptyState icon={Paperclip} title="Este caso aún no tiene actas de reunión adjuntas." />
             <div className="mt-3 flex justify-center">
-              <Button type="button" size="sm" variant="secondary" onClick={() => setFormOpen(true)}>
+              <Button type="button" variant="secondary" onClick={() => setFormOpen(true)}>
                 <Upload className="h-4 w-4" /> + Adjuntar primera acta
               </Button>
             </div>

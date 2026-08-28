@@ -339,21 +339,6 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      {/* DIAGNÓSTICO TEMPORAL -- sin gate de rol a propósito: si session.roles
-          está fallando en runtime, un diagnóstico gateado por rol también
-          quedaría oculto. Visible para cualquier usuario autenticado que
-          logre abrir esta página. Eliminar apenas se confirme la causa. */}
-      <div className="mb-3 rounded-lg border-2 border-red-500 bg-red-50 p-3 font-mono text-xs text-red-900">
-        <p className="font-bold">DIAGNOSTICO CASO - commit 81b15ae+</p>
-        <p>email: {session?.profile?.email ?? "(sin perfil)"}</p>
-        <p>user_id: {session?.userId ?? "(sin sesión)"}</p>
-        <p>session.roles: {JSON.stringify(session?.roles ?? null)}</p>
-        <p>canViewAttachments: {String(canViewAttachments)}</p>
-        <p>tabs.length: {tabs.length}</p>
-        <p>tabs keys: {tabs.map((t) => `${t.key}:${t.label}`).join(" | ")}</p>
-        <p>documentos presente: {String(tabs.some((t) => t.key === "documentos"))}</p>
-      </div>
-
       <Link href="/plataforma/convivencia/casos" className="text-xs font-medium text-brand-700 hover:underline">
         ← Casos
       </Link>
@@ -368,6 +353,25 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
           <Badge tone={PRIORITY_TONE[caseDetail.priority]}>Prioridad {PRIORITY_LABELS[caseDetail.priority]}</Badge>
         </div>
       </div>
+
+      {/* Bloque siempre visible en la ficha del caso -- a propósito NO
+          depende de que se encuentre/seleccione la pestaña "Actas y
+          documentos" (que se deja intacta más abajo, dentro de tabs, para
+          quien prefiera navegar por pestañas). Mismos datos, mismo
+          CaseAttachmentsPanel -- sin duplicar lógica de carga/listado. */}
+      {canViewAttachments && (
+        <Card className="mt-4">
+          <CardBody>
+            <h3 className="text-base font-semibold text-slate-900">Actas de reunión y documentos</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Actas físicas (reunión → impresión → firmas → escaneo) y otros documentos de respaldo de este caso.
+            </p>
+            <div className="mt-4">
+              <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} attachments={attachments} />
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       <Card className="mt-4">
         <CardBody>
