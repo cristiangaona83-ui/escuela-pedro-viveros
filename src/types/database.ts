@@ -898,6 +898,17 @@ export type ConvivenciaPreventiveActionPmeLinkRow = {
   created_at: string;
 }
 
+export type ConvivenciaAttachmentDocumentType =
+  | "acta_entrevista"
+  | "acta_apoderado"
+  | "acta_estudiante"
+  | "acta_reunion"
+  | "acta_seguimiento"
+  | "acta_firmada"
+  | "otro";
+
+export type ConvivenciaAttachmentStatus = "borrador" | "finalizada" | "firmada" | "archivada";
+
 export type ConvivenciaAttachmentRow = {
   id: string;
   case_id: string | null;
@@ -909,6 +920,11 @@ export type ConvivenciaAttachmentRow = {
   description: string | null;
   uploaded_by: string;
   created_at: string;
+  document_type: ConvivenciaAttachmentDocumentType | null;
+  status: ConvivenciaAttachmentStatus;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  related_attachment_id: string | null;
 }
 
 // ---------------------------------------------------------------------------

@@ -520,10 +520,17 @@ export async function listCaseProtocols(caseId: string): Promise<(ConvivenciaCas
   return ((data ?? []) as unknown as Row[]).map((r) => ({ ...r, protocol_name: r.protocol?.name ?? "—", responsible_name: r.responsible?.full_name ?? "—" }));
 }
 
-export async function listCaseAttachments(caseId: string): Promise<ConvivenciaAttachmentRow[]> {
+export type CaseAttachmentListItem = ConvivenciaAttachmentRow & { uploaded_by_name: string };
+
+export async function listCaseAttachments(caseId: string): Promise<CaseAttachmentListItem[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("convivencia_attachments").select("*").eq("case_id", caseId).order("created_at", { ascending: false });
-  return data ?? [];
+  const { data } = await supabase
+    .from("convivencia_attachments")
+    .select("*, uploader:profiles!convivencia_attachments_uploaded_by_fkey(full_name)")
+    .eq("case_id", caseId)
+    .order("created_at", { ascending: false });
+  type Row = ConvivenciaAttachmentRow & { uploader: { full_name: string } | null };
+  return ((data ?? []) as unknown as Row[]).map((r) => ({ ...r, uploaded_by_name: r.uploader?.full_name ?? "—" }));
 }
 
 // ---------------------------------------------------------------------------

@@ -91,3 +91,26 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   caso_cerrado: "Caso cerrado",
   otro: "Otro",
 };
+
+export const ATTACHMENT_DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  acta_entrevista: "Acta de entrevista",
+  acta_apoderado: "Acta con apoderado",
+  acta_estudiante: "Acta con estudiante",
+  acta_reunion: "Acta de reunión",
+  acta_seguimiento: "Acta de seguimiento",
+  acta_firmada: "Acta firmada",
+  otro: "Otro",
+};
+
+export const ATTACHMENT_STATUS_LABELS: Record<string, string> = {
+  borrador: "Borrador",
+  finalizada: "Finalizada",
+  firmada: "Firmada",
+  archivada: "Archivada",
+};
+export const ATTACHMENT_STATUS_TONE: Record<string, "neutral" | "brand" | "success" | "warning"> = {
+  borrador: "neutral",
+  finalizada: "brand",
+  firmada: "success",
+  archivada: "warning",
+};

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 export const PUBLIC_BUCKET = "archivos-publicos";
 export const PRIVATE_BUCKET = "archivos-internos";
 
-export type FileKind = "document" | "image" | "signature" | "video";
+export type FileKind = "document" | "image" | "signature" | "video" | "case_attachment";
 
 export class FileValidationError extends Error {}
 
@@ -16,7 +16,12 @@ const MAX_SIZE_BYTES: Record<FileKind, number> = {
   // Coincide con el límite de video ya optimizado (ver lib/video/compressVideo.ts)
   // -- esta es la última barrera antes de Storage, no el límite que ve el usuario.
   video: 30 * 1024 * 1024,
+  // Actas/documentos adjuntos de caso (Convivencia) -- puede ser un PDF
+  // escaneado de varias páginas, mismo límite que "document".
+  case_attachment: 15 * 1024 * 1024,
 };
+
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   document: ["application/pdf"],
@@ -25,6 +30,7 @@ const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   signature: ["image/png", "image/webp"],
   // Solo MP4: el video que se sube aquí ya salió de compressVideo() como MP4/H.264.
   video: ["video/mp4"],
+  case_attachment: ["application/pdf", DOCX_MIME, "image/jpeg", "image/png"],
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -33,6 +39,7 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
   "video/mp4": "mp4",
+  [DOCX_MIME]: "docx",
 };
 
 /**
@@ -61,6 +68,14 @@ async function detectRealMimeType(file: File): Promise<string | null> {
   if (head[4] === 0x66 && head[5] === 0x74 && head[6] === 0x79 && head[7] === 0x70) {
     return "video/mp4"; // caja "ftyp" del contenedor MP4/ISO-BMFF (bytes 4-7)
   }
+  if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04) {
+    // Firma ZIP genérica ("PK\x03\x04") -- DOCX/XLSX/PPTX/ODT son todos
+    // contenedores ZIP y comparten estos primeros bytes; no se puede
+    // distinguir el subtipo exacto sin abrir el archivo. Igual que el resto
+    // de esta función, es una barrera de "no es cualquier cosa con la
+    // extensión cambiada", no un parser de formato completo.
+    return DOCX_MIME;
+  }
   return null;
 }
 
@@ -78,6 +93,7 @@ async function validateFile(file: File, kind: FileKind): Promise<string> {
       image: "Solo se aceptan imágenes JPG, PNG o WEBP.",
       signature: "Solo se aceptan imágenes PNG o WEBP (con fondo transparente).",
       video: "El video optimizado no es un MP4 válido.",
+      case_attachment: "Solo se aceptan archivos PDF, DOCX, JPG o PNG.",
     };
     throw new FileValidationError(messages[kind]);
   }
