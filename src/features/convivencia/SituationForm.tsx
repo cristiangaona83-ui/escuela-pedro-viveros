@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/Button";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { StudentMultiPicker, type SelectedStudent } from "@/features/convivencia/StudentMultiPicker";
 import { createClient } from "@/lib/supabase/client";
+import { uploadPrivateFile, FileValidationError } from "@/lib/supabase/storage";
 import type { ConvivenciaCaseTypeRow } from "@/types/database";
 import type { StudentName } from "@/services/convivencia";
 
 /** Registro de situación (punto 4). Al guardar, inserta la situación y sus
- * estudiantes vinculados, registra en log_audit, y redirige a la ficha de
- * la situación donde se puede "Convertir en Caso" o dejarla como registro
- * simple. */
+ * estudiantes vinculados, sube el acta adjunta si se seleccionó una
+ * (vinculada a la situación vía convivencia_attachments.situation_id --
+ * misma tabla que usan los casos, sin duplicar infraestructura), registra
+ * en log_audit, y redirige a la ficha de la situación donde se puede
+ * "Convertir en Caso" o dejarla como registro simple. */
 export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaCaseTypeRow[]; students: StudentName[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -79,6 +82,35 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       setLoading(false);
       setError("La situación se guardó, pero no pudimos vincular a todos los estudiantes.");
       return;
+    }
+
+    const actaFile = form.get("acta_file") as File | null;
+    if (actaFile && actaFile.size > 0) {
+      try {
+        const path = await uploadPrivateFile(`convivencia/situaciones/${situation.id}`, actaFile, "case_attachment");
+        const { error: attachmentError } = await supabase.from("convivencia_attachments").insert({
+          situation_id: situation.id,
+          storage_path: path,
+          file_name: actaFile.name,
+          document_date: payload.occurred_on,
+          mime_type: actaFile.type || null,
+          file_size_bytes: actaFile.size,
+          uploaded_by: user.id,
+        });
+        if (attachmentError) throw attachmentError;
+
+        await supabase.rpc("log_audit", {
+          p_action: "subir_acta_situacion",
+          p_module: "convivencia",
+          p_entity: "convivencia_attachments",
+          p_entity_id: situation.id,
+          p_details: { file_name: actaFile.name, situation_id: situation.id },
+        });
+      } catch (err) {
+        setLoading(false);
+        setError(err instanceof FileValidationError ? err.message : "La situación se guardó, pero no pudimos adjuntar el acta.");
+        return;
+      }
     }
 
     await supabase.rpc("log_audit", {
@@ -152,6 +184,10 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
 
       <FormField label="Observaciones" htmlFor="observations" hint="Opcional">
         <Textarea id="observations" name="observations" rows={2} />
+      </FormField>
+
+      <FormField label="Adjuntar acta" htmlFor="acta_file" hint="Opcional — PDF, JPG, JPEG, PNG o DOCX, máximo 15 MB. Queda vinculada a esta situación.">
+        <Input id="acta_file" name="acta_file" type="file" accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" />
       </FormField>
 
       {error && (
