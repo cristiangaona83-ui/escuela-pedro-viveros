@@ -62,7 +62,7 @@ export default async function FirmasInstitucionalesPage() {
         <CardBody>
           <div className="flex items-center gap-2">
             <Stamp className="h-5 w-5 text-brand-700" />
-            <h2 className="font-semibold text-slate-900">Timbre institucional</h2>
+            <h2 className="font-semibold text-slate-900">Timbre del Director</h2>
           </div>
           <p className="mt-1 text-xs text-slate-500">
             Uno solo para toda la escuela — se agrega automáticamente a la derecha de la firma del Director en los documentos que ya la usan. No depende del funcionario que firme.
@@ -71,7 +71,7 @@ export default async function FirmasInstitucionalesPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
             <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
               {stamp.previewDataUri ? (
-                <Image src={stamp.previewDataUri} alt="Timbre institucional" width={80} height={80} className="h-20 w-20 object-contain" unoptimized />
+                <Image src={stamp.previewDataUri} alt="Timbre del Director" width={80} height={80} className="h-20 w-20 object-contain" unoptimized />
               ) : (
                 <span className="text-center text-[10px] text-slate-400">Sin timbre</span>
               )}

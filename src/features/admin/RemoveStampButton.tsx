@@ -12,7 +12,7 @@ export function RemoveStampButton({ storagePath }: { storagePath: string }) {
   const [loading, setLoading] = useState(false);
 
   async function handleRemove() {
-    if (!window.confirm("¿Quitar el timbre institucional? Los documentos volverán a mostrar solo la firma.")) return;
+    if (!window.confirm("¿Quitar el timbre del Director? Los documentos volverán a mostrar solo la firma.")) return;
     setLoading(true);
     const supabase = createClient();
 
