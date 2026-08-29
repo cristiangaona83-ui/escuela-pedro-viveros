@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
 import { getLogoDataUri } from "./DocumentHeader";
+import { DirectorSignatureImage } from "./OfficialCertificateShared";
 import { SITE } from "@/config/site";
 import { formatDate, formatRun } from "@/lib/utils";
 import type { InstitutionalProfile } from "@/services/school-config";
@@ -25,6 +26,7 @@ export function CertificateAlumnoRegular({
   qrDataUrl,
   verificationCode,
   directorSignatureDataUri,
+  stampDataUri,
   profile,
 }: {
   folio: string;
@@ -39,6 +41,8 @@ export function CertificateAlumnoRegular({
   verificationCode: string;
   /** Data URI de la firma escaneada del Director (ver getDirectorSignatureDataUri). Si es null, se muestra solo la línea de firma en blanco. */
   directorSignatureDataUri?: string | null;
+  /** Data URI del timbre institucional (ver getInstitutionalStampDataUri). Si es null, se ve exactamente igual que antes. */
+  stampDataUri?: string | null;
   profile: InstitutionalProfile;
 }) {
   const logoDataUri = getLogoDataUri();
@@ -93,12 +97,12 @@ export function CertificateAlumnoRegular({
 
         <View style={pdfStyles.footerRow}>
           <View style={pdfStyles.signatureBlock}>
-            {showDirectorSignatureImage ? (
-              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
-              <Image src={directorSignatureDataUri!} style={[pdfStyles.directorSignatureImage, { marginTop: 4 }]} />
-            ) : (
-              <View style={pdfStyles.signatureLine} />
-            )}
+            <View style={{ marginTop: 4 }}>
+              <DirectorSignatureImage
+                directorSignatureDataUri={showDirectorSignatureImage ? directorSignatureDataUri : null}
+                stampDataUri={showDirectorSignatureImage ? stampDataUri : null}
+              />
+            </View>
             <Text style={pdfStyles.signatureName}>{resolvedSignatureName}</Text>
             <Text style={pdfStyles.signatureTitle}>{signatureTitle || profile.directorTitle}</Text>
             <Text style={pdfStyles.signatureTitle}>{profile.name}</Text>

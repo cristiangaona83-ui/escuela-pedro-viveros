@@ -20,6 +20,7 @@ export function CertificadoCierreAnioDocument({
   issuedAt,
   verificationCode,
   directorSignatureDataUri,
+  stampDataUri,
   profile,
 }: {
   folio: string;
@@ -37,6 +38,7 @@ export function CertificadoCierreAnioDocument({
   issuedAt: string;
   verificationCode: string;
   directorSignatureDataUri?: string | null;
+  stampDataUri?: string | null;
   profile: InstitutionalProfile;
 }) {
   return (
@@ -104,6 +106,7 @@ export function CertificadoCierreAnioDocument({
           folio={folio}
           verificationCode={verificationCode}
           directorSignatureDataUri={directorSignatureDataUri}
+          stampDataUri={stampDataUri}
           profile={profile}
         />
       </Page>

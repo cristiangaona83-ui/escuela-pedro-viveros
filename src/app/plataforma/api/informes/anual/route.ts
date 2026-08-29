@@ -6,7 +6,7 @@ import { formalCourseName, nextFormalCourseName, isEnsenanzaBasica } from "@/lib
 import { getStudentSubjectAverages } from "@/services/report-data";
 import { getHomeroomTeacherName } from "@/services/students";
 import { getStudentAttendanceRate } from "@/services/student-attendance";
-import { getDirectorSignatureDataUri } from "@/lib/pdf/institutional-signatures";
+import { getDirectorSignatureDataUri, getInstitutionalStampDataUri } from "@/lib/pdf/institutional-signatures";
 import { getInstitutionalProfile } from "@/services/school-config";
 import { DEFAULT_GRADING_CONFIG } from "@/config/grading";
 import { getSessionContext } from "@/features/auth/session";
@@ -81,10 +81,11 @@ export async function POST(request: Request) {
     });
   }
 
-  const [homeroomTeacher, attendanceRate, directorSignatureDataUri, profile] = await Promise.all([
+  const [homeroomTeacher, attendanceRate, directorSignatureDataUri, stampDataUri, profile] = await Promise.all([
     getHomeroomTeacherName(report.courseId),
     getStudentAttendanceRate(student_id, report.courseId, `${year.year}-01-01`, `${year.year}-12-31`),
     getDirectorSignatureDataUri(),
+    getInstitutionalStampDataUri(),
     getInstitutionalProfile(),
   ]);
 
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
       issuedAt: certificate.issued_at,
       verificationCode: certificate.verification_code,
       directorSignatureDataUri,
+      stampDataUri,
       profile,
     })
   );

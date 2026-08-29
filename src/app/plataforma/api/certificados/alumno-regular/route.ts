@@ -4,7 +4,7 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { CertificateAlumnoRegular } from "@/lib/pdf/CertificateAlumnoRegular";
 import { getCertificateSignature, getInstitutionalProfile } from "@/services/school-config";
-import { getDirectorSignatureDataUri } from "@/lib/pdf/institutional-signatures";
+import { getDirectorSignatureDataUri, getInstitutionalStampDataUri } from "@/lib/pdf/institutional-signatures";
 import { SITE } from "@/config/site";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -89,9 +89,10 @@ export async function POST(request: Request) {
     });
   }
 
-  const [signature, directorSignatureDataUri, profile] = await Promise.all([
+  const [signature, directorSignatureDataUri, stampDataUri, profile] = await Promise.all([
     getCertificateSignature(),
     getDirectorSignatureDataUri(),
+    getInstitutionalStampDataUri(),
     getInstitutionalProfile(),
   ]);
   // En producción el QR siempre debe apuntar al dominio institucional
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
       qrDataUrl,
       verificationCode: certificate.verification_code,
       directorSignatureDataUri,
+      stampDataUri,
       profile,
     })
   );

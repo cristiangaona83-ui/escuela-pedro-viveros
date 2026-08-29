@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { downloadAsDataUri } from "@/lib/supabase/storage-server";
+import { getInstitutionalStampConfig } from "@/services/school-config";
 import type { InstitutionalSignatureKind } from "@/types/database";
 
 /**
@@ -49,4 +50,24 @@ export async function getActiveSignatureDataUri(
 /** Atajo para el caso más usado hoy: la firma (única) del Director. */
 export async function getDirectorSignatureDataUri(): Promise<string | null> {
   return getActiveSignatureDataUri("director");
+}
+
+/**
+ * Timbre institucional -- uno solo para toda la escuela (ver
+ * getInstitutionalStampConfig en services/school-config.ts), no una fila por
+ * firma. Mismo criterio de "nunca romper el PDF": si no hay timbre
+ * configurado, el bucket no está disponible, o el archivo no se puede
+ * descargar, devuelve `null` y el documento se emite solo con la firma,
+ * exactamente como antes de que existiera esta función.
+ */
+export async function getInstitutionalStampDataUri(): Promise<string | null> {
+  try {
+    const config = await getInstitutionalStampConfig();
+    if (!config.storagePath) return null;
+    const supabase = await createClient();
+    return await downloadAsDataUri(supabase, config.bucket, config.storagePath);
+  } catch (err) {
+    console.error("[institutional-signatures] Error inesperado obteniendo el timbre institucional", err);
+    return null;
+  }
 }

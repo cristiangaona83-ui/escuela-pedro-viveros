@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { PenTool, ShieldAlert } from "lucide-react";
+import { PenTool, ShieldAlert, Stamp } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SignatureUploadForm } from "@/features/admin/SignatureUploadForm";
 import { ToggleSignatureActiveButton } from "@/features/admin/ToggleSignatureActiveButton";
-import { listSignatures, type SignatureAdminRow } from "@/services/signatures-admin";
+import { StampUploadForm } from "@/features/admin/StampUploadForm";
+import { RemoveStampButton } from "@/features/admin/RemoveStampButton";
+import { listSignatures, getStampAdminState, type SignatureAdminRow } from "@/services/signatures-admin";
 import { listAllStaffMembers } from "@/services/staff-admin";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -38,7 +40,7 @@ export default async function FirmasInstitucionalesPage() {
     );
   }
 
-  const [signatures, teachers] = await Promise.all([listSignatures(), listAllStaffMembers()]);
+  const [signatures, teachers, stamp] = await Promise.all([listSignatures(), listAllStaffMembers(), getStampAdminState()]);
 
   const groups = signatures.reduce<Record<string, SignatureAdminRow[]>>((acc, s) => {
     const key = s.kind === "teacher" ? `teacher:${s.staff_member_id}` : s.kind;
@@ -55,6 +57,36 @@ export default async function FirmasInstitucionalesPage() {
       <p className="mt-1 text-sm text-slate-500">
         Se usan en el Certificado de Alumno Regular y los certificados/informes de calificaciones. Se almacenan exclusivamente en el bucket privado — nunca se exponen públicamente.
       </p>
+
+      <Card className="mt-6">
+        <CardBody>
+          <div className="flex items-center gap-2">
+            <Stamp className="h-5 w-5 text-brand-700" />
+            <h2 className="font-semibold text-slate-900">Timbre institucional</h2>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Uno solo para toda la escuela — se agrega automáticamente a la derecha de la firma del Director en los documentos que ya la usan. No depende del funcionario que firme.
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
+            <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
+              {stamp.previewDataUri ? (
+                <Image src={stamp.previewDataUri} alt="Timbre institucional" width={80} height={80} className="h-20 w-20 object-contain" unoptimized />
+              ) : (
+                <span className="text-center text-[10px] text-slate-400">Sin timbre</span>
+              )}
+            </div>
+            <div>
+              <StampUploadForm hasStamp={Boolean(stamp.storagePath)} previousPath={stamp.storagePath} />
+              {stamp.storagePath && (
+                <div className="mt-3">
+                  <RemoveStampButton storagePath={stamp.storagePath} />
+                </div>
+              )}
+            </div>
+          </div>
+        </CardBody>
+      </Card>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">

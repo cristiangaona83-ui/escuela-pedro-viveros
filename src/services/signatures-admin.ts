@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { downloadAsDataUri } from "@/lib/supabase/storage-server";
+import { getInstitutionalStampConfig } from "@/services/school-config";
 import type { InstitutionalSignatureRow, StaffMemberRow } from "@/types/database";
 
 export type SignatureAdminRow = InstitutionalSignatureRow & {
@@ -29,4 +30,20 @@ export async function listSignatures(): Promise<SignatureAdminRow[]> {
       previewDataUri: await downloadAsDataUri(supabase, row.bucket, row.storage_path),
     }))
   );
+}
+
+export interface StampAdminState {
+  storagePath: string | null;
+  bucket: string;
+  uploadedAt: string | null;
+  previewDataUri: string | null;
+}
+
+/** Timbre institucional -- uno solo (school_config), no una lista como las firmas. Igual criterio de vista previa: se descarga server-side porque el bucket es privado. */
+export async function getStampAdminState(): Promise<StampAdminState> {
+  const config = await getInstitutionalStampConfig();
+  if (!config.storagePath) return { ...config, previewDataUri: null };
+  const supabase = await createClient();
+  const previewDataUri = await downloadAsDataUri(supabase, config.bucket, config.storagePath);
+  return { ...config, previewDataUri };
 }

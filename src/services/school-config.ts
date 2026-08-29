@@ -88,6 +88,36 @@ export async function getCertificateSignature() {
   }
 }
 
+export interface InstitutionalStampConfig {
+  storagePath: string | null;
+  bucket: string;
+  uploadedAt: string | null;
+}
+
+/**
+ * Timbre institucional -- a diferencia de las firmas (institutional_signatures,
+ * una fila por persona/cargo), es uno solo para toda la escuela, así que se
+ * guarda como una fila más de `school_config` (mismo patrón que
+ * certificate_signature/institutional_profile) en vez de agregar una tabla o
+ * columna nueva. El archivo en sí vive en el mismo bucket privado y la misma
+ * carpeta `firmas/` que ya usan las firmas -- reutiliza sus políticas de
+ * Storage tal cual, sin política nueva.
+ */
+export async function getInstitutionalStampConfig(): Promise<InstitutionalStampConfig> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.from("school_config").select("value").eq("key", "institutional_stamp").maybeSingle();
+    const value = data?.value as { storage_path?: string; bucket?: string; uploaded_at?: string } | undefined;
+    return {
+      storagePath: value?.storage_path ?? null,
+      bucket: value?.bucket ?? "archivos-internos",
+      uploadedAt: value?.uploaded_at ?? null,
+    };
+  } catch {
+    return { storagePath: null, bucket: "archivos-internos", uploadedAt: null };
+  }
+}
+
 async function getConfigValue<T>(key: string, fallback: T): Promise<T> {
   try {
     const supabase = await createClient();

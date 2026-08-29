@@ -28,6 +28,56 @@ export interface SubjectAverageRow {
 /** Alto de la zona reservada para la firma del Director sobre "Director" -- ver comentario en CertificateSignatureFooter. */
 const SIGNATURE_MARK_HEIGHT = 68;
 
+/** Ancho de la firma del Director cuando va sola vs. cuando va acompañada del timbre (se angosta un poco para que la fila quepa dentro de signatureBlock sin salirse). */
+const DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP = 90;
+const STAMP_SIZE = 46;
+
+/**
+ * Firma del Director + timbre institucional, uno al lado del otro (firma a
+ * la izquierda, timbre a la derecha -- nunca debajo). Componente central:
+ * se usa en todos los documentos que hoy muestran la firma del Director
+ * (CertificateSignatureFooter más abajo, y CertificateAlumnoRegular.tsx),
+ * así que agregar el timbre acá se propaga a todos ellos sin tocarlos uno
+ * por uno.
+ *
+ * Reglas de "nunca romper el documento":
+ *  - Sin firma: se muestra solo la línea en blanco de siempre (`lineStyle`
+ *    permite igualar el override puntual que ya tenía cada documento).
+ *  - Con firma y sin timbre: se ve exactamente igual que antes de que
+ *    existiera esta función (mismo ancho de imagen, sin timbre).
+ *  - Con firma y timbre: fila horizontal, timbre con `objectFit: "contain"`
+ *    (no se deforma, mantiene proporción) en una caja fija -- nunca tapa la
+ *    firma ni el texto de abajo (nombre/cargo, fuera de esta función).
+ *  - El timbre NUNCA se muestra sin firma (evita un timbre "flotante" sin
+ *    firma real sobre él, que no es un diseño válido).
+ */
+export function DirectorSignatureImage({
+  directorSignatureDataUri,
+  stampDataUri,
+  lineStyle,
+}: {
+  directorSignatureDataUri?: string | null;
+  stampDataUri?: string | null;
+  /** Override puntual (hoy solo se usa para marginTop:0 en CertificateSignatureFooter, que ya reserva su propia altura). */
+  lineStyle?: { marginTop?: number };
+}) {
+  if (!directorSignatureDataUri) {
+    return <View style={lineStyle ? { ...pdfStyles.signatureLine, ...lineStyle } : pdfStyles.signatureLine} />;
+  }
+  if (!stampDataUri) {
+    // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
+    return <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />;
+  }
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", columnGap: 6 }}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
+      <Image src={directorSignatureDataUri} style={{ width: DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP, alignSelf: "center" }} />
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
+      <Image src={stampDataUri} style={{ width: STAMP_SIZE, height: STAMP_SIZE, objectFit: "contain" }} />
+    </View>
+  );
+}
+
 /** Párrafo compacto (interlineado y margen reducidos) para que los tres certificados quepan en una sola página A4. */
 export const compactParagraph = [pdfStyles.paragraph, { lineHeight: 1.3, marginBottom: 5 }];
 export const compactHeading = [pdfStyles.bold, { fontSize: 10.5, marginBottom: 3 }];
@@ -120,6 +170,7 @@ export function CertificateSignatureFooter({
   folio,
   verificationCode,
   directorSignatureDataUri,
+  stampDataUri,
   profile,
 }: {
   homeroomTeacherName: string | null;
@@ -128,6 +179,8 @@ export function CertificateSignatureFooter({
   verificationCode: string;
   /** Data URI de la firma escaneada del Director (ver getDirectorSignatureDataUri). Si es null, se muestra solo la línea de firma en blanco. */
   directorSignatureDataUri?: string | null;
+  /** Data URI del timbre institucional (ver getInstitutionalStampDataUri). Si es null, se ve exactamente igual que antes. */
+  stampDataUri?: string | null;
   profile: InstitutionalProfile;
 }) {
   return (
@@ -147,12 +200,7 @@ export function CertificateSignatureFooter({
         </View>
         <View style={pdfStyles.signatureBlock}>
           <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
-            {directorSignatureDataUri ? (
-              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
-              <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />
-            ) : (
-              <View style={[pdfStyles.signatureLine, { marginTop: 0 }]} />
-            )}
+            <DirectorSignatureImage directorSignatureDataUri={directorSignatureDataUri} stampDataUri={stampDataUri} lineStyle={{ marginTop: 0 }} />
           </View>
           <Text style={pdfStyles.signatureName}>{profile.director}</Text>
           <Text style={pdfStyles.signatureTitle}>{profile.directorTitle}</Text>
