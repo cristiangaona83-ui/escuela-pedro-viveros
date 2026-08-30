@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input } from "@/components/ui/Field";
+import { AlignmentControl } from "@/components/ui/AlignmentControl";
 import { ParagraphListEditor } from "./ParagraphListEditor";
 import { createClient } from "@/lib/supabase/client";
 import type { HomeAdmissionContent } from "@/services/school-config";
@@ -13,6 +14,13 @@ export function HomeAdmissionForm({ content }: { content: HomeAdmissionContent }
   const router = useRouter();
   const [saeParagraphs, setSaeParagraphs] = useState(content.sae.paragraphs);
   const [vacantesParagraphs, setVacantesParagraphs] = useState(content.vacantes.paragraphs);
+  const [saeBadgeAlign, setSaeBadgeAlign] = useState(content.sae.badgeAlign);
+  const [saeTitleAlign, setSaeTitleAlign] = useState(content.sae.titleAlign);
+  const [saeDeadlineAlign, setSaeDeadlineAlign] = useState(content.sae.deadlineLabelAlign);
+  const [saeCtaBoxTitleAlign, setSaeCtaBoxTitleAlign] = useState(content.sae.ctaBoxTitleAlign);
+  const [saeCtaBoxTextAlign, setSaeCtaBoxTextAlign] = useState(content.sae.ctaBoxTextAlign);
+  const [vacBadgeAlign, setVacBadgeAlign] = useState(content.vacantes.badgeAlign);
+  const [vacTitleAlign, setVacTitleAlign] = useState(content.vacantes.titleAlign);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -28,18 +36,25 @@ export function HomeAdmissionForm({ content }: { content: HomeAdmissionContent }
     const value: HomeAdmissionContent = {
       sae: {
         badge: str("sae_badge"),
+        badgeAlign: saeBadgeAlign,
         title: str("sae_title"),
-        paragraphs: saeParagraphs.map((p) => p.trim()).filter(Boolean),
+        titleAlign: saeTitleAlign,
+        paragraphs: saeParagraphs.map((p) => ({ ...p, text: p.text.trim() })).filter((p) => p.text),
         deadlineLabel: str("sae_deadline"),
+        deadlineLabelAlign: saeDeadlineAlign,
         ctaBoxTitle: str("sae_ctaBoxTitle"),
+        ctaBoxTitleAlign: saeCtaBoxTitleAlign,
         ctaBoxText: str("sae_ctaBoxText"),
+        ctaBoxTextAlign: saeCtaBoxTextAlign,
         ctaText: str("sae_ctaText"),
         ctaHref: str("sae_ctaHref"),
       },
       vacantes: {
         badge: str("vac_badge"),
+        badgeAlign: vacBadgeAlign,
         title: str("vac_title"),
-        paragraphs: vacantesParagraphs.map((p) => p.trim()).filter(Boolean),
+        titleAlign: vacTitleAlign,
+        paragraphs: vacantesParagraphs.map((p) => ({ ...p, text: p.text.trim() })).filter((p) => p.text),
         ctaText: str("vac_ctaText"),
         ctaHref: str("vac_ctaHref"),
       },
@@ -64,23 +79,38 @@ export function HomeAdmissionForm({ content }: { content: HomeAdmissionContent }
         <h3 className="text-sm font-semibold text-slate-800">Bloque principal — Postulación SAE</h3>
         <div className="mt-3 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Etiqueta (badge)" htmlFor="sae_badge" required hint='Ej: "Admisión 2027"'>
-              <Input id="sae_badge" name="sae_badge" required defaultValue={content.sae.badge} />
-            </FormField>
-            <FormField label="Título" htmlFor="sae_title" required>
-              <Input id="sae_title" name="sae_title" required defaultValue={content.sae.title} />
-            </FormField>
+            <div>
+              <FormField label="Etiqueta (badge)" htmlFor="sae_badge" required hint='Ej: "Admisión 2027"'>
+                <Input id="sae_badge" name="sae_badge" required defaultValue={content.sae.badge} />
+              </FormField>
+              <AlignmentControl className="mt-2" value={saeBadgeAlign} onChange={setSaeBadgeAlign} />
+            </div>
+            <div>
+              <FormField label="Título" htmlFor="sae_title" required>
+                <Input id="sae_title" name="sae_title" required defaultValue={content.sae.title} />
+              </FormField>
+              <AlignmentControl className="mt-2" value={saeTitleAlign} onChange={setSaeTitleAlign} />
+            </div>
           </div>
           <ParagraphListEditor label="Párrafos" paragraphs={saeParagraphs} onChange={setSaeParagraphs} />
-          <FormField label="Plazo / fecha límite" htmlFor="sae_deadline" required hint='Se muestra destacado. Ej: "Plazo hasta el jueves 27 de agosto a las 14:00 horas"'>
-            <Input id="sae_deadline" name="sae_deadline" required defaultValue={content.sae.deadlineLabel} />
-          </FormField>
-          <FormField label="Título del recuadro de postulación" htmlFor="sae_ctaBoxTitle" required>
-            <Input id="sae_ctaBoxTitle" name="sae_ctaBoxTitle" required defaultValue={content.sae.ctaBoxTitle} />
-          </FormField>
-          <FormField label="Texto del recuadro de postulación" htmlFor="sae_ctaBoxText" required>
-            <Input id="sae_ctaBoxText" name="sae_ctaBoxText" required defaultValue={content.sae.ctaBoxText} />
-          </FormField>
+          <div>
+            <FormField label="Plazo / fecha límite" htmlFor="sae_deadline" required hint='Se muestra destacado. Ej: "Plazo hasta el jueves 27 de agosto a las 14:00 horas"'>
+              <Input id="sae_deadline" name="sae_deadline" required defaultValue={content.sae.deadlineLabel} />
+            </FormField>
+            <AlignmentControl className="mt-2" value={saeDeadlineAlign} onChange={setSaeDeadlineAlign} />
+          </div>
+          <div>
+            <FormField label="Título del recuadro de postulación" htmlFor="sae_ctaBoxTitle" required>
+              <Input id="sae_ctaBoxTitle" name="sae_ctaBoxTitle" required defaultValue={content.sae.ctaBoxTitle} />
+            </FormField>
+            <AlignmentControl className="mt-2" value={saeCtaBoxTitleAlign} onChange={setSaeCtaBoxTitleAlign} />
+          </div>
+          <div>
+            <FormField label="Texto del recuadro de postulación" htmlFor="sae_ctaBoxText" required>
+              <Input id="sae_ctaBoxText" name="sae_ctaBoxText" required defaultValue={content.sae.ctaBoxText} />
+            </FormField>
+            <AlignmentControl className="mt-2" value={saeCtaBoxTextAlign} onChange={setSaeCtaBoxTextAlign} />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Texto del botón" htmlFor="sae_ctaText" required>
               <Input id="sae_ctaText" name="sae_ctaText" required defaultValue={content.sae.ctaText} />
@@ -96,12 +126,18 @@ export function HomeAdmissionForm({ content }: { content: HomeAdmissionContent }
         <h3 className="text-sm font-semibold text-slate-800">Bloque secundario — Vacantes</h3>
         <div className="mt-3 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Etiqueta (badge)" htmlFor="vac_badge" required hint='Ej: "Vacantes 2026"'>
-              <Input id="vac_badge" name="vac_badge" required defaultValue={content.vacantes.badge} />
-            </FormField>
-            <FormField label="Título" htmlFor="vac_title" required>
-              <Input id="vac_title" name="vac_title" required defaultValue={content.vacantes.title} />
-            </FormField>
+            <div>
+              <FormField label="Etiqueta (badge)" htmlFor="vac_badge" required hint='Ej: "Vacantes 2026"'>
+                <Input id="vac_badge" name="vac_badge" required defaultValue={content.vacantes.badge} />
+              </FormField>
+              <AlignmentControl className="mt-2" value={vacBadgeAlign} onChange={setVacBadgeAlign} />
+            </div>
+            <div>
+              <FormField label="Título" htmlFor="vac_title" required>
+                <Input id="vac_title" name="vac_title" required defaultValue={content.vacantes.title} />
+              </FormField>
+              <AlignmentControl className="mt-2" value={vacTitleAlign} onChange={setVacTitleAlign} />
+            </div>
           </div>
           <ParagraphListEditor label="Párrafos" paragraphs={vacantesParagraphs} onChange={setVacantesParagraphs} />
           <div className="grid gap-4 sm:grid-cols-2">

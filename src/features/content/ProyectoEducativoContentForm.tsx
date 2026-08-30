@@ -21,7 +21,7 @@ export function ProyectoEducativoContentForm({ content }: { content: ProyectoEdu
     setError(null);
     setSaved(false);
     const value: ProyectoEducativoContent = {
-      introParagraphs: introParagraphs.map((p) => p.trim()).filter(Boolean),
+      introParagraphs: introParagraphs.map((p) => ({ ...p, text: p.text.trim() })).filter((p) => p.text),
     };
 
     const supabase = createClient();

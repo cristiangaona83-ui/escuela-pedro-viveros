@@ -12,10 +12,6 @@ import {
   Highlighter,
   Eraser,
   PanelTop,
-  TextAlignStart,
-  TextAlignCenter,
-  TextAlignEnd,
-  TextAlignJustify,
   List,
   ListOrdered,
   ListIndentIncrease,
@@ -37,6 +33,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BULLETIN_EXTENSIONS, ALLOWED_FONT_SIZES } from "@/lib/bulletin-content";
+import { AlignmentControl } from "@/components/ui/AlignmentControl";
+import { normalizeAlign, type Align } from "@/lib/content-align";
 
 const TEXT_COLORS = ["#1c2624", "#274a3a", "#b91c1c", "#1d4ed8", "#a16207", "#7c3aed"];
 const HIGHLIGHT_COLORS = ["#fef08a", "#bbf7d0", "#bfdbfe", "#fecaca", "#e9d5ff", "#e2e8f0"];
@@ -185,6 +183,10 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
   }
 
   const inTable = editor.isActive("table");
+  const currentAlign: Align = normalizeAlign(
+    (["center", "right", "justify"] as const).find((a) => editor.isActive({ textAlign: a })),
+    "left"
+  );
   const activeTextColor = editor.getAttributes("textStyle").color as string | undefined;
   const activeHighlight = editor.getAttributes("highlight").color as string | undefined;
   const activeFontSize = editor.getAttributes("textStyle").fontSize as string | undefined;
@@ -276,30 +278,7 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
         />
         <Divider />
 
-        <ToolbarButton
-          label="Alinear a la izquierda"
-          icon={TextAlignStart}
-          active={editor.isActive({ textAlign: "left" })}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        />
-        <ToolbarButton
-          label="Centrar"
-          icon={TextAlignCenter}
-          active={editor.isActive({ textAlign: "center" })}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        />
-        <ToolbarButton
-          label="Alinear a la derecha"
-          icon={TextAlignEnd}
-          active={editor.isActive({ textAlign: "right" })}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        />
-        <ToolbarButton
-          label="Justificar"
-          icon={TextAlignJustify}
-          active={editor.isActive({ textAlign: "justify" })}
-          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-        />
+        <AlignmentControl label={null} size="md" value={currentAlign} onChange={(align) => editor.chain().focus().setTextAlign(align).run()} />
         <Divider />
 
         <ToolbarButton

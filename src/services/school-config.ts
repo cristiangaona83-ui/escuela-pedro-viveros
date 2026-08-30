@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, type GradingConfig } from "@/config/grading";
 import { SITE } from "@/config/site";
 import { HISTORY, MISSION, VISION, PEI_INTRO } from "@/config/institutional-content";
+import { normalizeAlign, normalizeParagraphs, type Align, type AlignedText } from "@/lib/content-align";
 
 /**
  * Valores por defecto = los ya hardcodeados en `SITE` -- si `school_config`
@@ -133,52 +134,97 @@ async function getConfigValue<T>(key: string, fallback: T): Promise<T> {
  * Bloque de Admisión de Inicio (SAE + Vacantes) -- campos separados para
  * fecha límite, enlaces, CTA y textos (decisión explícita del usuario), en
  * vez de un párrafo único con la fecha incrustada como antes.
+ *
+ * Alineación: los campos simples (badge/title/etc.) llevan una propiedad
+ * hermana `xAlign` en vez de anidarse en `{text, align}` -- así el resto
+ * del código que ya lee `.title`/`.badge` como string plano no se rompe.
+ * `paragraphs` sí es `{text, align}[]` porque la alineación es realmente
+ * por párrafo (un array paralelo de alineaciones se desincroniza al
+ * reordenar/agregar/quitar párrafos).
  */
 export interface AdmissionBlock {
   badge: string;
+  badgeAlign: Align;
   title: string;
-  paragraphs: string[];
+  titleAlign: Align;
+  paragraphs: AlignedText[];
   deadlineLabel: string;
+  deadlineLabelAlign: Align;
   ctaBoxTitle: string;
+  ctaBoxTitleAlign: Align;
   ctaBoxText: string;
+  ctaBoxTextAlign: Align;
   ctaText: string;
   ctaHref: string;
 }
 
-const DEFAULT_HOME_ADMISSION: { sae: AdmissionBlock; vacantes: Omit<AdmissionBlock, "deadlineLabel" | "ctaBoxTitle" | "ctaBoxText"> } = {
+type VacantesBlock = Omit<
+  AdmissionBlock,
+  "deadlineLabel" | "deadlineLabelAlign" | "ctaBoxTitle" | "ctaBoxTitleAlign" | "ctaBoxText" | "ctaBoxTextAlign"
+>;
+
+// Los valores *Align por defecto reproducen la apariencia visual actual del
+// sitio (heredada de un wrapper `text-center`, o fija en `text-left`/
+// `text-justify` según el bloque) -- ver auditoría: agregar esta función NO
+// debe cambiar cómo se ve ningún contenido existente.
+const DEFAULT_HOME_ADMISSION: { sae: AdmissionBlock; vacantes: VacantesBlock } = {
   sae: {
     badge: "Admisión 2027",
+    badgeAlign: "center",
     title: "¡Postulaciones SAE 2027 abiertas! 🏫✨",
+    titleAlign: "center",
     paragraphs: [
       "Ya se encuentra abierto el Periodo Principal de Postulación del Sistema de Admisión Escolar (SAE) para el año 2027.",
       "Revisa establecimientos, ordena tus preferencias y envía tu postulación dentro del plazo indicado.",
       "Recuerda: el proceso no es por orden de llegada. Puedes realizar tu postulación con calma dentro del plazo establecido; el día y la hora en que la envíes no influyen en el resultado.",
-    ],
+    ].map((text) => ({ text, align: "left" as const })),
     deadlineLabel: "Plazo hasta el jueves 27 de agosto a las 14:00 horas",
+    deadlineLabelAlign: "center",
     ctaBoxTitle: `¿Quieres ser parte de la ${SITE.name} en 2027?`,
+    ctaBoxTitleAlign: "center",
     ctaBoxText: "Ingresa al Sistema de Admisión Escolar y realiza tu postulación dentro del plazo.",
+    ctaBoxTextAlign: "center",
     ctaText: "Postular en SAE",
     ctaHref: "https://www.sistemadeadmisionescolar.cl/",
   },
   vacantes: {
     badge: "Vacantes 2026",
+    badgeAlign: "center",
     title: "¿Necesitas una vacante para este año?",
+    titleAlign: "center",
     paragraphs: [
       "Si necesitas matrícula durante el año escolar 2026 o no obtuviste un cupo mediante el proceso regular, puedes utilizar Anótate en la Lista, plataforma oficial del Ministerio de Educación para solicitar vacantes disponibles.",
       "Las solicitudes se realizan en línea y las vacantes disponibles se gestionan respetando el orden de llegada registrado en la plataforma.",
-    ],
+    ].map((text) => ({ text, align: "justify" as const })),
     ctaText: "Anótate en la Lista",
     ctaHref: "https://www.sistemadeadmisionescolar.cl/",
   },
 };
 
-export type HomeAdmissionContent = typeof DEFAULT_HOME_ADMISSION;
+export type HomeAdmissionContent = { sae: AdmissionBlock; vacantes: VacantesBlock };
+
+function mergeAdmissionBlock<T extends VacantesBlock>(defaults: T, stored: Partial<T> | undefined, paragraphLegacyAlign: Align): T {
+  const s: Partial<T> = stored ?? {};
+  return {
+    ...defaults,
+    ...s,
+    badgeAlign: normalizeAlign((s as Partial<AdmissionBlock>).badgeAlign, defaults.badgeAlign),
+    titleAlign: normalizeAlign((s as Partial<AdmissionBlock>).titleAlign, defaults.titleAlign),
+    paragraphs: s.paragraphs ? normalizeParagraphs(s.paragraphs, paragraphLegacyAlign) : defaults.paragraphs,
+  };
+}
 
 export async function getHomeAdmissionContent(): Promise<HomeAdmissionContent> {
-  const stored = await getConfigValue<Partial<HomeAdmissionContent>>("home_admission", {});
+  const stored = await getConfigValue<{ sae?: Partial<AdmissionBlock>; vacantes?: Partial<VacantesBlock> }>("home_admission", {});
+  const sae = mergeAdmissionBlock(DEFAULT_HOME_ADMISSION.sae, stored.sae, "left");
   return {
-    sae: { ...DEFAULT_HOME_ADMISSION.sae, ...stored.sae },
-    vacantes: { ...DEFAULT_HOME_ADMISSION.vacantes, ...stored.vacantes },
+    sae: {
+      ...sae,
+      deadlineLabelAlign: normalizeAlign(stored.sae?.deadlineLabelAlign, DEFAULT_HOME_ADMISSION.sae.deadlineLabelAlign),
+      ctaBoxTitleAlign: normalizeAlign(stored.sae?.ctaBoxTitleAlign, DEFAULT_HOME_ADMISSION.sae.ctaBoxTitleAlign),
+      ctaBoxTextAlign: normalizeAlign(stored.sae?.ctaBoxTextAlign, DEFAULT_HOME_ADMISSION.sae.ctaBoxTextAlign),
+    },
+    vacantes: mergeAdmissionBlock(DEFAULT_HOME_ADMISSION.vacantes, stored.vacantes, "justify"),
   };
 }
 
@@ -199,24 +245,52 @@ export async function getHomeScheduleContent(): Promise<{ blocks: ScheduleBlock[
   return getConfigValue("home_schedule", DEFAULT_HOME_SCHEDULE);
 }
 
+// Alineación por defecto = la apariencia actual del sitio: la historia ya
+// se mostraba con `text-justify` por párrafo, misión/visión sin clase (=
+// izquierda).
 const DEFAULT_NUESTRA_ESCUELA_CONTENT = {
-  historyParagraphs: HISTORY.paragraphs,
+  historyParagraphs: HISTORY.paragraphs.map((text) => ({ text, align: "justify" as const })),
   mission: MISSION ?? "",
+  missionAlign: "left" as const,
   vision: VISION ?? "",
+  visionAlign: "left" as const,
 };
 
-export type NuestraEscuelaContent = typeof DEFAULT_NUESTRA_ESCUELA_CONTENT;
+export type NuestraEscuelaContent = {
+  historyParagraphs: AlignedText[];
+  mission: string;
+  missionAlign: Align;
+  vision: string;
+  visionAlign: Align;
+};
 
 export async function getNuestraEscuelaContent(): Promise<NuestraEscuelaContent> {
-  return getConfigValue("nuestra_escuela_content", DEFAULT_NUESTRA_ESCUELA_CONTENT);
+  const stored = await getConfigValue<Partial<NuestraEscuelaContent>>("nuestra_escuela_content", {});
+  return {
+    ...DEFAULT_NUESTRA_ESCUELA_CONTENT,
+    ...stored,
+    historyParagraphs: stored.historyParagraphs
+      ? normalizeParagraphs(stored.historyParagraphs, "justify")
+      : DEFAULT_NUESTRA_ESCUELA_CONTENT.historyParagraphs,
+    missionAlign: normalizeAlign(stored.missionAlign, "left"),
+    visionAlign: normalizeAlign(stored.visionAlign, "left"),
+  };
 }
 
+// La introducción del PEI ya se mostraba con `text-justify` por párrafo.
 const DEFAULT_PROYECTO_EDUCATIVO_CONTENT = {
-  introParagraphs: PEI_INTRO.paragraphs,
+  introParagraphs: PEI_INTRO.paragraphs.map((text) => ({ text, align: "justify" as const })),
 };
 
-export type ProyectoEducativoContent = typeof DEFAULT_PROYECTO_EDUCATIVO_CONTENT;
+export type ProyectoEducativoContent = {
+  introParagraphs: AlignedText[];
+};
 
 export async function getProyectoEducativoContent(): Promise<ProyectoEducativoContent> {
-  return getConfigValue("proyecto_educativo_content", DEFAULT_PROYECTO_EDUCATIVO_CONTENT);
+  const stored = await getConfigValue<Partial<ProyectoEducativoContent>>("proyecto_educativo_content", {});
+  return {
+    introParagraphs: stored.introParagraphs
+      ? normalizeParagraphs(stored.introParagraphs, "justify")
+      : DEFAULT_PROYECTO_EDUCATIVO_CONTENT.introParagraphs,
+  };
 }

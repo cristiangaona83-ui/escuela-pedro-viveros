@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/public/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { getInstitutionalProfile, getNuestraEscuelaContent } from "@/services/school-config";
 import { getContentCards } from "@/services/public-content";
+import { ALIGN_CLASS } from "@/lib/content-align";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Nuestra Escuela" };
 
@@ -30,7 +32,7 @@ export default async function NuestraEscuelaPage() {
         </div>
         <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-slate-600 sm:text-base">
           {content.historyParagraphs.map((p, i) => (
-            <p key={i} className="text-justify">{p}</p>
+            <p key={i} className={ALIGN_CLASS[p.align]}>{p.text}</p>
           ))}
         </div>
       </section>
@@ -43,7 +45,7 @@ export default async function NuestraEscuelaPage() {
                 <Target className="h-5 w-5 text-brand-700" />
                 <h3 className="text-lg font-semibold text-slate-900">Misión</h3>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">{content.mission}</p>
+              <p className={cn("mt-3 text-sm leading-relaxed text-slate-600", ALIGN_CLASS[content.missionAlign])}>{content.mission}</p>
             </CardBody>
           </Card>
           <Card>
@@ -52,7 +54,7 @@ export default async function NuestraEscuelaPage() {
                 <Eye className="h-5 w-5 text-brand-700" />
                 <h3 className="text-lg font-semibold text-slate-900">Visión</h3>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">{content.vision}</p>
+              <p className={cn("mt-3 text-sm leading-relaxed text-slate-600", ALIGN_CLASS[content.visionAlign])}>{content.vision}</p>
             </CardBody>
           </Card>
         </div>

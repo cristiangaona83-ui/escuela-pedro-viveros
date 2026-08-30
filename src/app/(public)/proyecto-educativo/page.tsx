@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/public/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
 import { getPublicDocuments } from "@/services/public-content";
 import { getProyectoEducativoContent } from "@/services/school-config";
+import { ALIGN_CLASS } from "@/lib/content-align";
 
 export const metadata: Metadata = { title: "Proyecto Educativo Institucional" };
 
@@ -27,7 +28,7 @@ export default async function ProyectoEducativoPage() {
 
         <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-slate-600 sm:text-base">
           {content.introParagraphs.map((p, i) => (
-            <p key={i} className="text-justify">{p}</p>
+            <p key={i} className={ALIGN_CLASS[p.align]}>{p.text}</p>
           ))}
         </div>
 

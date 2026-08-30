@@ -8,6 +8,8 @@ import { getPublishedNews, getContentCards } from "@/services/public-content";
 import { getInstitutionalProfile, getHomeAdmissionContent, getHomeScheduleContent } from "@/services/school-config";
 import { resolveContentCardIcon } from "@/config/content-icons";
 import { SITE } from "@/config/site";
+import { ALIGN_CLASS } from "@/lib/content-align";
+import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
   const [news, profile, admission, schedule, highlights] = await Promise.all([
@@ -50,27 +52,31 @@ export default async function HomePage() {
         <div className="space-y-6">
           {/* Postulaciones — bloque principal */}
           <div className="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-10 sm:px-10 sm:py-12">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
-                {admission.sae.badge}
-              </span>
-              <h2 className="mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
+            <div className="mx-auto max-w-3xl">
+              <div className={ALIGN_CLASS[admission.sae.badgeAlign]}>
+                <span className="inline-flex items-center rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+                  {admission.sae.badge}
+                </span>
+              </div>
+              <h2 className={cn("mt-4 font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl", ALIGN_CLASS[admission.sae.titleAlign])}>
                 {admission.sae.title}
               </h2>
-              <div className="mx-auto mt-4 max-w-2xl space-y-3 text-left leading-relaxed text-slate-600">
+              <div className="mx-auto mt-4 max-w-2xl space-y-3 leading-relaxed text-slate-600">
                 {admission.sae.paragraphs.map((p, i) => (
-                  <p key={i}>{p}</p>
+                  <p key={i} className={ALIGN_CLASS[p.align]}>{p.text}</p>
                 ))}
               </div>
               {admission.sae.deadlineLabel && (
-                <p className="mt-4 inline-flex items-center rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
-                  {admission.sae.deadlineLabel}
-                </p>
+                <div className={cn("mt-4", ALIGN_CLASS[admission.sae.deadlineLabelAlign])}>
+                  <p className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
+                    {admission.sae.deadlineLabel}
+                  </p>
+                </div>
               )}
 
-              <div className="mx-auto mt-8 max-w-xl rounded-xl bg-white/70 px-5 py-6">
-                <p className="font-semibold text-slate-900">{admission.sae.ctaBoxTitle}</p>
-                <p className="mt-1 text-sm text-slate-600">{admission.sae.ctaBoxText}</p>
+              <div className="mx-auto mt-8 max-w-xl rounded-xl bg-white/70 px-5 py-6 text-center">
+                <p className={cn("font-semibold text-slate-900", ALIGN_CLASS[admission.sae.ctaBoxTitleAlign])}>{admission.sae.ctaBoxTitle}</p>
+                <p className={cn("mt-1 text-sm text-slate-600", ALIGN_CLASS[admission.sae.ctaBoxTextAlign])}>{admission.sae.ctaBoxText}</p>
                 <div className="mt-5">
                   <LinkButton href={admission.sae.ctaHref} target="_blank" rel="noopener noreferrer" size="lg">
                     {admission.sae.ctaText}
@@ -83,15 +89,17 @@ export default async function HomePage() {
           {/* Vacantes — bloque secundario, visualmente distinto */}
           <div className="rounded-2xl border border-slate-200 bg-white px-6 py-8 sm:px-10">
             <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                {admission.vacantes.badge}
-              </span>
-              <h3 className="mt-3 font-heading text-xl font-medium tracking-tight text-slate-900">
+              <div className={ALIGN_CLASS[admission.vacantes.badgeAlign]}>
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  {admission.vacantes.badge}
+                </span>
+              </div>
+              <h3 className={cn("mt-3 font-heading text-xl font-medium tracking-tight text-slate-900", ALIGN_CLASS[admission.vacantes.titleAlign])}>
                 {admission.vacantes.title}
               </h3>
-              <div className="mx-auto mt-3 max-w-2xl space-y-2 text-justify text-sm leading-relaxed text-slate-600">
+              <div className="mx-auto mt-3 max-w-2xl space-y-2 text-sm leading-relaxed text-slate-600">
                 {admission.vacantes.paragraphs.map((p, i) => (
-                  <p key={i}>{p}</p>
+                  <p key={i} className={ALIGN_CLASS[p.align]}>{p.text}</p>
                 ))}
               </div>
               <div className="mt-5">

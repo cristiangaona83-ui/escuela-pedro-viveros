@@ -2,24 +2,11 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  List,
-  ListOrdered,
-  Link2,
-  Link2Off,
-  Undo2,
-  Redo2,
-  type LucideIcon,
-} from "lucide-react";
+import { Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, Link2, Link2Off, Undo2, Redo2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NEWS_EXTENSIONS } from "@/lib/news-content";
+import { AlignmentControl } from "@/components/ui/AlignmentControl";
+import { normalizeAlign, type Align } from "@/lib/content-align";
 
 function ToolbarButton({
   active,
@@ -76,6 +63,11 @@ export function NewsEditor({ content, onChange }: { content: JSONContent; onChan
 
   if (!editor) return null;
 
+  const currentAlign: Align = normalizeAlign(
+    (["center", "right", "justify"] as const).find((a) => editor.isActive({ textAlign: a })),
+    "left"
+  );
+
   function setLink() {
     const previousUrl = editor!.getAttributes("link").href as string | undefined;
     const url = window.prompt("URL del enlace (http://, https:// o mailto:)", previousUrl ?? "https://");
@@ -124,30 +116,7 @@ export function NewsEditor({ content, onChange }: { content: JSONContent; onChan
         />
         <Divider />
 
-        <ToolbarButton
-          label="Alinear a la izquierda"
-          icon={AlignLeft}
-          active={editor.isActive({ textAlign: "left" })}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        />
-        <ToolbarButton
-          label="Centrar"
-          icon={AlignCenter}
-          active={editor.isActive({ textAlign: "center" })}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        />
-        <ToolbarButton
-          label="Alinear a la derecha"
-          icon={AlignRight}
-          active={editor.isActive({ textAlign: "right" })}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        />
-        <ToolbarButton
-          label="Justificar"
-          icon={AlignJustify}
-          active={editor.isActive({ textAlign: "justify" })}
-          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-        />
+        <AlignmentControl label={null} size="md" value={currentAlign} onChange={(align) => editor.chain().focus().setTextAlign(align).run()} />
         <Divider />
 
         <ToolbarButton
