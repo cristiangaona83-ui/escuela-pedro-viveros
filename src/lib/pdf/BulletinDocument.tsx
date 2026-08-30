@@ -24,9 +24,24 @@ const bulletinStyles = StyleSheet.create({
   tableHeaderText: { fontFamily: "Helvetica-Bold", color: "#213c30" },
   footer: { marginTop: 32, borderTopWidth: 1, borderTopColor: "#dce8e2", paddingTop: 10 },
   footerSlogan: { fontSize: 9, textAlign: "center", fontFamily: "Helvetica-Oblique", color: "#5c6b66" },
+  pageNumber: { position: "absolute", bottom: 20, left: 0, right: 0, fontSize: 8, textAlign: "center", color: "#8a938f" },
 });
 
 const HEADING_STYLE: Record<number, Style> = { 1: bulletinStyles.h1, 2: bulletinStyles.h2, 3: bulletinStyles.h3 };
+
+export type BulletinPageSize = "carta" | "oficio";
+
+/**
+ * "LETTER" (8,5x11in) y "FOLIO" (8,5x13in) son tamaños nativos de react-pdf/
+ * pdfkit -- FOLIO equivale exactamente al tamaño Oficio usado en Chile para
+ * documentos administrativos, y es distinto de "LEGAL" (8,5x14in), que no
+ * corresponde. Se usan los tamaños estándar en vez de dimensiones custom en
+ * mm para evitar cualquier redondeo.
+ */
+const PAGE_SIZE: Record<BulletinPageSize, "LETTER" | "FOLIO"> = { carta: "LETTER", oficio: "FOLIO" };
+
+/** Espacio mínimo (pt) que debe quedar libre bajo un título para que no quede solo al final de una página, separado de su contenido. */
+const HEADING_MIN_PRESENCE_AHEAD = 28;
 
 type Mark = { type: string; attrs?: Record<string, unknown> };
 
@@ -119,41 +134,61 @@ function renderTable(node: JSONContent, keyPrefix: string) {
   );
   const occupancy: boolean[][] = rows.map(() => Array(columnCount).fill(false));
 
+  // Filas iniciales cuyas celdas son todas tableHeader -- ese es el
+  // encabezado de columnas de la tabla.
+  let headerRowCount = 0;
+  while (headerRowCount < rows.length) {
+    const rowCells = rows[headerRowCount].content ?? [];
+    if (rowCells.length === 0 || !rowCells.every((c) => c.type === "tableHeader")) break;
+    headerRowCount++;
+  }
+
+  const rowElements = rows.map((row, rIdx) => {
+    let colCursor = 0;
+    const cells = (row.content ?? []).map((cell, cIdx) => {
+      while (colCursor < columnCount && occupancy[rIdx][colCursor]) colCursor++;
+      const colspan = typeof cell.attrs?.colspan === "number" ? cell.attrs.colspan : 1;
+      const rowspan = typeof cell.attrs?.rowspan === "number" ? cell.attrs.rowspan : 1;
+      for (let r = rIdx; r < Math.min(rIdx + rowspan, rows.length); r++) {
+        for (let c = colCursor; c < colCursor + colspan; c++) {
+          if (occupancy[r]) occupancy[r][c] = true;
+        }
+      }
+      const isHeader = cell.type === "tableHeader";
+      const bg = isSafeColor(cell.attrs?.backgroundColor) ? cell.attrs.backgroundColor : undefined;
+      const cellKey = `${keyPrefix}-r${rIdx}-c${cIdx}`;
+      const el = (
+        <View
+          key={cellKey}
+          style={[bulletinStyles.tableCell, { flex: colspan }, isHeader ? bulletinStyles.tableHeaderCell : null, bg ? { backgroundColor: bg } : null].filter(
+            Boolean
+          ) as Style[]}
+        >
+          {renderBlocks(cell.content, cellKey, 0, isHeader ? "header" : "body")}
+        </View>
+      );
+      colCursor += colspan;
+      return el;
+    });
+    // `fixed` en una fila hace que react-pdf la incluya en ambos lados
+    // cuando el propio contenedor de la tabla se divide entre páginas (ver
+    // splitNodes en @react-pdf/layout): no es "fijo en toda la página" como
+    // un pie de página, es un efecto secundario del corte de ESTE
+    // contenedor -- así que el encabezado reaparece únicamente si la tabla
+    // realmente continúa en la página siguiente, nunca a mitad de una misma
+    // página ni en páginas posteriores ajenas a la tabla. Sin bloques de
+    // tamaño arbitrario ni cálculo manual de alturas.
+    const isHeaderRow = rIdx < headerRowCount;
+    return (
+      <View key={`${keyPrefix}-row-${rIdx}`} style={bulletinStyles.tableRow} wrap={false} fixed={isHeaderRow}>
+        {cells}
+      </View>
+    );
+  });
+
   return (
     <View key={keyPrefix} style={bulletinStyles.table} wrap>
-      {rows.map((row, rIdx) => {
-        let colCursor = 0;
-        const cells = (row.content ?? []).map((cell, cIdx) => {
-          while (colCursor < columnCount && occupancy[rIdx][colCursor]) colCursor++;
-          const colspan = typeof cell.attrs?.colspan === "number" ? cell.attrs.colspan : 1;
-          const rowspan = typeof cell.attrs?.rowspan === "number" ? cell.attrs.rowspan : 1;
-          for (let r = rIdx; r < Math.min(rIdx + rowspan, rows.length); r++) {
-            for (let c = colCursor; c < colCursor + colspan; c++) {
-              if (occupancy[r]) occupancy[r][c] = true;
-            }
-          }
-          const isHeader = cell.type === "tableHeader";
-          const bg = isSafeColor(cell.attrs?.backgroundColor) ? cell.attrs.backgroundColor : undefined;
-          const cellKey = `${keyPrefix}-r${rIdx}-c${cIdx}`;
-          const el = (
-            <View
-              key={cellKey}
-              style={[bulletinStyles.tableCell, { flex: colspan }, isHeader ? bulletinStyles.tableHeaderCell : null, bg ? { backgroundColor: bg } : null].filter(
-                Boolean
-              ) as Style[]}
-            >
-              {renderBlocks(cell.content, cellKey, 0, isHeader ? "header" : "body")}
-            </View>
-          );
-          colCursor += colspan;
-          return el;
-        });
-        return (
-          <View key={`${keyPrefix}-row-${rIdx}`} style={bulletinStyles.tableRow} wrap={false}>
-            {cells}
-          </View>
-        );
-      })}
+      {rowElements}
     </View>
   );
 }
@@ -169,7 +204,7 @@ function renderBlocks(nodes: JSONContent[] | undefined, keyPrefix = "b", depth =
         const level = [1, 2, 3].includes(node.attrs?.level) ? (node.attrs!.level as number) : 2;
         const align = safeAlignment(node.attrs?.textAlign);
         return (
-          <Text key={key} style={[HEADING_STYLE[level], alignStyle(align)]}>
+          <Text key={key} style={[HEADING_STYLE[level], alignStyle(align)]} minPresenceAhead={HEADING_MIN_PRESENCE_AHEAD}>
             {renderInline(node.content, key)}
           </Text>
         );
@@ -206,16 +241,18 @@ export function BulletinDocument({
   weekLabel,
   publishDate,
   content,
+  pageSize = "carta",
 }: {
   number: number;
   title: string;
   weekLabel: string;
   publishDate: string;
   content: JSONContent;
+  pageSize?: BulletinPageSize;
 }) {
   return (
     <Document title={`Informativo Semanal N.º ${number} - ${title}`}>
-      <Page size="A4" style={pdfStyles.page} wrap>
+      <Page size={PAGE_SIZE[pageSize]} style={pdfStyles.page} wrap>
         <DocumentHeader dateLabel={`San Antonio, ${formatBulletinDate(publishDate)}`} />
         <Text style={pdfStyles.title}>INFORMATIVO SEMANAL N.º {number}</Text>
         <Text style={bulletinStyles.weekLine}>{weekLabel}</Text>
@@ -225,6 +262,12 @@ export function BulletinDocument({
         <View style={bulletinStyles.footer}>
           <Text style={bulletinStyles.footerSlogan}>{SITE.slogan}</Text>
         </View>
+
+        <Text
+          style={bulletinStyles.pageNumber}
+          fixed
+          render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+        />
       </Page>
     </Document>
   );

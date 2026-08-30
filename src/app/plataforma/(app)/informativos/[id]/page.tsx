@@ -6,6 +6,7 @@ import { BulletinForm } from "@/features/weekly-bulletins/BulletinForm";
 import { DuplicateBulletinButton } from "@/features/weekly-bulletins/DuplicateBulletinButton";
 import { DeleteBulletinButton } from "@/features/weekly-bulletins/DeleteBulletinButton";
 import { EmailScheduleCard } from "@/features/weekly-bulletins/EmailScheduleCard";
+import { BulletinPrintPanel } from "@/features/weekly-bulletins/BulletinPrintPanel";
 import { getBulletinById, getBulletinEmailSummary } from "@/services/weekly-bulletins-admin";
 import { getActiveRecipientCount } from "@/services/bulletin-recipients-admin";
 import { getSessionContext } from "@/features/auth/session";
@@ -42,6 +43,10 @@ export default async function EditarInformativoPage({ params }: { params: Promis
           <DuplicateBulletinButton bulletin={bulletin} />
           <DeleteBulletinButton bulletinId={bulletin.id} title={bulletin.title} pdfUrl={bulletin.pdf_url} redirectTo="/plataforma/informativos" />
         </div>
+      </div>
+
+      <div className="mt-4">
+        <BulletinPrintPanel bulletinId={bulletin.id} />
       </div>
 
       {bulletin.published && (
