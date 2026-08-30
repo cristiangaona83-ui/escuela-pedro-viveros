@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 import { getCourseSubjectAverages } from "@/services/report-data";
+import { getCourseGradeDetail } from "@/services/grade-overview";
 import { isEnsenanzaBasica } from "@/lib/pdf/academic-certificate-wording";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -58,9 +59,16 @@ export default async function InformesCursoPage({
   if (!course || !isEnsenanzaBasica(course.level)) notFound();
 
   const courseLabel = `${course.level} ${course.letter}`.trim();
-  const reports = await getCourseSubjectAverages(cursoId, year, tipo === "semestral" ? period : undefined);
+  const periodForQuery = tipo === "semestral" ? period : undefined;
+  const [reports, gradeDetail] = await Promise.all([
+    getCourseSubjectAverages(cursoId, year, periodForQuery),
+    getCourseGradeDetail(cursoId, year, periodForQuery),
+  ]);
   const completed = reports.filter((r) => r.generalAverage !== null);
   const pending = reports.filter((r) => r.generalAverage === null);
+  const subjectsPending = (gradeDetail?.subjects ?? [])
+    .filter((s) => s.status !== "completo")
+    .map((s) => (s.status === "sin_evaluaciones" ? `${s.subjectName} (sin evaluaciones)` : `${s.subjectName}: ${s.studentsPending} pendiente${s.studentsPending === 1 ? "" : "s"}`));
 
   return (
     <div>
@@ -87,7 +95,16 @@ export default async function InformesCursoPage({
             )}
           </p>
         </div>
-        <PrintAllButton tipo={tipo} courseId={cursoId} courseLabel={courseLabel} year={year} period={period} pendingCount={pending.length} availableCount={completed.length} />
+        <PrintAllButton
+          tipo={tipo}
+          courseId={cursoId}
+          courseLabel={courseLabel}
+          year={year}
+          period={period}
+          pendingCount={pending.length}
+          availableCount={completed.length}
+          subjectsPending={subjectsPending}
+        />
       </div>
 
       <Card className="mt-6">
@@ -116,7 +133,7 @@ export default async function InformesCursoPage({
                         )}
                       </td>
                       <td className="py-2 pr-3">
-                        <StudentReportActions tipo={tipo} studentId={r.studentId} year={year} period={period} available={r.generalAverage !== null} />
+                        <StudentReportActions tipo={tipo} studentId={r.studentId} courseId={cursoId} year={year} period={period} available={r.generalAverage !== null} />
                       </td>
                     </tr>
                   ))}

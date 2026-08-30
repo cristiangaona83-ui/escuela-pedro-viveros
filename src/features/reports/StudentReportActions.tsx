@@ -21,12 +21,14 @@ const INDIVIDUAL_URL: Record<string, string> = {
 export function StudentReportActions({
   tipo,
   studentId,
+  courseId,
   year,
   period,
   available,
 }: {
   tipo: string;
   studentId: string;
+  courseId: string;
   year: string;
   period?: string;
   available: boolean;
@@ -46,7 +48,7 @@ export function StudentReportActions({
     return (
       <div className="flex items-center gap-3 text-xs text-slate-400">
         <span>Sin notas suficientes</span>
-        <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline">
+        <Link href={`/plataforma/calificaciones/${courseId}?year=${year}${period ? `&period=${period}` : ""}`} className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline">
           <Pencil className="h-3.5 w-3.5" /> Editar
         </Link>
       </div>
@@ -71,7 +73,7 @@ export function StudentReportActions({
       >
         {loading === "imprimir" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />} Imprimir
       </button>
-      <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
+      <Link href={`/plataforma/calificaciones/${courseId}?year=${year}${period ? `&period=${period}` : ""}`} className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
         <Pencil className="h-3.5 w-3.5" /> Editar
       </Link>
     </div>

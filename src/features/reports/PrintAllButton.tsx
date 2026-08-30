@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Printer, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Printer, AlertCircle, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { requestPdf } from "@/lib/download-pdf";
 
@@ -26,6 +27,7 @@ export function PrintAllButton({
   period,
   pendingCount,
   availableCount,
+  subjectsPending = [],
 }: {
   tipo: string;
   courseId: string;
@@ -34,6 +36,8 @@ export function PrintAllButton({
   period?: string;
   pendingCount: number;
   availableCount: number;
+  /** Detalle de asignaturas con calificaciones incompletas (no confundir con pendingCount, que mide informes sin notas suficientes -- ver getCourseGradeDetail). Solo se usa para enriquecer el aviso previo a imprimir; no bloquea la impresión. */
+  subjectsPending?: string[];
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,10 +48,11 @@ export function PrintAllButton({
       window.alert(`Ningún estudiante de ${courseLabel} tiene el informe completo todavía.`);
       return;
     }
-    if (pendingCount > 0) {
+    if (pendingCount > 0 || subjectsPending.length > 0) {
+      const detail = subjectsPending.length > 0 ? `\n\nCalificaciones pendientes:\n${subjectsPending.map((s) => `- ${s}`).join("\n")}` : "";
       const proceed = window.confirm(
-        `Este curso tiene ${pendingCount} informe${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"} de completar.\n\n` +
-          `Puede imprimir únicamente los ${availableCount} informes disponibles, o cancelar para completar los pendientes.\n\n` +
+        `Este curso tiene ${pendingCount} informe${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"} de completar.${detail}\n\n` +
+          `Puede imprimir únicamente los ${availableCount} informes disponibles, o cancelar para revisar las calificaciones pendientes.\n\n` +
           `¿Imprimir los ${availableCount} informes disponibles?`
       );
       if (!proceed) return;
@@ -63,6 +68,20 @@ export function PrintAllButton({
 
   return (
     <div>
+      {subjectsPending.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Calificaciones pendientes: {subjectsPending.join(" · ")}.{" "}
+            <Link
+              href={`/plataforma/calificaciones/${courseId}?year=${year}${period ? `&period=${period}` : ""}`}
+              className="inline-flex items-center gap-1 font-medium text-amber-900 hover:underline"
+            >
+              <ClipboardList className="h-3.5 w-3.5" /> Revisar calificaciones
+            </Link>
+          </span>
+        </div>
+      )}
       <Button type="button" onClick={handlePrint} disabled={loading}>
         <Printer className="h-4 w-4" /> {loading ? "Generando…" : "Imprimir todos los informes"}
       </Button>
