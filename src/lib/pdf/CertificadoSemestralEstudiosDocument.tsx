@@ -6,23 +6,7 @@ import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
 import type { InstitutionalProfile } from "@/services/school-config";
 
-export function CertificadoSemestralEstudiosDocument({
-  folio,
-  studentName,
-  studentRun,
-  courseFormalName,
-  periodName,
-  year,
-  rows,
-  generalAverage,
-  attendanceRate,
-  homeroomTeacherName,
-  issuedAt,
-  verificationCode,
-  directorSignatureDataUri,
-  stampDataUri,
-  profile,
-}: {
+export interface CertificadoSemestralEstudiosProps {
   folio: string;
   studentName: string;
   studentRun: string;
@@ -38,9 +22,27 @@ export function CertificadoSemestralEstudiosDocument({
   directorSignatureDataUri?: string | null;
   stampDataUri?: string | null;
   profile: InstitutionalProfile;
-}) {
+}
+
+/** Solo el <Page> -- ver comentario equivalente en CertificadoAnualEstudiosDocument.tsx. */
+export function CertificadoSemestralEstudiosPage({
+  folio,
+  studentName,
+  studentRun,
+  courseFormalName,
+  periodName,
+  year,
+  rows,
+  generalAverage,
+  attendanceRate,
+  homeroomTeacherName,
+  issuedAt,
+  verificationCode,
+  directorSignatureDataUri,
+  stampDataUri,
+  profile,
+}: CertificadoSemestralEstudiosProps) {
   return (
-    <Document title={`Certificado Semestral de Estudios - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
         <CertificateInstitutionalHeader title="CERTIFICADO SEMESTRAL DE ESTUDIOS" year={year} profile={profile} />
 
@@ -92,6 +94,14 @@ export function CertificadoSemestralEstudiosDocument({
           profile={profile}
         />
       </Page>
+  );
+}
+
+/** Uso individual (sin cambios de comportamiento): un <Document> con la misma página que arriba. */
+export function CertificadoSemestralEstudiosDocument(props: CertificadoSemestralEstudiosProps) {
+  return (
+    <Document title={`Certificado Semestral de Estudios - ${props.studentName}`}>
+      <CertificadoSemestralEstudiosPage {...props} />
     </Document>
   );
 }

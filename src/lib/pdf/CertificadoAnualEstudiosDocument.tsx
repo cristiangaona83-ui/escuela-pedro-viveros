@@ -6,23 +6,7 @@ import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
 import type { InstitutionalProfile } from "@/services/school-config";
 
-export function CertificadoAnualEstudiosDocument({
-  folio,
-  studentName,
-  studentRun,
-  courseFormalName,
-  year,
-  rows,
-  generalAverage,
-  attendanceRate,
-  promotionSentence,
-  homeroomTeacherName,
-  issuedAt,
-  verificationCode,
-  directorSignatureDataUri,
-  stampDataUri,
-  profile,
-}: {
+export interface CertificadoAnualEstudiosProps {
   folio: string;
   studentName: string;
   studentRun: string;
@@ -38,9 +22,33 @@ export function CertificadoAnualEstudiosDocument({
   directorSignatureDataUri?: string | null;
   stampDataUri?: string | null;
   profile: InstitutionalProfile;
-}) {
+}
+
+/**
+ * Solo el <Page> -- sin <Document> envolvente -- para poder componer varias
+ * de estas páginas (una por estudiante) dentro de un único <Document> en la
+ * impresión masiva por curso (ver bulk-report-documents.tsx). El uso
+ * individual (CertificadoAnualEstudiosDocument, abajo) sigue exactamente
+ * igual que antes: un <Document> con esta misma página adentro.
+ */
+export function CertificadoAnualEstudiosPage({
+  folio,
+  studentName,
+  studentRun,
+  courseFormalName,
+  year,
+  rows,
+  generalAverage,
+  attendanceRate,
+  promotionSentence,
+  homeroomTeacherName,
+  issuedAt,
+  verificationCode,
+  directorSignatureDataUri,
+  stampDataUri,
+  profile,
+}: CertificadoAnualEstudiosProps) {
   return (
-    <Document title={`Certificado Anual de Estudios - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
         <CertificateInstitutionalHeader title="CERTIFICADO ANUAL DE ESTUDIOS" year={year} profile={profile} />
 
@@ -94,6 +102,14 @@ export function CertificadoAnualEstudiosDocument({
           profile={profile}
         />
       </Page>
+  );
+}
+
+/** Uso individual (sin cambios de comportamiento): un <Document> con la misma página que arriba. */
+export function CertificadoAnualEstudiosDocument(props: CertificadoAnualEstudiosProps) {
+  return (
+    <Document title={`Certificado Anual de Estudios - ${props.studentName}`}>
+      <CertificadoAnualEstudiosPage {...props} />
     </Document>
   );
 }

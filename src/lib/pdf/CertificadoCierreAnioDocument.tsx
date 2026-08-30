@@ -5,24 +5,7 @@ import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow } from "./OfficialCertificateShared";
 import type { InstitutionalProfile } from "@/services/school-config";
 
-export function CertificadoCierreAnioDocument({
-  folio,
-  studentName,
-  studentRun,
-  courseFormalName,
-  nextCourseFormalName,
-  year,
-  rows,
-  generalAverage,
-  attendanceRate,
-  promoted,
-  homeroomTeacherName,
-  issuedAt,
-  verificationCode,
-  directorSignatureDataUri,
-  stampDataUri,
-  profile,
-}: {
+export interface CertificadoCierreAnioProps {
   folio: string;
   studentName: string;
   studentRun: string;
@@ -40,9 +23,28 @@ export function CertificadoCierreAnioDocument({
   directorSignatureDataUri?: string | null;
   stampDataUri?: string | null;
   profile: InstitutionalProfile;
-}) {
+}
+
+/** Solo el <Page> -- ver comentario equivalente en CertificadoAnualEstudiosDocument.tsx. */
+export function CertificadoCierreAnioPage({
+  folio,
+  studentName,
+  studentRun,
+  courseFormalName,
+  nextCourseFormalName,
+  year,
+  rows,
+  generalAverage,
+  attendanceRate,
+  promoted,
+  homeroomTeacherName,
+  issuedAt,
+  verificationCode,
+  directorSignatureDataUri,
+  stampDataUri,
+  profile,
+}: CertificadoCierreAnioProps) {
   return (
-    <Document title={`Certificado de Cierre de Año Escolar - ${studentName}`}>
       <Page size="A4" style={[pdfStyles.page, { padding: 30 }]}>
         <CertificateInstitutionalHeader title="CERTIFICADO DE CIERRE DE AÑO ESCOLAR" year={year} profile={profile} />
 
@@ -110,6 +112,14 @@ export function CertificadoCierreAnioDocument({
           profile={profile}
         />
       </Page>
+  );
+}
+
+/** Uso individual (sin cambios de comportamiento): un <Document> con la misma página que arriba. */
+export function CertificadoCierreAnioDocument(props: CertificadoCierreAnioProps) {
+  return (
+    <Document title={`Certificado de Cierre de Año Escolar - ${props.studentName}`}>
+      <CertificadoCierreAnioPage {...props} />
     </Document>
   );
 }
