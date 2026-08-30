@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { getNewsBySlug } from "@/services/public-content";
 import { parseNewsContent, renderNewsHTML } from "@/lib/news-content";
+import { NewsCoverImage } from "@/components/public/NewsCoverImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -31,15 +32,13 @@ export default async function NoticiaDetailPage({ params }: { params: Promise<{ 
       </div>
       <h1 className="mt-4 font-heading text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl">{news.title}</h1>
 
-      <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-xl bg-slate-100">
-        {news.cover_image_url ? (
-          <Image src={news.cover_image_url} alt={news.title} fill className="object-cover" sizes="768px" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-slate-300">
-            <ImageIcon className="h-12 w-12" strokeWidth={1.5} />
-          </div>
-        )}
-      </div>
+      {news.cover_image_url ? (
+        <NewsCoverImage src={news.cover_image_url} alt={news.title} />
+      ) : (
+        <div className="relative mt-8 flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-slate-300">
+          <ImageIcon className="h-12 w-12" strokeWidth={1.5} />
+        </div>
+      )}
 
       {/*
         Sin @tailwindcss/typography en el proyecto (verificado: no está en
