@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { ToggleNewsPublishedButton } from "@/features/news/ToggleNewsPublishedButton";
+import { DeleteNewsButton } from "@/features/news/DeleteNewsButton";
 import { listNewsAdmin } from "@/services/news-admin";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -59,6 +60,7 @@ export default async function NoticiasAdminPage() {
                           title={n.title}
                           publishedAt={n.published_at}
                         />
+                        <DeleteNewsButton newsId={n.id} title={n.title} coverImageUrl={n.cover_image_url} />
                       </>
                     )}
                   </div>
