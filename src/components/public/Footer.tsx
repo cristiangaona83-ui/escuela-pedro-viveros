@@ -15,7 +15,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <SchoolLogo size={44} />
+              <SchoolLogo size={44} priority={false} />
               <span className="font-heading text-base font-medium tracking-tight text-white">{SITE.name}</span>
             </div>
             <p className="mt-4 max-w-sm text-sm text-slate-400">{SITE.slogan}</p>

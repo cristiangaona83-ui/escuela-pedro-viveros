@@ -38,8 +38,8 @@ export function NewsCoverImage({ src, alt }: { src: string; alt: string }) {
         className="mt-8 block w-full overflow-hidden rounded-xl bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         aria-label={`Ampliar imagen destacada: ${alt}`}
       >
-        {/* width/height son solo una referencia para el cálculo de srcset/placeholder de next/image (no hay dimensiones reales guardadas para una imagen remota) -- `h-auto` hace que el navegador use el alto real de la imagen ya cargada, nunca el de esta referencia. */}
-        <Image src={src} alt={alt} width={1200} height={800} sizes="(min-width: 1024px) 768px, 100vw" className="h-auto w-full" priority />
+        {/* width/height son solo una referencia para el cálculo de srcset/placeholder de next/image (no hay dimensiones reales guardadas para una imagen remota) -- `h-auto` hace que el navegador use el alto real de la imagen ya cargada, nunca el de esta referencia. 900x600 se acerca al ancho real del contenedor (max-w-3xl ≈ 768px, con margen para pantallas de alta densidad) en vez de sobredimensionar a 1200. */}
+        <Image src={src} alt={alt} width={900} height={600} sizes="(min-width: 1024px) 768px, 100vw" className="h-auto w-full" priority />
       </button>
 
       {open && (
