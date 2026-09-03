@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Users, BookOpen, CheckCircle2 } from "lucide-react";
+import { Users, BookOpen, CheckCircle2, History } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LinkButton } from "@/components/ui/Button";
 import { GradeEntryGrid } from "@/features/grades/GradeEntryGrid";
 import { CalificacionesFilterBar } from "@/features/grades/CalificacionesFilterBar";
 import { getTeachableCourseSubjects, listOpenPeriods } from "@/services/academic-scope";
@@ -57,8 +58,15 @@ export default async function CalificacionesPage({
 
       {overview && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900">Resumen por curso</h2>
-          <p className="mt-1 text-xs text-slate-500">Vista de consulta para revisar rápidamente qué cursos tienen calificaciones pendientes.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Resumen por curso</h2>
+              <p className="mt-1 text-xs text-slate-500">Vista de consulta para revisar rápidamente qué cursos tienen calificaciones pendientes.</p>
+            </div>
+            <LinkButton href="/plataforma/calificaciones/historial" variant="secondary" size="sm">
+              <History className="h-4 w-4" /> Ver historial de modificaciones
+            </LinkButton>
+          </div>
           <div className="mt-4">
             <CalificacionesFilterBar
               academicYears={overview.academicYears}

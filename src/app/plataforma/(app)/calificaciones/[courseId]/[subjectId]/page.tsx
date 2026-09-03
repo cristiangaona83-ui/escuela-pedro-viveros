@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users, ClipboardList, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, Users, ClipboardList, CheckCircle2, Clock, Settings } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LinkButton } from "@/components/ui/Button";
 import { getSubjectGradeMatrix } from "@/services/grade-overview";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -64,7 +65,8 @@ export default async function CalificacionesAsignaturaPage({
         <span className="text-slate-500">{matrix.subjectName}</span>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="text-2xl font-semibold text-slate-900">
           {matrix.subjectName} — {matrix.courseLabel}
         </h1>
@@ -86,6 +88,10 @@ export default async function CalificacionesAsignaturaPage({
           {matrix.courseAverage !== null && <span>Promedio del curso: <strong>{formatGrade(matrix.courseAverage)}</strong></span>}
           {matrix.completionPercent !== null && <span>{matrix.completionPercent}% completado</span>}
         </p>
+        </div>
+        <LinkButton href={`/plataforma/calificaciones/${courseId}/${subjectId}/evaluaciones?${extraParams}`} variant="secondary" size="sm">
+          <Settings className="h-4 w-4" /> Gestionar evaluaciones
+        </LinkButton>
       </div>
 
       <Card className="mt-6">

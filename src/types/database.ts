@@ -242,7 +242,7 @@ export type EvaluationRow = {
   weight: number;
   eval_date: string | null;
   description: string | null;
-  status: "planificada" | "aplicada" | "cerrada";
+  status: "planificada" | "aplicada" | "cerrada" | "borrador" | "archivada";
   created_at: string;
 }
 
@@ -256,6 +256,24 @@ export type GradeRow = {
   updated_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type GradeChangeReason = "error_digitacion" | "correccion_docente" | "evaluacion_recuperativa" | "autorizacion_utp" | "otro";
+
+export type GradeChangeHistoryRow = {
+  id: string;
+  evaluation_id: string | null;
+  student_id: string | null;
+  previous_score: number | null;
+  new_score: number | null;
+  action: "creada" | "modificada" | "eliminada" | "restaurada";
+  reason: GradeChangeReason | null;
+  reason_note: string | null;
+  changed_by: string | null;
+  evaluation_name: string | null;
+  course_id: string | null;
+  subject_id: string | null;
+  created_at: string;
 }
 
 export type AttendanceRow = {
@@ -1112,6 +1130,18 @@ export interface Database {
         Args: { p_student_id: string; p_academic_year_id: string; p_reason?: string };
         Returns: boolean;
       };
+      set_grade_administrative: {
+        Args: { p_evaluation_id: string; p_student_id: string; p_score: number; p_reason: string; p_reason_note?: string };
+        Returns: void;
+      };
+      delete_grade_administrative: {
+        Args: { p_evaluation_id: string; p_student_id: string; p_reason: string; p_reason_note?: string };
+        Returns: void;
+      };
+      delete_evaluation_administrative: {
+        Args: { p_evaluation_id: string; p_reason: string; p_reason_note?: string };
+        Returns: void;
+      };
       update_student_fields: {
         Args: {
           p_student_id: string;
@@ -1245,6 +1275,7 @@ export interface Database {
       academic_periods: CrudTable<AcademicPeriodRow>;
       evaluations: CrudTable<EvaluationRow>;
       grades: CrudTable<GradeRow>;
+      grade_change_history: CrudTable<GradeChangeHistoryRow>;
       attendance: CrudTable<AttendanceRow>;
       learning_objectives: CrudTable<LearningObjectiveRow>;
       lesson_plans: CrudTable<LessonPlanRow>;
