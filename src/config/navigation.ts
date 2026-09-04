@@ -55,6 +55,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "superadmin"], group: "utp" },
 
   { label: "Asistencia", href: "/plataforma/asistencia", icon: "CalendarCheck", roles: ["director", "utp", "docente", "convivencia", "superadmin", "inspectoria_general"], group: "inspectoria" },
+  { label: "Seguro Escolar", href: "/plataforma/seguro-escolar", icon: "ShieldAlert", roles: ["director", "superadmin", "inspectoria_general"], group: "inspectoria" },
 
   { label: "Convivencia Educativa", href: "/plataforma/convivencia", icon: "ShieldCheck", roles: ["director", "superadmin", "convivencia", "inspectoria_general"], group: "convivencia" },
 

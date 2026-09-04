@@ -40,6 +40,8 @@ import { listAcademicYears } from "@/services/courses";
 import { getTeachableCourses } from "@/services/academic-scope";
 import { getStudentConvivenciaSummary } from "@/services/convivencia";
 import { CASE_STATUS_LABELS, CASE_STATUS_TONE } from "@/features/convivencia/labels";
+import { listStudentSeguroEscolarHistory } from "@/services/seguro-escolar";
+import { SEGURO_ESCOLAR_STATUS_LABELS, SEGURO_ESCOLAR_STATUS_TONE, SEGURO_ESCOLAR_ACCIDENT_TYPE_LABELS } from "@/features/seguro-escolar/labels";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -50,6 +52,7 @@ const MANAGE_ROLES = ["director", "utp", "administrativo", "superadmin", "inspec
 const GUARDIAN_FULL_ROLES = ["director", "utp", "administrativo", "convivencia", "superadmin"] as const;
 const PIE_ACCESS_ROLES = ["pie", "director", "utp", "superadmin"] as const; // igual que pie_records_select_scope
 const CONVIVENCIA_ACCESS_ROLES = ["director", "superadmin", "convivencia", "inspectoria_general"] as const; // igual que el módulo Convivencia Educativa (0026)
+const SEGURO_ESCOLAR_ACCESS_ROLES = ["director", "superadmin", "inspectoria_general"] as const; // igual que el módulo Seguro Escolar (0046)
 const PICKUP_AUTH_READ_ROLES = ["director", "utp", "administrativo", "convivencia", "inspectoria_general", "superadmin"] as const;
 const PICKUP_AUTH_WRITE_ROLES = ["director", "utp", "inspectoria_general", "superadmin"] as const;
 const PICKUP_RESTRICTION_ROLES = ["director", "utp", "convivencia", "inspectoria_general", "superadmin"] as const;
@@ -64,6 +67,7 @@ const TABS: StudentTab[] = [
   { key: "apoyos", label: "Apoyos" },
   { key: "pie", label: "PIE" },
   { key: "convivencia", label: "Convivencia" },
+  { key: "seguro_escolar", label: "Seguro Escolar" },
   { key: "documentos", label: "Documentos" },
   { key: "historial", label: "Historial" },
 ];
@@ -129,6 +133,12 @@ export default async function EstudianteDetailPage({
   // inspectoria_general -- mismo alcance que el módulo (0026_convivencia_educativa_module.sql).
   const hasConvivenciaAccess = canWrite(roles, [...CONVIVENCIA_ACCESS_ROLES]);
   const convivenciaSummary = hasConvivenciaAccess && tab === "convivencia" ? await getStudentConvivenciaSummary(student.id) : null;
+
+  // Seguro Escolar: mismo alcance que el módulo (0046_seguro_escolar.sql) --
+  // director/superadmin/inspectoria_general. Docentes y otros roles no ven
+  // esta pestaña ni su historial.
+  const hasSeguroEscolarAccess = canWrite(roles, [...SEGURO_ESCOLAR_ACCESS_ROLES]);
+  const seguroEscolarHistory = hasSeguroEscolarAccess && tab === "seguro_escolar" ? await listStudentSeguroEscolarHistory(student.id) : null;
 
   const needsAttendance = tab === "resumen" || tab === "asistencia";
   const attendance = needsAttendance ? await listAttendanceForStudent(student.id) : null;
@@ -274,7 +284,11 @@ export default async function EstudianteDetailPage({
 
       <StudentTabsNav
         studentId={student.id}
-        tabs={hasConvivenciaAccess ? TABS : TABS.filter((t) => t.key !== "convivencia")}
+        tabs={TABS.filter((t) => {
+          if (t.key === "convivencia") return hasConvivenciaAccess;
+          if (t.key === "seguro_escolar") return hasSeguroEscolarAccess;
+          return true;
+        })}
         active={tab}
       />
 
@@ -650,6 +664,47 @@ export default async function EstudianteDetailPage({
                 </div>
               ) : (
                 <EmptyState icon={HeartHandshake} title="Sin registros de Convivencia" description="Este estudiante no tiene casos de Convivencia Educativa registrados." />
+              )}
+            </CardBody>
+          </Card>
+        )}
+
+        {tab === "seguro_escolar" && (
+          <Card>
+            <CardBody>
+              {!hasSeguroEscolarAccess ? (
+                <EmptyState icon={FileWarning} title="Sección no disponible" description="Tu rol no tiene acceso al Seguro Escolar." />
+              ) : (
+                <>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-900">Declaraciones de Accidente Escolar</h2>
+                    <Link
+                      href={`/plataforma/seguro-escolar/nueva?studentId=${student.id}`}
+                      className="text-xs font-medium text-brand-700 hover:underline"
+                    >
+                      + Nueva declaración
+                    </Link>
+                  </div>
+                  {seguroEscolarHistory && seguroEscolarHistory.length > 0 ? (
+                    <ul className="divide-y divide-slate-100">
+                      {seguroEscolarHistory.map((h) => (
+                        <li key={h.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                          <div>
+                            <Link href={`/plataforma/seguro-escolar/${h.id}`} className="font-mono font-medium text-brand-700 hover:underline">
+                              N.º {h.folio}
+                            </Link>
+                            <p className="text-xs text-slate-500">
+                              {formatDate(h.accidentDate)} · {SEGURO_ESCOLAR_ACCIDENT_TYPE_LABELS[h.accidentType]}
+                            </p>
+                          </div>
+                          <Badge tone={SEGURO_ESCOLAR_STATUS_TONE[h.status]}>{SEGURO_ESCOLAR_STATUS_LABELS[h.status]}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <EmptyState icon={FileWarning} title="Sin declaraciones registradas" description="Este estudiante no tiene declaraciones de Seguro Escolar." />
+                  )}
+                </>
               )}
             </CardBody>
           </Card>

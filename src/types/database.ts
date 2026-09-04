@@ -1107,6 +1107,108 @@ export type ClassSuspensionCourseRow = {
   course_id: string;
 }
 
+// ---------------------------------------------------------------------------
+// Seguro Escolar (supabase/migrations/0046_seguro_escolar.sql)
+// ---------------------------------------------------------------------------
+export type SeguroEscolarAccidentType = "trayecto" | "escuela";
+export type SeguroEscolarSectionDMode = "blank" | "transcribed";
+export type SeguroEscolarIncapacityType = "leve" | "temporal" | "invalidez_parcial" | "invalidez_total" | "gran_invalidez" | "muerte";
+export type SeguroEscolarClosureCause = "alta_medica" | "invalidez" | "abandono_tratamiento" | "muerte";
+export type SeguroEscolarStatus = "borrador" | "emitido" | "entregado" | "en_seguimiento" | "cerrado" | "anulado";
+export type SeguroEscolarAttachmentType = "seguro_firmado" | "documento_atencion" | "certificado" | "documento_centro_asistencial" | "respaldo_seguimiento" | "otro";
+export type SeguroEscolarFollowupStatus = "pendiente" | "realizado" | "cancelado";
+
+export type SeguroEscolarDeclarationRow = {
+  id: string;
+  folio_year: number;
+  folio_number: number;
+  student_id: string;
+  registration_date: string;
+  course_label: string;
+  course_id: string | null;
+  schedule: string | null;
+  student_last_name_paterno: string | null;
+  student_last_name_materno: string | null;
+  student_first_names: string;
+  student_sex: "M" | "F" | null;
+  student_birth_year: number | null;
+  student_age: number | null;
+  residence_street: string | null;
+  residence_number: string | null;
+  residence_population: string | null;
+  residence_commune: string | null;
+  residence_city: string | null;
+  residence_commune_code: string | null;
+  accident_date: string;
+  accident_hour: number | null;
+  accident_minute: number | null;
+  accident_type: SeguroEscolarAccidentType;
+  circumstance: string;
+  witness_a_name: string | null;
+  witness_a_lastname: string | null;
+  witness_a_id: string | null;
+  witness_b_name: string | null;
+  witness_b_lastname: string | null;
+  witness_b_id: string | null;
+  section_d_mode: SeguroEscolarSectionDMode;
+  assistance_establishment: string | null;
+  health_service_code: string | null;
+  establishment_code: string | null;
+  medical_diagnosis: string | null;
+  body_part_affected: string | null;
+  hospitalization: boolean | null;
+  hospitalization_days: number | null;
+  incapacity: boolean | null;
+  incapacity_days: number | null;
+  incapacity_type: SeguroEscolarIncapacityType | null;
+  case_closure_cause: SeguroEscolarClosureCause | null;
+  case_closure_date: string | null;
+  status: SeguroEscolarStatus;
+  annulled_reason: string | null;
+  annulled_by: string | null;
+  annulled_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SeguroEscolarAttachmentRow = {
+  id: string;
+  declaration_id: string;
+  document_type: SeguroEscolarAttachmentType;
+  storage_path: string;
+  file_name: string;
+  description: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
+
+export type SeguroEscolarGuardianContactRow = {
+  id: string;
+  declaration_id: string;
+  contact_name: string;
+  contact_date: string;
+  contact_time: string | null;
+  contact_method: string;
+  staff_member_id: string | null;
+  result: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export type SeguroEscolarFollowupRow = {
+  id: string;
+  declaration_id: string;
+  followup_date: string;
+  responsible_id: string | null;
+  information_received: string | null;
+  reincorporation_date: string | null;
+  observation: string | null;
+  status: SeguroEscolarFollowupStatus;
+  created_by: string;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Views: {
@@ -1179,6 +1281,10 @@ export interface Database {
       permanently_delete_case_and_situation_administrative: {
         Args: { p_situation_id: string };
         Returns: string[];
+      };
+      next_seguro_escolar_folio: {
+        Args: { p_year: number };
+        Returns: number;
       };
       update_student_fields: {
         Args: {
@@ -1370,6 +1476,10 @@ export interface Database {
       psychologist_reports: CrudTable<PsychologistReportRow>;
       class_suspensions: CrudTable<ClassSuspensionRow>;
       class_suspension_courses: CrudTable<ClassSuspensionCourseRow>;
+      seguro_escolar_declarations: CrudTable<SeguroEscolarDeclarationRow>;
+      seguro_escolar_attachments: CrudTable<SeguroEscolarAttachmentRow>;
+      seguro_escolar_guardian_contacts: CrudTable<SeguroEscolarGuardianContactRow>;
+      seguro_escolar_followups: CrudTable<SeguroEscolarFollowupRow>;
     };
   };
 }
