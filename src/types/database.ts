@@ -1172,6 +1172,10 @@ export interface Database {
         Args: { p_case_id: string; p_reason?: string };
         Returns: void;
       };
+      permanently_delete_situation_administrative: {
+        Args: { p_situation_id: string };
+        Returns: string[];
+      };
       update_student_fields: {
         Args: {
           p_student_id: string;

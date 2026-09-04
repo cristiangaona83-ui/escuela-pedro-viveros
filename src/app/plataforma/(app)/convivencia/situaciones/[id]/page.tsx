@@ -56,7 +56,11 @@ export default async function SituacionDetailPage({ params }: { params: Promise<
               />
             )
           )}
-          <SituationActionsMenu situation={situation} canManage={allowedToConvert} redirectAfterDeleteTo="/plataforma/convivencia/situaciones" />
+          <SituationActionsMenu
+            situation={situation}
+            canManage={allowedToConvert}
+            redirectAfterDeleteTo="/plataforma/convivencia/situaciones"
+          />
         </div>
       </div>
 
