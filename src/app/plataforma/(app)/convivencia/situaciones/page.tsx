@@ -9,6 +9,11 @@ import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { listSituations, listSituationCourseFolders } from "@/services/convivencia";
 import { SITUATION_STATUS_LABELS, SITUATION_STATUS_TONE } from "@/features/convivencia/labels";
+import { SituationActionsMenu } from "@/features/convivencia/SituationActionsMenu";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
+
+const MANAGE_ROLES = ["director", "superadmin", "convivencia"] as const;
 
 export const metadata: Metadata = { title: "Situaciones — Convivencia Educativa" };
 
@@ -18,10 +23,12 @@ export default async function ConvivenciaSituacionesPage({
   searchParams: Promise<{ course?: string; q?: string }>;
 }) {
   const { course, q } = await searchParams;
-  const [folders, situations] = await Promise.all([
+  const [folders, situations, session] = await Promise.all([
     listSituationCourseFolders(),
     listSituations({ courseId: course || undefined, search: q || undefined }),
+    getSessionContext(),
   ]);
+  const canManage = canWrite(session?.roles ?? [], [...MANAGE_ROLES]);
   const selectedFolder = folders.find((f) => f.id === course);
 
   return (
@@ -74,8 +81,8 @@ export default async function ConvivenciaSituacionesPage({
           {situations.length > 0 ? (
             <ul className="mt-4 divide-y divide-slate-100">
               {situations.map((s) => (
-                <li key={s.id} className="py-3">
-                  <Link href={`/plataforma/convivencia/situaciones/${s.id}`} className="block hover:bg-slate-50 -mx-2 px-2 py-1 rounded-lg">
+                <li key={s.id} className="flex items-start gap-2 py-3">
+                  <Link href={`/plataforma/convivencia/situaciones/${s.id}`} className="block min-w-0 flex-1 hover:bg-slate-50 -mx-2 px-2 py-1 rounded-lg">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-sm font-medium text-slate-800">
                         {s.students.map((st) => `${st.student.last_names}, ${st.student.first_names}`).join(" · ") || "Sin estudiantes"}
@@ -89,6 +96,11 @@ export default async function ConvivenciaSituacionesPage({
                       {s.status === "archivado" && <Badge tone={SITUATION_STATUS_TONE[s.status]}>{SITUATION_STATUS_LABELS[s.status]}</Badge>}
                     </div>
                   </Link>
+                  {canManage && (
+                    <div className="pt-1">
+                      <SituationActionsMenu situation={s} canManage={canManage} />
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

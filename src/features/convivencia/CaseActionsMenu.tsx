@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Archive, Trash2 } from "lucide-react";
 import { ActionsMenu, type ActionsMenuItem } from "@/components/ui/ActionsMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { EditCaseModal } from "@/features/convivencia/EditCaseModal";
-import type { ConvivenciaCaseTypeRow, ConvivenciaPriority } from "@/types/database";
+import type { ConvivenciaCaseStatus, ConvivenciaCaseTypeRow, ConvivenciaPriority } from "@/types/database";
 import type { PersonName } from "@/services/convivencia";
 
 export function CaseActionsMenu({
@@ -16,6 +16,7 @@ export function CaseActionsMenu({
   caseFolio,
   isFullAdmin,
   title,
+  status,
   caseTypeId,
   priority,
   responsibleId,
@@ -27,9 +28,10 @@ export function CaseActionsMenu({
 }: {
   caseId: string;
   caseFolio: string;
-  /** director/superadmin -- solo ellos pueden enviar a la papelera. */
+  /** director/superadmin -- solo ellos pueden enviar a la papelera. Este componente ya solo se renderiza para canManage (director/superadmin/convivencia), así que Editar/Archivar quedan disponibles para los tres. */
   isFullAdmin: boolean;
   title: string;
+  status: ConvivenciaCaseStatus;
   caseTypeId: string;
   priority: ConvivenciaPriority;
   responsibleId: string;
@@ -42,8 +44,36 @@ export function CaseActionsMenu({
   const router = useRouter();
   const showToast = useToast();
   const [editOpen, setEditOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [trashOpen, setTrashOpen] = useState(false);
   const [trashing, setTrashing] = useState(false);
+
+  async function handleArchive() {
+    setArchiving(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("convivencia_cases").update({ status: "archivado" }).eq("id", caseId);
+    if (error) {
+      setArchiving(false);
+      showToast("error", error.message || "No pudimos archivar el expediente.");
+      return;
+    }
+    await supabase.from("convivencia_events").insert({
+      case_id: caseId,
+      event_type: "caso_archivado",
+      observation: "Caso archivado.",
+    });
+    await supabase.rpc("log_audit", {
+      p_action: "archivar_caso",
+      p_module: "convivencia",
+      p_entity: "convivencia_cases",
+      p_entity_id: caseId,
+    });
+    setArchiving(false);
+    setArchiveOpen(false);
+    showToast("success", "Expediente archivado.");
+    router.refresh();
+  }
 
   async function handleSendToTrash() {
     setTrashing(true);
@@ -60,6 +90,9 @@ export function CaseActionsMenu({
   }
 
   const items: ActionsMenuItem[] = [{ label: "Editar expediente", icon: Pencil, onSelect: () => setEditOpen(true) }];
+  if (status !== "archivado") {
+    items.push({ label: "Archivar caso", icon: Archive, onSelect: () => setArchiveOpen(true) });
+  }
   if (isFullAdmin) {
     items.push({ label: "Enviar a la papelera", icon: Trash2, danger: true, onSelect: () => setTrashOpen(true) });
   }
@@ -80,6 +113,16 @@ export function CaseActionsMenu({
         caseTypes={caseTypes}
         managers={managers}
         academicYears={academicYears}
+      />
+
+      <ConfirmDialog
+        open={archiveOpen}
+        onClose={() => (!archiving ? setArchiveOpen(false) : undefined)}
+        onConfirm={handleArchive}
+        title="Archivar caso"
+        description={`¿Archivar el expediente N.º ${caseFolio}? Queda registrado como cerrado y válido institucionalmente, sin salir de los listados de consulta.`}
+        confirmLabel="Archivar"
+        loading={archiving}
       />
 
       <ConfirmDialog

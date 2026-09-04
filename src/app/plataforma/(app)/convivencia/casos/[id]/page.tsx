@@ -367,6 +367,7 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
               caseFolio={caseDetail.folio}
               isFullAdmin={isFullAdmin}
               title={caseDetail.title}
+              status={caseDetail.status}
               caseTypeId={caseDetail.case_type_id}
               priority={caseDetail.priority}
               responsibleId={caseDetail.responsible_id}

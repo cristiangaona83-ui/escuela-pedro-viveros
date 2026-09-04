@@ -7,7 +7,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { getSituation } from "@/services/convivencia";
 import { ConvertToCaseButton } from "@/features/convivencia/ConvertToCaseButton";
-import { ArchiveSituationButton } from "@/features/convivencia/ArchiveSituationButton";
+import { SituationActionsMenu } from "@/features/convivencia/SituationActionsMenu";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import { SITUATION_STATUS_LABELS, SITUATION_STATUS_TONE } from "@/features/convivencia/labels";
@@ -41,11 +41,6 @@ export default async function SituacionDetailPage({ params }: { params: Promise<
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {allowedToConvert && situation.status !== "archivado" && (
-            <LinkButton href={`/plataforma/convivencia/situaciones/${situation.id}/editar`} size="sm" variant="secondary">
-              Editar
-            </LinkButton>
-          )}
           {situation.case_id ? (
             <LinkButton href={`/plataforma/convivencia/casos/${situation.case_id}`} size="sm" variant="secondary">
               Ver Caso
@@ -61,7 +56,7 @@ export default async function SituacionDetailPage({ params }: { params: Promise<
               />
             )
           )}
-          {allowedToConvert && situation.status !== "archivado" && <ArchiveSituationButton situationId={situation.id} />}
+          <SituationActionsMenu situation={situation} canManage={allowedToConvert} redirectAfterDeleteTo="/plataforma/convivencia/situaciones" />
         </div>
       </div>
 
