@@ -55,18 +55,3 @@ export async function deleteGradeAdministrative(params: {
   if (error) return { ok: false, error: error.message || "No se pudo eliminar la nota." };
   return { ok: true };
 }
-
-export async function deleteEvaluationAdministrative(params: {
-  evaluationId: string;
-  reason: GradeChangeReason;
-  reasonNote?: string;
-}): Promise<ActionResult> {
-  const supabase = createClient();
-  const { error } = await supabase.rpc("delete_evaluation_administrative", {
-    p_evaluation_id: params.evaluationId,
-    p_reason: params.reason,
-    p_reason_note: params.reasonNote,
-  });
-  if (error) return { ok: false, error: error.message || "No se pudo eliminar la evaluación." };
-  return { ok: true };
-}

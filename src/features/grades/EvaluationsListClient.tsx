@@ -142,6 +142,8 @@ export function EvaluationsListClient({
           router.refresh();
         }}
         evaluation={deleteTarget}
+        courseLabel={data.courseLabel}
+        subjectName={data.subjectName}
       />
     </div>
   );

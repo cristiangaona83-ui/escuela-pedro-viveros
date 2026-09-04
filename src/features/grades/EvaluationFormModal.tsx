@@ -53,6 +53,7 @@ export function EvaluationFormModal({
 }) {
   const showToast = useToast();
   const isEdit = Boolean(evaluation);
+  const hasGrades = (evaluation?.gradedCount ?? 0) > 0;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,7 +66,11 @@ export function EvaluationFormModal({
     const payload = {
       name: String(form.get("name") || "").trim(),
       eval_type: String(form.get("eval_type") || "sumativa"),
-      weight: Number(form.get("weight") || 1),
+      // Con notas registradas, la ponderación queda protegida: el campo se
+      // deshabilita en el formulario y aquí se ignora cualquier valor que
+      // igual llegara en el FormData, para no depender solo de la UI --
+      // el trigger de base de datos (0041) igual la rechazaría.
+      weight: hasGrades ? evaluation!.weight : Number(form.get("weight") || 1),
       eval_date: String(form.get("eval_date") || "") || null,
       description: String(form.get("description") || "").trim() || null,
       status: String(form.get("status") || "borrador") as EvaluationRow["status"],
@@ -90,7 +95,7 @@ export function EvaluationFormModal({
 
     if (dbError) {
       setLoading(false);
-      setError("No pudimos guardar la evaluación.");
+      setError(dbError.message || "No pudimos guardar la evaluación.");
       return;
     }
 
@@ -103,13 +108,23 @@ export function EvaluationFormModal({
     });
 
     setLoading(false);
-    showToast("success", isEdit ? "Evaluación actualizada." : "Evaluación creada.");
+    showToast("success", isEdit ? "Evaluación actualizada correctamente." : "Evaluación creada.");
     onSaved();
   }
 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? "Editar evaluación" : "Nueva evaluación"} maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {hasGrades && (
+          <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Esta evaluación ya tiene <strong>{evaluation!.gradedCount}</strong> calificación{evaluation!.gradedCount === 1 ? "" : "es"}{" "}
+              registrada{evaluation!.gradedCount === 1 ? "" : "s"}. Puedes editar nombre, descripción, fecha, tipo y estado con libertad; la
+              ponderación queda protegida para no alterar el significado de las notas ya existentes.
+            </p>
+          </div>
+        )}
         <FormField label="Nombre" htmlFor="name" required>
           <Input id="name" name="name" required defaultValue={evaluation?.name} />
         </FormField>
@@ -121,8 +136,13 @@ export function EvaluationFormModal({
               ))}
             </Select>
           </FormField>
-          <FormField label="Ponderación" htmlFor="weight" required hint="Peso relativo dentro del promedio">
-            <Input id="weight" name="weight" type="number" step="0.1" min="0.1" required defaultValue={evaluation?.weight ?? 1} />
+          <FormField
+            label="Ponderación"
+            htmlFor="weight"
+            required
+            hint={hasGrades ? "No se puede modificar: esta evaluación ya tiene calificaciones registradas." : "Peso relativo dentro del promedio"}
+          >
+            <Input id="weight" name="weight" type="number" step="0.1" min="0.1" required defaultValue={evaluation?.weight ?? 1} disabled={hasGrades} />
           </FormField>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

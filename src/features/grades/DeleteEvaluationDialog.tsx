@@ -1,123 +1,159 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle, Archive } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { GradeReasonSelect } from "./GradeReasonSelect";
-import { deleteEvaluationAdministrative, type GradeChangeReason } from "@/services/grade-admin";
+import { createClient } from "@/lib/supabase/client";
+import { formatDate } from "@/lib/utils";
 import type { EvaluationListItem } from "@/services/grade-overview";
 
 /**
- * Eliminar evaluación -- advierte cuántas calificaciones se perderán,
- * exige motivo y (por ser destructiva sobre datos académicos) escribir
- * "ELIMINAR" antes de habilitar el botón. El historial de cada nota
- * eliminada queda protegido por el trigger de base de datos (migración
- * 0039), no depende de este componente.
+ * Eliminar evaluación -- escritura directa respaldada por RLS
+ * (`evaluations_delete_scope`: director/utp/superadmin, o el propio
+ * docente en sus cursos), igual que crear/editar en EvaluationFormModal.
+ * El trigger `trg_guard_evaluation_delete` (migración 0041) es quien
+ * realmente protege el historial académico: rechaza el DELETE si la
+ * evaluación tiene una o más calificaciones, sin importar la vía de
+ * escritura -- por eso, si ya tiene notas, ni siquiera se ofrece el botón
+ * de eliminar: se ofrece archivar en su lugar (mismo campo `status` que ya
+ * usa EvaluationFormModal, protegido por el mismo trigger para no dejar de
+ * archivar por error un cambio de curso/asignatura/ponderación).
  */
 export function DeleteEvaluationDialog({
   open,
   onClose,
   onDeleted,
   evaluation,
+  courseLabel,
+  subjectName,
 }: {
   open: boolean;
   onClose: () => void;
   onDeleted: () => void;
   evaluation: EvaluationListItem | null;
+  courseLabel: string;
+  subjectName: string;
 }) {
   const showToast = useToast();
-  const [reason, setReason] = useState<GradeChangeReason | "">("");
-  const [note, setNote] = useState("");
-  const [typedValue, setTypedValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!evaluation) return null;
+  const hasGrades = evaluation.gradedCount > 0;
 
-  const canConfirm = reason !== "" && (reason !== "otro" || note.trim() !== "") && typedValue.trim().toUpperCase() === "ELIMINAR";
-
-  function reset() {
-    setReason("");
-    setNote("");
-    setTypedValue("");
-    setError(null);
-  }
-
-  async function handleConfirm() {
-    if (!canConfirm || !evaluation) return;
+  async function handleDelete() {
+    if (!evaluation) return;
     setLoading(true);
     setError(null);
-    const result = await deleteEvaluationAdministrative({
-      evaluationId: evaluation.id,
-      reason: reason as GradeChangeReason,
-      reasonNote: note.trim() || undefined,
-    });
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.error);
+    const supabase = createClient();
+
+    const { error: dbError } = await supabase.from("evaluations").delete().eq("id", evaluation.id);
+    if (dbError) {
+      setLoading(false);
+      setError(dbError.message || "No pudimos eliminar la evaluación.");
       return;
     }
-    showToast("success", `Evaluación "${evaluation.name}" eliminada.`);
-    reset();
+
+    await supabase.rpc("log_audit", {
+      p_action: "eliminar_evaluacion",
+      p_module: "calificaciones",
+      p_entity: "evaluations",
+      p_entity_id: evaluation.id,
+      p_details: { name: evaluation.name },
+    });
+
+    setLoading(false);
+    showToast("success", "Evaluación eliminada.");
     onDeleted();
   }
 
+  async function handleArchive() {
+    if (!evaluation) return;
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
+
+    const { error: dbError } = await supabase.from("evaluations").update({ status: "archivada" }).eq("id", evaluation.id);
+    if (dbError) {
+      setLoading(false);
+      setError(dbError.message || "No pudimos archivar la evaluación.");
+      return;
+    }
+
+    await supabase.rpc("log_audit", {
+      p_action: "archivar_evaluacion",
+      p_module: "calificaciones",
+      p_entity: "evaluations",
+      p_entity_id: evaluation.id,
+      p_details: { name: evaluation.name },
+    });
+
+    setLoading(false);
+    showToast("success", "Evaluación archivada.");
+    onDeleted();
+  }
+
+  if (hasGrades) {
+    return (
+      <Modal open={open} onClose={() => (!loading ? onClose() : undefined)} title="No se puede eliminar">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+              <AlertCircle className="h-4.5 w-4.5" />
+            </span>
+            <div className="text-sm text-slate-600">
+              <p>
+                Esta evaluación contiene calificaciones registradas y no puede eliminarse directamente.
+              </p>
+              <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                <strong>{evaluation.name}</strong> · {courseLabel} · {subjectName}
+                {evaluation.evalDate && <> · {formatDate(evaluation.evalDate)}</>} · {evaluation.gradedCount} calificación
+                {evaluation.gradedCount === 1 ? "" : "es"}
+              </p>
+              {evaluation.status !== "archivada" && (
+                <p className="mt-2">Puedes archivarla para retirarla del uso activo sin perder el historial académico.</p>
+              )}
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={loading}>
+              Cerrar
+            </Button>
+            {evaluation.status !== "archivada" && (
+              <Button type="button" size="sm" onClick={handleArchive} disabled={loading}>
+                <Archive className="h-4 w-4" /> {loading ? "Archivando…" : "Archivar evaluación"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
-    <Modal
+    <ConfirmDialog
       open={open}
-      onClose={() => {
-        if (loading) return;
-        reset();
-        onClose();
-      }}
+      onClose={() => (!loading ? onClose() : undefined)}
+      onConfirm={handleDelete}
       title="Eliminar evaluación"
-    >
-      <div className="space-y-4">
-        <div className="rounded-lg bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
-          Está a punto de eliminar la evaluación <strong>&ldquo;{evaluation.name}&rdquo;</strong>.
-          {evaluation.gradedCount > 0 ? (
-            <>
-              {" "}Esta evaluación contiene <strong>{evaluation.gradedCount}</strong> calificacion{evaluation.gradedCount === 1 ? "" : "es"}.
-              Si continúa, las calificaciones asociadas también serán eliminadas.
-            </>
-          ) : (
-            " No tiene calificaciones registradas todavía."
-          )}
-          {" "}Esta acción afectará información académica y no se puede deshacer.
-        </div>
-
-        <GradeReasonSelect reason={reason} onReasonChange={setReason} note={note} onNoteChange={setNote} />
-
-        <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500">
-            Escribe <span className="font-semibold text-slate-700">ELIMINAR</span> para confirmar
-          </label>
-          <input
-            type="text"
-            value={typedValue}
-            onChange={(e) => setTypedValue(e.target.value)}
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
-          />
-        </div>
-
-        {error && <p className="text-xs text-red-600">{error}</p>}
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={() => { reset(); onClose(); }} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleConfirm}
-            disabled={!canConfirm || loading}
-            className="bg-red-600 hover:bg-red-700 focus-visible:ring-red-600"
-          >
-            {loading ? "Eliminando…" : "Eliminar evaluación"}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+      description={
+        <>
+          <p>¿Eliminar esta evaluación?</p>
+          <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            <strong>{evaluation.name}</strong> · {courseLabel} · {subjectName}
+            {evaluation.evalDate && <> · {formatDate(evaluation.evalDate)}</>}
+          </p>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        </>
+      }
+      confirmLabel="Eliminar evaluación"
+      loading={loading}
+    />
   );
 }
