@@ -3,6 +3,7 @@ import { getActiveAcademicYear, levelSortIndex } from "@/services/courses";
 import type {
   ConvivenciaCaseRow,
   ConvivenciaCaseTypeRow,
+  ConvivenciaSituationStatus,
   ConvivenciaProtocolRow,
   ConvivenciaEventRow,
   ConvivenciaInterviewRow,
@@ -232,6 +233,7 @@ export async function listCases(filters: CaseFilters = {}): Promise<CaseListItem
   let query = supabase
     .from("convivencia_cases")
     .select("*, case_type:convivencia_case_types(label), responsible:profiles!convivencia_cases_responsible_id_fkey(full_name)")
+    .is("deleted_at", null)
     .order("opened_at", { ascending: false });
 
   if (filters.academicYearId) query = query.eq("academic_year_id", filters.academicYearId);
@@ -258,6 +260,37 @@ export async function listCases(filters: CaseFilters = {}): Promise<CaseListItem
 
 export async function listCasesForCourse(courseId: string): Promise<CaseListItem[]> {
   return listCases({ courseId });
+}
+
+/**
+ * Papelera -- exclusiva Director/Superadmin. La RLS de convivencia_cases
+ * (0040) ya oculta deleted_at is not null a cualquier otro rol, así que este
+ * listado nunca devuelve filas para convivencia/inspectoria_general aunque
+ * llegaran a llamarlo; esta función solo evita que el resto de la app tenga
+ * que repetir el `.not("deleted_at", "is", null)`.
+ */
+export async function listTrashedCases(): Promise<CaseListItem[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("convivencia_cases")
+    .select("*, case_type:convivencia_case_types(label), responsible:profiles!convivencia_cases_responsible_id_fkey(full_name)")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+  return enrichCases(data ?? []);
+}
+
+/** Perfiles elegibles como "responsable" de un caso -- mismos roles que pueden crear/editar casos (director/convivencia/superadmin). */
+export async function listCaseManagerProfiles(): Promise<PersonName[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("user_roles")
+    .select("profiles(id, full_name), roles!inner(code)")
+    .in("roles.code", ["director", "convivencia", "superadmin"]);
+  type Row = { profiles: PersonName | null };
+  const rows = ((data ?? []) as unknown as Row[]).map((r) => r.profiles).filter((p): p is PersonName => Boolean(p));
+  const seen = new Map<string, PersonName>();
+  for (const p of rows) seen.set(p.id, p);
+  return Array.from(seen.values()).sort((a, b) => a.full_name.localeCompare(b.full_name, "es"));
 }
 
 export interface CaseDetail extends CaseListItem {
@@ -308,11 +341,17 @@ export type SituationListItem = {
   occurred_time: string | null;
   location: string | null;
   description: string;
+  people_present: string | null;
+  witnesses: string | null;
+  immediate_action: string | null;
+  observations: string | null;
   needs_followup: boolean;
   needs_protocol: boolean;
   case_id: string | null;
   case_type_id: string;
   case_type_label: string;
+  status: ConvivenciaSituationStatus;
+  priority_attention: boolean;
   reported_by_name: string;
   students: { role: string; student: StudentName; courseLabel: string | null; courseId: string | null }[];
 };
@@ -330,10 +369,16 @@ export async function listSituations(filters: { courseId?: string; search?: stri
     occurred_time: string | null;
     location: string | null;
     description: string;
+    people_present: string | null;
+    witnesses: string | null;
+    immediate_action: string | null;
+    observations: string | null;
     needs_followup: boolean;
     needs_protocol: boolean;
     case_id: string | null;
     case_type_id: string;
+    status: ConvivenciaSituationStatus;
+    priority_attention: boolean;
     case_type: { label: string } | null;
     reported_by_profile: { full_name: string } | null;
   };
@@ -365,10 +410,16 @@ export async function listSituations(filters: { courseId?: string; search?: stri
     occurred_time: r.occurred_time,
     location: r.location,
     description: r.description,
+    people_present: r.people_present,
+    witnesses: r.witnesses,
+    immediate_action: r.immediate_action,
+    observations: r.observations,
     needs_followup: r.needs_followup,
     needs_protocol: r.needs_protocol,
     case_id: r.case_id,
     case_type_id: r.case_type_id,
+    status: r.status,
+    priority_attention: r.priority_attention,
     case_type_label: r.case_type?.label ?? "—",
     reported_by_name: r.reported_by_profile?.full_name ?? "—",
     students: studentsBySituation.get(r.id) ?? [],

@@ -5,6 +5,7 @@ export const CASE_STATUS_LABELS: Record<string, string> = {
   en_seguimiento: "En seguimiento",
   pendiente_antecedentes: "Pendiente de antecedentes",
   cerrado: "Cerrado",
+  archivado: "Archivado",
 };
 
 export const CASE_STATUS_TONE: Record<string, "brand" | "accent" | "neutral" | "success" | "warning" | "danger"> = {
@@ -14,6 +15,22 @@ export const CASE_STATUS_TONE: Record<string, "brand" | "accent" | "neutral" | "
   en_seguimiento: "brand",
   pendiente_antecedentes: "warning",
   cerrado: "neutral",
+  archivado: "neutral",
+};
+
+export const SITUATION_STATUS_LABELS: Record<string, string> = {
+  recibido: "Recibido",
+  en_revision: "En revisión",
+  en_gestion: "En gestión",
+  cerrado: "Cerrado",
+  archivado: "Archivado",
+};
+export const SITUATION_STATUS_TONE: Record<string, "brand" | "accent" | "neutral" | "success" | "warning" | "danger"> = {
+  recibido: "warning",
+  en_revision: "accent",
+  en_gestion: "brand",
+  cerrado: "success",
+  archivado: "neutral",
 };
 
 export const PRIORITY_LABELS: Record<string, string> = { baja: "Baja", media: "Media", alta: "Alta" };
@@ -79,6 +96,14 @@ export const PLAN_STATUS_TONE: Record<string, "neutral" | "brand" | "success" | 
   reprogramada: "warning",
 };
 
+export const MINUTE_TYPE_LABELS: Record<string, string> = { entrevista: "Entrevista", reunion: "Reunión" };
+export const MINUTE_STATUS_LABELS: Record<string, string> = { borrador: "Borrador", finalizada: "Finalizada" };
+export const MINUTE_STATUS_TONE: Record<string, "neutral" | "success"> = { borrador: "neutral", finalizada: "success" };
+export const MINUTE_MODULE_LABELS: Record<string, string> = { convivencia: "Convivencia Educativa", inspectoria: "Inspectoría General" };
+
+export const REPORT_STATUS_LABELS: Record<string, string> = { borrador: "Borrador", finalizada: "Finalizada" };
+export const REPORT_STATUS_TONE: Record<string, "neutral" | "success"> = { borrador: "neutral", finalizada: "success" };
+
 export const EVENT_TYPE_LABELS: Record<string, string> = {
   caso_creado: "Caso creado",
   entrevista: "Entrevista",
@@ -89,6 +114,13 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   derivacion: "Derivación",
   protocolo: "Protocolo",
   caso_cerrado: "Caso cerrado",
+  documento_agregado: "Documento agregado",
+  documento_editado: "Documento editado",
+  documento_eliminado: "Documento eliminado",
+  caso_editado: "Expediente editado",
+  caso_archivado: "Expediente archivado",
+  caso_enviado_papelera: "Enviado a la papelera",
+  caso_restaurado: "Restaurado desde la papelera",
   otro: "Otro",
 };
 
@@ -100,6 +132,15 @@ export const ATTACHMENT_DOCUMENT_TYPE_LABELS: Record<string, string> = {
   acta_seguimiento: "Acta de seguimiento",
   acta_firmada: "Acta firmada",
   acta_entrevista: "Acta de entrevista",
+  informe_direccion: "Informe de Dirección",
+  informe_convivencia: "Informe de Convivencia",
+  informe_externo: "Informe externo",
+  evidencia: "Evidencia",
+  resolucion: "Resolución",
+  derivacion: "Derivación",
+  seguimiento: "Seguimiento",
+  documento_judicial: "Documento judicial",
+  oficio: "Oficio",
   otro: "Otro",
 };
 

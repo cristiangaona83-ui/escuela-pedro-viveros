@@ -9,21 +9,39 @@ import { StudentMultiPicker, type SelectedStudent } from "@/features/convivencia
 import { createClient } from "@/lib/supabase/client";
 import { uploadPrivateFile, FileValidationError } from "@/lib/supabase/storage";
 import type { ConvivenciaCaseTypeRow } from "@/types/database";
-import type { StudentName } from "@/services/convivencia";
+import type { StudentName, SituationListItem } from "@/services/convivencia";
 
 /** Registro de situación (punto 4). Al guardar, inserta la situación y sus
  * estudiantes vinculados, sube el acta adjunta si se seleccionó una
  * (vinculada a la situación vía convivencia_attachments.situation_id --
  * misma tabla que usan los casos, sin duplicar infraestructura), registra
  * en log_audit, y redirige a la ficha de la situación donde se puede
- * "Convertir en Caso" o dejarla como registro simple. */
-export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaCaseTypeRow[]; students: StudentName[] }) {
+ * "Convertir en Caso" o dejarla como registro simple.
+ *
+ * Con `situation`, el mismo formulario edita en vez de crear: actualiza la
+ * fila y reemplaza los vínculos de estudiantes (borra todos e inserta la
+ * selección actual -- no hay edición incremental en ningún otro formulario
+ * de esta app, mismo criterio). No se sube ni reemplaza el acta desde el
+ * modo edición -- eso ya lo cubre el panel de documentos del caso una vez
+ * convertida. */
+export function SituationForm({
+  caseTypes,
+  students,
+  situation,
+}: {
+  caseTypes: ConvivenciaCaseTypeRow[];
+  students: StudentName[];
+  situation?: SituationListItem;
+}) {
   const router = useRouter();
+  const isEdit = Boolean(situation);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<SelectedStudent[]>([]);
-  const [needsFollowup, setNeedsFollowup] = useState(false);
-  const [needsProtocol, setNeedsProtocol] = useState(false);
+  const [selected, setSelected] = useState<SelectedStudent[]>(
+    situation ? situation.students.map((s) => ({ student_id: s.student.id, role: s.role })) : []
+  );
+  const [needsFollowup, setNeedsFollowup] = useState(situation?.needs_followup ?? false);
+  const [needsProtocol, setNeedsProtocol] = useState(situation?.needs_protocol ?? false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,8 +86,53 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       return;
     }
 
-    const { data: situation, error: insertError } = await supabase.from("convivencia_situations").insert(payload).select("id").single();
-    if (insertError || !situation) {
+    if (isEdit && situation) {
+      const updatePayload = {
+        occurred_on: payload.occurred_on,
+        occurred_time: payload.occurred_time,
+        location: payload.location,
+        case_type_id: payload.case_type_id,
+        description: payload.description,
+        people_present: payload.people_present,
+        witnesses: payload.witnesses,
+        immediate_action: payload.immediate_action,
+        needs_followup: payload.needs_followup,
+        needs_protocol: payload.needs_protocol,
+        observations: payload.observations,
+      };
+      const { error: updateError } = await supabase.from("convivencia_situations").update(updatePayload).eq("id", situation.id);
+      if (updateError) {
+        setLoading(false);
+        setError("No pudimos guardar los cambios.");
+        return;
+      }
+
+      await supabase.from("convivencia_situation_students").delete().eq("situation_id", situation.id);
+      const { error: linkError } = await supabase
+        .from("convivencia_situation_students")
+        .insert(selected.map((s) => ({ situation_id: situation.id, student_id: s.student_id, role: s.role })));
+      if (linkError) {
+        setLoading(false);
+        setError("Los datos se guardaron, pero no pudimos actualizar todos los estudiantes vinculados.");
+        return;
+      }
+
+      await supabase.rpc("log_audit", {
+        p_action: "editar_situacion",
+        p_module: "convivencia",
+        p_entity: "convivencia_situations",
+        p_entity_id: situation.id,
+        p_details: { case_type_id: payload.case_type_id, student_count: selected.length },
+      });
+
+      setLoading(false);
+      router.push(`/plataforma/convivencia/situaciones/${situation.id}`);
+      router.refresh();
+      return;
+    }
+
+    const { data: newSituation, error: insertError } = await supabase.from("convivencia_situations").insert(payload).select("id").single();
+    if (insertError || !newSituation) {
       setLoading(false);
       setError("No pudimos guardar la situación.");
       return;
@@ -77,7 +140,7 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
 
     const { error: linkError } = await supabase
       .from("convivencia_situation_students")
-      .insert(selected.map((s) => ({ situation_id: situation.id, student_id: s.student_id, role: s.role })));
+      .insert(selected.map((s) => ({ situation_id: newSituation.id, student_id: s.student_id, role: s.role })));
     if (linkError) {
       setLoading(false);
       setError("La situación se guardó, pero no pudimos vincular a todos los estudiantes.");
@@ -87,9 +150,9 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
     const actaFile = form.get("acta_file") as File | null;
     if (actaFile && actaFile.size > 0) {
       try {
-        const path = await uploadPrivateFile(`convivencia/situaciones/${situation.id}`, actaFile, "case_attachment");
+        const path = await uploadPrivateFile(`convivencia/situaciones/${newSituation.id}`, actaFile, "case_attachment");
         const { error: attachmentError } = await supabase.from("convivencia_attachments").insert({
-          situation_id: situation.id,
+          situation_id: newSituation.id,
           storage_path: path,
           file_name: actaFile.name,
           document_date: payload.occurred_on,
@@ -103,8 +166,8 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
           p_action: "subir_acta_situacion",
           p_module: "convivencia",
           p_entity: "convivencia_attachments",
-          p_entity_id: situation.id,
-          p_details: { file_name: actaFile.name, situation_id: situation.id },
+          p_entity_id: newSituation.id,
+          p_details: { file_name: actaFile.name, situation_id: newSituation.id },
         });
       } catch (err) {
         setLoading(false);
@@ -117,33 +180,33 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       p_action: "crear_situacion",
       p_module: "convivencia",
       p_entity: "convivencia_situations",
-      p_entity_id: situation.id,
+      p_entity_id: newSituation.id,
       p_details: { case_type_id: payload.case_type_id, student_count: selected.length },
     });
 
     setLoading(false);
-    router.push(`/plataforma/convivencia/situaciones/${situation.id}`);
+    router.push(`/plataforma/convivencia/situaciones/${newSituation.id}`);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Fecha" htmlFor="occurred_on" required>
-          <Input id="occurred_on" name="occurred_on" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+          <Input id="occurred_on" name="occurred_on" type="date" required defaultValue={situation?.occurred_on ?? new Date().toISOString().slice(0, 10)} />
         </FormField>
         <FormField label="Hora" htmlFor="occurred_time" hint="Opcional">
-          <Input id="occurred_time" name="occurred_time" type="time" />
+          <Input id="occurred_time" name="occurred_time" type="time" defaultValue={situation?.occurred_time ?? ""} />
         </FormField>
       </div>
 
       <FormField label="Lugar" htmlFor="location" hint="Opcional">
-        <Input id="location" name="location" placeholder="Ej: Patio, Sala 5° Básico, Baño…" />
+        <Input id="location" name="location" placeholder="Ej: Patio, Sala 5° Básico, Baño…" defaultValue={situation?.location ?? ""} />
       </FormField>
 
       <StudentMultiPicker students={students} value={selected} onChange={setSelected} />
 
       <FormField label="Tipo de situación" htmlFor="case_type_id" required>
-        <Select id="case_type_id" name="case_type_id" required defaultValue="">
+        <Select id="case_type_id" name="case_type_id" required defaultValue={situation?.case_type_id ?? ""}>
           <option value="" disabled>
             Selecciona…
           </option>
@@ -156,19 +219,19 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       </FormField>
 
       <FormField label="Descripción objetiva de los hechos" htmlFor="description" required hint="Solo hechos observables, sin juicios de valor.">
-        <Textarea id="description" name="description" required rows={4} />
+        <Textarea id="description" name="description" required rows={4} defaultValue={situation?.description ?? ""} />
       </FormField>
 
       <FormField label="Personas presentes" htmlFor="people_present" hint="Opcional">
-        <Textarea id="people_present" name="people_present" rows={2} />
+        <Textarea id="people_present" name="people_present" rows={2} defaultValue={situation?.people_present ?? ""} />
       </FormField>
 
       <FormField label="Testigos" htmlFor="witnesses" hint="Opcional">
-        <Textarea id="witnesses" name="witnesses" rows={2} />
+        <Textarea id="witnesses" name="witnesses" rows={2} defaultValue={situation?.witnesses ?? ""} />
       </FormField>
 
       <FormField label="Acción inmediata realizada" htmlFor="immediate_action" hint="Opcional">
-        <Textarea id="immediate_action" name="immediate_action" rows={2} />
+        <Textarea id="immediate_action" name="immediate_action" rows={2} defaultValue={situation?.immediate_action ?? ""} />
       </FormField>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -183,12 +246,14 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       </div>
 
       <FormField label="Observaciones" htmlFor="observations" hint="Opcional">
-        <Textarea id="observations" name="observations" rows={2} />
+        <Textarea id="observations" name="observations" rows={2} defaultValue={situation?.observations ?? ""} />
       </FormField>
 
-      <FormField label="Adjuntar acta" htmlFor="acta_file" hint="Opcional — PDF, JPG, JPEG, PNG o DOCX, máximo 15 MB. Queda vinculada a esta situación.">
-        <Input id="acta_file" name="acta_file" type="file" accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" />
-      </FormField>
+      {!isEdit && (
+        <FormField label="Adjuntar acta" htmlFor="acta_file" hint="Opcional — PDF, JPG, JPEG, PNG o DOCX, máximo 15 MB. Queda vinculada a esta situación.">
+          <Input id="acta_file" name="acta_file" type="file" accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" />
+        </FormField>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -197,7 +262,7 @@ export function SituationForm({ caseTypes, students }: { caseTypes: ConvivenciaC
       )}
 
       <Button type="submit" disabled={loading}>
-        <Save className="h-4 w-4" /> {loading ? "Guardando…" : "Registrar situación"}
+        <Save className="h-4 w-4" /> {loading ? "Guardando…" : isEdit ? "Guardar cambios" : "Registrar situación"}
       </Button>
     </form>
   );

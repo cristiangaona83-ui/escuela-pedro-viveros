@@ -62,6 +62,13 @@ export function CaseStatusForm({ caseId, currentStatus }: { caseId: string; curr
         observation: "Caso cerrado.",
         created_by: user.id,
       });
+    } else if (status === "archivado") {
+      await supabase.from("convivencia_events").insert({
+        case_id: caseId,
+        event_type: "caso_archivado",
+        observation: "Caso archivado.",
+        created_by: user.id,
+      });
     }
 
     await supabase.rpc("log_audit", {

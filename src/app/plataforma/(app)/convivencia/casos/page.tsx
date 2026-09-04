@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Folder, FolderOpen as FolderOpenIcon } from "lucide-react";
+import { Folder, FolderOpen as FolderOpenIcon, Trash2 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -9,6 +9,10 @@ import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { listCases, listCaseCourseFolders, listCaseTypes } from "@/services/convivencia";
 import { CASE_STATUS_LABELS, CASE_STATUS_TONE } from "@/features/convivencia/labels";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
+
+const ADMIN_ROLES = ["director", "superadmin"] as const;
 
 export const metadata: Metadata = { title: "Casos — Convivencia Educativa" };
 
@@ -18,11 +22,13 @@ export default async function ConvivenciaCasosPage({
   searchParams: Promise<{ course?: string; status?: string; type?: string; q?: string }>;
 }) {
   const { course, status, type, q } = await searchParams;
-  const [folders, cases, caseTypes] = await Promise.all([
+  const [folders, cases, caseTypes, session] = await Promise.all([
     listCaseCourseFolders(),
     listCases({ courseId: course || undefined, status: status || undefined, caseTypeId: type || undefined, search: q || undefined }),
     listCaseTypes(),
+    getSessionContext(),
   ]);
+  const isFullAdmin = canWrite(session?.roles ?? [], [...ADMIN_ROLES]);
 
   const selectedFolder = folders.find((f) => f.id === course);
 
@@ -33,9 +39,16 @@ export default async function ConvivenciaCasosPage({
           <h2 className="text-lg font-semibold text-slate-900">Casos</h2>
           <p className="text-sm text-slate-500">Navega por curso o filtra directamente el listado completo.</p>
         </div>
-        <LinkButton href="/plataforma/convivencia/situaciones/nueva" size="sm">
-          + Registrar situación
-        </LinkButton>
+        <div className="flex items-center gap-2">
+          {isFullAdmin && (
+            <LinkButton href="/plataforma/convivencia/papelera" size="sm" variant="secondary">
+              <Trash2 className="h-4 w-4" /> Papelera
+            </LinkButton>
+          )}
+          <LinkButton href="/plataforma/convivencia/situaciones/nueva" size="sm">
+            + Registrar situación
+          </LinkButton>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

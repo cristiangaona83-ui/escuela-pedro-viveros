@@ -7,8 +7,10 @@ import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { getSituation } from "@/services/convivencia";
 import { ConvertToCaseButton } from "@/features/convivencia/ConvertToCaseButton";
+import { ArchiveSituationButton } from "@/features/convivencia/ArchiveSituationButton";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
+import { SITUATION_STATUS_LABELS, SITUATION_STATUS_TONE } from "@/features/convivencia/labels";
 
 export const metadata: Metadata = { title: "Situación — Convivencia Educativa" };
 
@@ -32,25 +34,35 @@ export default async function SituacionDetailPage({ params }: { params: Promise<
           <h2 className="text-lg font-semibold text-slate-900">Situación · {formatDate(situation.occurred_on)}</h2>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Badge tone="neutral">{situation.case_type_label}</Badge>
+            <Badge tone={SITUATION_STATUS_TONE[situation.status]}>{SITUATION_STATUS_LABELS[situation.status]}</Badge>
             {situation.needs_followup && <Badge tone="warning">Necesita seguimiento</Badge>}
             {situation.needs_protocol && <Badge tone="danger">Necesita protocolo</Badge>}
           </div>
         </div>
 
-        {situation.case_id ? (
-          <LinkButton href={`/plataforma/convivencia/casos/${situation.case_id}`} size="sm" variant="secondary">
-            Ver Caso
-          </LinkButton>
-        ) : (
-          allowedToConvert && (
-            <ConvertToCaseButton
-              situationId={situation.id}
-              caseTypeId={situation.case_type_id}
-              caseTypeLabel={situation.case_type_label}
-              occurredOn={formatDate(situation.occurred_on)}
-            />
-          )
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {allowedToConvert && situation.status !== "archivado" && (
+            <LinkButton href={`/plataforma/convivencia/situaciones/${situation.id}/editar`} size="sm" variant="secondary">
+              Editar
+            </LinkButton>
+          )}
+          {situation.case_id ? (
+            <LinkButton href={`/plataforma/convivencia/casos/${situation.case_id}`} size="sm" variant="secondary">
+              Ver Caso
+            </LinkButton>
+          ) : (
+            allowedToConvert &&
+            situation.status !== "archivado" && (
+              <ConvertToCaseButton
+                situationId={situation.id}
+                caseTypeId={situation.case_type_id}
+                caseTypeLabel={situation.case_type_label}
+                occurredOn={formatDate(situation.occurred_on)}
+              />
+            )
+          )}
+          {allowedToConvert && situation.status !== "archivado" && <ArchiveSituationButton situationId={situation.id} />}
+        </div>
       </div>
 
       <Card className="mt-4">

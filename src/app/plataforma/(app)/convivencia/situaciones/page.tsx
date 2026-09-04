@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Field";
 import { LinkButton } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { listSituations, listSituationCourseFolders } from "@/services/convivencia";
+import { SITUATION_STATUS_LABELS, SITUATION_STATUS_TONE } from "@/features/convivencia/labels";
 
 export const metadata: Metadata = { title: "Situaciones — Convivencia Educativa" };
 
@@ -85,6 +86,7 @@ export default async function ConvivenciaSituacionesPage({
                     <div className="mt-1.5 flex items-center gap-2">
                       <Badge tone="neutral">{s.case_type_label}</Badge>
                       {s.case_id ? <Badge tone="brand">Es un caso</Badge> : <Badge tone="warning">Registro simple</Badge>}
+                      {s.status === "archivado" && <Badge tone={SITUATION_STATUS_TONE[s.status]}>{SITUATION_STATUS_LABELS[s.status]}</Badge>}
                     </div>
                   </Link>
                 </li>

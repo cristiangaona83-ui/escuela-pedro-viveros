@@ -15,10 +15,15 @@ import {
   listCaseCommunications,
   listCaseProtocols,
   listCaseAttachments,
+  listCaseTypes,
   listProtocols,
   listInspectoriaProfiles,
+  listCaseManagerProfiles,
 } from "@/services/convivencia";
 import { listStudentGuardiansFull } from "@/services/guardians";
+import { listAcademicYears } from "@/services/courses";
+import { CaseActionsMenu } from "@/features/convivencia/CaseActionsMenu";
+import { CaseContentSummary } from "@/features/convivencia/CaseContentSummary";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import { CASE_STATUS_LABELS, CASE_STATUS_TONE, PRIORITY_LABELS, PRIORITY_TONE, EVENT_TYPE_LABELS, MEASURE_STATUS_LABELS, MEASURE_STATUS_TONE, REFERRAL_TYPE_LABELS, REFERRAL_STATUS_LABELS, COMM_TYPE_LABELS, INTERVIEW_PARTICIPANT_LABELS } from "@/features/convivencia/labels";
@@ -37,6 +42,7 @@ import { CaseAttachmentsPanel } from "@/features/convivencia/CaseAttachmentsPane
 export const metadata: Metadata = { title: "Caso — Convivencia Educativa" };
 
 const FULL_ROLES = ["director", "superadmin", "convivencia"] as const;
+const ADMIN_ROLES = ["director", "superadmin"] as const;
 const OPERATE_ROLES = ["director", "superadmin", "convivencia", "inspectoria_general"] as const;
 // Acceso a Actas y documentos: acceso completo (FULL_ROLES) + inspectoria_general
 // y psicologo, ambos acotados por RLS a casos donde tienen asignación
@@ -51,6 +57,7 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
   if (!caseDetail) notFound();
 
   const canManage = canWrite(session?.roles ?? [], [...FULL_ROLES]);
+  const isFullAdmin = canWrite(session?.roles ?? [], [...ADMIN_ROLES]);
   const canOperate = canWrite(session?.roles ?? [], [...OPERATE_ROLES]);
   const canViewAttachments = canWrite(session?.roles ?? [], [...ATTACHMENT_ROLES]);
 
@@ -61,13 +68,16 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
 
   const [events, interviews, protocols] = await Promise.all([listCaseEvents(id), listCaseInterviews(id), listProtocols()]);
 
-  const [measures, referrals, communications, caseProtocols, attachments, inspectoria] = await Promise.all([
+  const [measures, referrals, communications, caseProtocols, attachments, inspectoria, caseTypes, managers, academicYears] = await Promise.all([
     canManage ? listCaseMeasures(id) : Promise.resolve([]),
     canManage ? listCaseReferrals(id) : Promise.resolve([]),
     listCaseCommunications(id),
     canManage ? listCaseProtocols(id) : Promise.resolve([]),
     canViewAttachments ? listCaseAttachments(id) : Promise.resolve([]),
     canManage ? listInspectoriaProfiles() : Promise.resolve([]),
+    canManage ? listCaseTypes() : Promise.resolve([]),
+    canManage ? listCaseManagerProfiles() : Promise.resolve([]),
+    canManage ? listAcademicYears() : Promise.resolve([]),
   ]);
 
   const tabs: CaseTab[] = [
@@ -206,7 +216,7 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
     tabs.push({
       key: "documentos",
       label: "Actas y documentos",
-      content: <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} attachments={attachments} />,
+      content: <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} isFullAdmin={isFullAdmin} attachments={attachments} />,
     });
   }
 
@@ -351,8 +361,35 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
         <div className="flex items-center gap-2">
           <Badge tone={CASE_STATUS_TONE[caseDetail.status]}>{CASE_STATUS_LABELS[caseDetail.status]}</Badge>
           <Badge tone={PRIORITY_TONE[caseDetail.priority]}>Prioridad {PRIORITY_LABELS[caseDetail.priority]}</Badge>
+          {canManage && (
+            <CaseActionsMenu
+              caseId={caseDetail.id}
+              caseFolio={caseDetail.folio}
+              isFullAdmin={isFullAdmin}
+              title={caseDetail.title}
+              caseTypeId={caseDetail.case_type_id}
+              priority={caseDetail.priority}
+              responsibleId={caseDetail.responsible_id}
+              academicYearId={caseDetail.academic_year_id}
+              caseTypes={caseTypes}
+              managers={managers}
+              academicYears={academicYears}
+              contentCount={attachments.length + interviews.length + measures.length + referrals.length}
+            />
+          )}
         </div>
       </div>
+
+      {canManage && (
+        <div className="mt-3">
+          <CaseContentSummary
+            documentsCount={attachments.length}
+            interviewsCount={interviews.length}
+            measuresCount={measures.length}
+            referralsCount={referrals.length}
+          />
+        </div>
+      )}
 
       {/* Bloque siempre visible en la ficha del caso -- a propósito NO
           depende de que se encuentre/seleccione la pestaña "Actas y
@@ -367,7 +404,7 @@ export default async function CasoDetailPage({ params }: { params: Promise<{ id:
               Actas físicas (reunión → impresión → firmas → escaneo) y otros documentos de respaldo de este caso.
             </p>
             <div className="mt-4">
-              <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} attachments={attachments} />
+              <CaseAttachmentsPanel caseId={caseDetail.id} canManage={canManage} isFullAdmin={isFullAdmin} attachments={attachments} />
             </div>
           </CardBody>
         </Card>

@@ -607,11 +607,14 @@ type CrudTable<Row> = {
 // Convivencia Educativa (supabase/migrations/0026_convivencia_educativa_module.sql)
 // ---------------------------------------------------------------------------
 export type ConvivenciaCaseStatus =
-  | "abierto" | "en_evaluacion" | "protocolo_activo" | "en_seguimiento" | "pendiente_antecedentes" | "cerrado";
+  | "abierto" | "en_evaluacion" | "protocolo_activo" | "en_seguimiento" | "pendiente_antecedentes" | "cerrado" | "archivado";
+export type ConvivenciaSituationStatus = "recibido" | "en_revision" | "en_gestion" | "cerrado" | "archivado";
 export type ConvivenciaPriority = "baja" | "media" | "alta";
 export type ConvivenciaParticipantRole = "involucrado" | "afectado" | "testigo" | "otro";
 export type ConvivenciaEventType =
-  | "caso_creado" | "entrevista" | "contacto_apoderado" | "seguimiento" | "medida" | "acuerdo" | "derivacion" | "protocolo" | "caso_cerrado" | "otro";
+  | "caso_creado" | "entrevista" | "contacto_apoderado" | "seguimiento" | "medida" | "acuerdo" | "derivacion" | "protocolo" | "caso_cerrado"
+  | "documento_agregado" | "documento_editado" | "documento_eliminado" | "caso_editado" | "caso_archivado" | "caso_enviado_papelera" | "caso_restaurado"
+  | "otro";
 export type ConvivenciaInterviewParticipantType = "estudiante" | "apoderado" | "funcionario" | "otro";
 export type ConvivenciaMeasureStatus = "pendiente" | "en_curso" | "cumplido" | "no_cumplido" | "requiere_revision";
 export type ConvivenciaReferralType = "interna" | "externa";
@@ -657,6 +660,9 @@ export type ConvivenciaSituationRow = {
   reported_by: string;
   created_at: string;
   updated_at: string;
+  status: ConvivenciaSituationStatus;
+  priority_attention: boolean;
+  course_id: string | null;
 }
 
 export type ConvivenciaSituationStudentRow = {
@@ -680,6 +686,8 @@ export type ConvivenciaCaseRow = {
   created_by: string;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
 }
 
 export type ConvivenciaCaseClosureRow = {
@@ -924,6 +932,15 @@ export type ConvivenciaAttachmentDocumentType =
   | "acta_reunion"
   | "acta_seguimiento"
   | "acta_firmada"
+  | "informe_direccion"
+  | "informe_convivencia"
+  | "informe_externo"
+  | "evidencia"
+  | "resolucion"
+  | "derivacion"
+  | "seguimiento"
+  | "documento_judicial"
+  | "oficio"
   | "otro";
 
 export type ConvivenciaAttachmentStatus = "borrador" | "finalizada" | "firmada" | "archivada";
@@ -936,6 +953,7 @@ export type ConvivenciaAttachmentRow = {
   preventive_action_id: string | null;
   storage_path: string;
   file_name: string;
+  title: string | null;
   description: string | null;
   uploaded_by: string;
   created_at: string;
@@ -1140,6 +1158,18 @@ export interface Database {
       };
       delete_evaluation_administrative: {
         Args: { p_evaluation_id: string; p_reason: string; p_reason_note?: string };
+        Returns: void;
+      };
+      send_case_to_trash_administrative: {
+        Args: { p_case_id: string; p_reason?: string };
+        Returns: void;
+      };
+      restore_case_from_trash: {
+        Args: { p_case_id: string };
+        Returns: void;
+      };
+      permanently_delete_case_administrative: {
+        Args: { p_case_id: string; p_reason?: string };
         Returns: void;
       };
       update_student_fields: {

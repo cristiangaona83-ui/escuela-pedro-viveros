@@ -11,10 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uploadPrivateFile, FileValidationError } from "@/lib/supabase/storage";
 import { formatDate } from "@/lib/utils";
 import { ATTACHMENT_DOCUMENT_TYPE_LABELS, ATTACHMENT_STATUS_LABELS, ATTACHMENT_STATUS_TONE } from "@/features/convivencia/labels";
-import { ViewCaseAttachmentButton } from "@/features/convivencia/ViewCaseAttachmentButton";
-import { DownloadCaseAttachmentButton } from "@/features/convivencia/DownloadCaseAttachmentButton";
-import { CaseAttachmentSignedUpload } from "@/features/convivencia/CaseAttachmentSignedUpload";
-import { ArchiveCaseAttachmentButton } from "@/features/convivencia/ArchiveCaseAttachmentButton";
+import { CaseAttachmentActionsMenu } from "@/features/convivencia/CaseAttachmentActionsMenu";
 import type { ConvivenciaAttachmentDocumentType, ConvivenciaAttachmentStatus } from "@/types/database";
 import type { CaseAttachmentListItem } from "@/services/convivencia";
 
@@ -34,7 +31,18 @@ function formatFileSize(bytes: number | null): string {
  * botón del encabezado y el del estado vacío compartan el mismo estado de
  * abierto/cerrado del formulario.
  */
-export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseId: string; canManage: boolean; attachments: CaseAttachmentListItem[] }) {
+export function CaseAttachmentsPanel({
+  caseId,
+  canManage,
+  isFullAdmin,
+  attachments,
+}: {
+  caseId: string;
+  canManage: boolean;
+  /** director/superadmin -- puede eliminar documentos en cualquier estado, no solo borrador. */
+  isFullAdmin: boolean;
+  attachments: CaseAttachmentListItem[];
+}) {
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,6 +53,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
     const formEl = event.currentTarget;
     const form = new FormData(formEl);
     const file = form.get("file") as File | null;
+    const title = String(form.get("title") || "").trim() || null;
     const documentType = String(form.get("document_type") || "otro") as ConvivenciaAttachmentDocumentType;
     const status = String(form.get("status") || "finalizada") as ConvivenciaAttachmentStatus;
     const description = String(form.get("description") || "").trim() || null;
@@ -80,6 +89,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
           case_id: caseId,
           storage_path: path,
           file_name: file.name,
+          title,
           description,
           document_type: documentType,
           document_date: documentDate,
@@ -98,6 +108,12 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
         p_entity: "convivencia_attachments",
         p_entity_id: inserted.id,
         p_details: { file_name: file.name, document_type: documentType, case_id: caseId },
+      });
+
+      await supabase.from("convivencia_events").insert({
+        case_id: caseId,
+        event_type: "documento_agregado",
+        observation: `Documento agregado: ${title ?? file.name}.`,
       });
 
       setLoading(false);
@@ -127,6 +143,9 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
               <X className="h-4 w-4" />
             </button>
           </div>
+          <FormField label="Título" htmlFor="title" hint='Opcional -- ej: "Reunión con apoderado 27/08/2026". Si se deja vacío, se muestra el nombre del archivo.'>
+            <Input id="title" name="title" />
+          </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
             <FormField label="Tipo" htmlFor="document_type" required>
               <Select id="document_type" name="document_type" defaultValue="acta_reunion" required>
@@ -168,7 +187,7 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
             <li key={a.id} className="rounded-lg border border-slate-200 p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{a.file_name}</p>
+                  <p className="truncate text-sm font-medium text-slate-800">{a.title || a.file_name}</p>
                   <p className="mt-0.5 text-xs text-slate-400">
                     {a.document_type ? ATTACHMENT_DOCUMENT_TYPE_LABELS[a.document_type] : "—"}
                     {a.document_date && <> · Fecha del acta: {formatDate(a.document_date)}</>}
@@ -176,17 +195,15 @@ export function CaseAttachmentsPanel({ caseId, canManage, attachments }: { caseI
                   </p>
                   {a.description && <p className="mt-1 text-sm text-slate-600">{a.description}</p>}
                 </div>
-                <Badge tone={ATTACHMENT_STATUS_TONE[a.status]}>{ATTACHMENT_STATUS_LABELS[a.status]}</Badge>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <ViewCaseAttachmentButton storagePath={a.storage_path} />
-                <DownloadCaseAttachmentButton storagePath={a.storage_path} fileName={a.file_name} />
-                {a.document_type !== "acta_firmada" && (
-                  <CaseAttachmentSignedUpload caseId={caseId} originalAttachmentId={a.id} />
-                )}
-                {canManage && a.status !== "archivada" && (
-                  <ArchiveCaseAttachmentButton attachmentId={a.id} fileName={a.file_name} />
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  <Badge tone={ATTACHMENT_STATUS_TONE[a.status]}>{ATTACHMENT_STATUS_LABELS[a.status]}</Badge>
+                  <CaseAttachmentActionsMenu
+                    caseId={caseId}
+                    attachment={a}
+                    canManage={canManage}
+                    canDelete={isFullAdmin || (canManage && a.status === "borrador")}
+                  />
+                </div>
               </div>
             </li>
           ))}
