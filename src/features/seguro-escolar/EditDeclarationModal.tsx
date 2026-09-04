@@ -9,8 +9,9 @@ import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { accidentWeekday, WEEKDAY_LABELS } from "@/features/seguro-escolar/utils";
+import { SEGURO_ESCOLAR_CARE_MEASURE_LABELS } from "@/features/seguro-escolar/labels";
 import type { DeclarationDetail } from "@/services/seguro-escolar";
-import type { SeguroEscolarAccidentType } from "@/types/database";
+import type { SeguroEscolarAccidentType, SeguroEscolarCareMeasure } from "@/types/database";
 
 /**
  * Edita las Secciones A/B/C de una declaración ya creada -- mismos campos
@@ -28,10 +29,12 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
   const [accidentType, setAccidentType] = useState<SeguroEscolarAccidentType>(declaration.accident_type);
   const [accidentDate, setAccidentDate] = useState(declaration.accident_date);
   const [circumstance, setCircumstance] = useState(declaration.circumstance);
+  const [careMeasure, setCareMeasure] = useState<SeguroEscolarCareMeasure | "">(declaration.care_measure ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const weekday = accidentDate ? accidentWeekday(accidentDate) : null;
+  const requiresReferral = careMeasure === "derivacion_centro_asistencial" || careMeasure === "traslado_ambulancia";
 
   async function handleSave() {
     if (!formRef.current) return;
@@ -67,6 +70,16 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
       witness_b_name: accidentType === "trayecto" ? String(form.get("witness_b_name") || "").trim() || null : null,
       witness_b_lastname: accidentType === "trayecto" ? String(form.get("witness_b_lastname") || "").trim() || null : null,
       witness_b_id: accidentType === "trayecto" ? String(form.get("witness_b_id") || "").trim() || null : null,
+      location: String(form.get("location") || "").trim() || null,
+      activity: String(form.get("activity") || "").trim() || null,
+      initial_care: String(form.get("initial_care") || "").trim() || null,
+      care_staff_name: String(form.get("care_staff_name") || "").trim() || null,
+      care_time: String(form.get("care_time") || "") || null,
+      care_measure: (careMeasure || null) as SeguroEscolarCareMeasure | null,
+      referral_departure_time: requiresReferral ? String(form.get("referral_departure_time") || "") || null : null,
+      referral_accompanying_adult: requiresReferral ? String(form.get("referral_accompanying_adult") || "").trim() || null : null,
+      referral_transport_means: requiresReferral ? String(form.get("referral_transport_means") || "").trim() || null : null,
+      observations: String(form.get("observations") || "").trim() || null,
     };
 
     if (!patch.circumstance) {
@@ -91,7 +104,7 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
     });
 
     setLoading(false);
-    showToast("success", "Declaración actualizada.");
+    showToast("success", "Seguro Escolar actualizado correctamente.");
     onClose();
     router.refresh();
   }
@@ -101,7 +114,7 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
       <form ref={formRef} className="space-y-5" onSubmit={(e) => e.preventDefault()}>
         {declaration.status !== "borrador" && (
           <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
-            <AlertCircle className="h-4 w-4 shrink-0" /> Esta declaración ya fue emitida. La corrección quedará registrada en auditoría.
+            <AlertCircle className="h-4 w-4 shrink-0" /> Esta declaración ya fue emitida. Los cambios quedarán registrados en el historial.
           </div>
         )}
 
@@ -192,12 +205,18 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
             </FormField>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <FormField label="Accidente" htmlFor="accident_type" required>
               <Select id="accident_type" name="accident_type" value={accidentType} onChange={(e) => setAccidentType(e.target.value as SeguroEscolarAccidentType)}>
                 <option value="escuela">En la escuela (2)</option>
                 <option value="trayecto">De trayecto (1)</option>
               </Select>
+            </FormField>
+            <FormField label="Lugar" htmlFor="location">
+              <Input id="location" name="location" defaultValue={declaration.location ?? ""} />
+            </FormField>
+            <FormField label="Actividad que realizaba" htmlFor="activity">
+              <Input id="activity" name="activity" defaultValue={declaration.activity ?? ""} />
             </FormField>
           </div>
 
@@ -236,6 +255,52 @@ export function EditDeclarationModal({ open, onClose, declaration }: { open: boo
               <Textarea id="circumstance" name="circumstance" required rows={5} maxLength={900} value={circumstance} onChange={(e) => setCircumstance(e.target.value)} />
             </FormField>
             <p className="mt-1 text-right text-xs text-slate-400">{circumstance.length}/900</p>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Atención y procedimiento</p>
+          <FormField label="Atención inicial realizada" htmlFor="initial_care">
+            <Textarea id="initial_care" name="initial_care" rows={3} defaultValue={declaration.initial_care ?? ""} />
+          </FormField>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <FormField label="Funcionario que atendió" htmlFor="care_staff_name">
+              <Input id="care_staff_name" name="care_staff_name" defaultValue={declaration.care_staff_name ?? ""} />
+            </FormField>
+            <FormField label="Hora de atención" htmlFor="care_time">
+              <Input id="care_time" name="care_time" type="time" defaultValue={declaration.care_time ?? ""} />
+            </FormField>
+            <FormField label="Medida adoptada" htmlFor="care_measure">
+              <Select id="care_measure" name="care_measure" value={careMeasure} onChange={(e) => setCareMeasure(e.target.value as SeguroEscolarCareMeasure | "")}>
+                <option value="">—</option>
+                {Object.entries(SEGURO_ESCOLAR_CARE_MEASURE_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </Select>
+            </FormField>
+          </div>
+
+          {requiresReferral && (
+            <div className="mt-4 rounded-lg border border-slate-200 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Derivación</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <FormField label="Hora de salida" htmlFor="referral_departure_time">
+                  <Input id="referral_departure_time" name="referral_departure_time" type="time" defaultValue={declaration.referral_departure_time ?? ""} />
+                </FormField>
+                <FormField label="Adulto acompañante" htmlFor="referral_accompanying_adult">
+                  <Input id="referral_accompanying_adult" name="referral_accompanying_adult" defaultValue={declaration.referral_accompanying_adult ?? ""} />
+                </FormField>
+                <FormField label="Medio de traslado" htmlFor="referral_transport_means">
+                  <Input id="referral_transport_means" name="referral_transport_means" defaultValue={declaration.referral_transport_means ?? ""} />
+                </FormField>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4">
+            <FormField label="Observaciones" htmlFor="observations">
+              <Textarea id="observations" name="observations" rows={3} defaultValue={declaration.observations ?? ""} />
+            </FormField>
           </div>
         </div>
 

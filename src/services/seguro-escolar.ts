@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getInstitutionalProfile } from "@/services/school-config";
+import { getActiveAcademicYear, levelSortIndex } from "@/services/courses";
 import { formatFolio } from "@/features/seguro-escolar/utils";
 import type {
   SeguroEscolarDeclarationRow,
@@ -101,6 +102,96 @@ export async function resolveStudentForDeclaration(studentId: string): Promise<S
     primaryGuardianName: primary?.guardians?.full_name ?? null,
     primaryGuardianPhone: primary?.guardians?.phone ?? null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Cursos vigentes -- misma fuente que el resto de la plataforma
+// (courses + academic_years activo), nunca una lista propia. Se usa tanto
+// para "Curso → Estudiante → Seguro Escolar" (crear) como para la vista por
+// curso del panel principal.
+// ---------------------------------------------------------------------------
+async function activeYearCourses(): Promise<{ id: string; level: string; letter: string; courseLabel: string }[]> {
+  const year = await getActiveAcademicYear();
+  if (!year) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("courses")
+    .select("id, level, letter")
+    .eq("academic_year_id", year.id)
+    .eq("active", true);
+  return (data ?? [])
+    .sort((a, b) => levelSortIndex(a.level) - levelSortIndex(b.level) || a.letter.localeCompare(b.letter, "es"))
+    .map((c) => ({ id: c.id, level: c.level, letter: c.letter, courseLabel: c.letter ? `${c.level} ${c.letter}` : c.level }));
+}
+
+/** Cursos vigentes, sin conteos -- paso 1 de "Curso → Estudiante" al crear una declaración. */
+export async function listActiveCoursesForDeclaration(): Promise<{ id: string; courseLabel: string }[]> {
+  const courses = await activeYearCourses();
+  return courses.map((c) => ({ id: c.id, courseLabel: c.courseLabel }));
+}
+
+export interface SeguroEscolarCourseFolder {
+  id: string;
+  courseLabel: string;
+  enrollmentCount: number;
+  declarationCount: number;
+}
+
+/** Carpetas de curso para el panel principal: matrícula vigente + cantidad
+ * de declaraciones registradas ese año (course_id queda congelado en la
+ * declaración al crearla, así que el conteo refleja el curso real del
+ * accidentado en ese momento, no su matrícula actual). */
+export async function listSeguroEscolarCourseFolders(year: number): Promise<SeguroEscolarCourseFolder[]> {
+  const courses = await activeYearCourses();
+  if (courses.length === 0) return [];
+  const supabase = await createClient();
+  const courseIds = courses.map((c) => c.id);
+
+  const [{ data: enrollments }, { data: declarations }] = await Promise.all([
+    supabase.from("enrollments").select("course_id").eq("status", "activa").in("course_id", courseIds),
+    supabase.from("seguro_escolar_declarations").select("course_id").eq("folio_year", year).in("course_id", courseIds),
+  ]);
+
+  const enrollCounts = new Map<string, number>();
+  for (const e of enrollments ?? []) enrollCounts.set(e.course_id, (enrollCounts.get(e.course_id) ?? 0) + 1);
+  const declCounts = new Map<string, number>();
+  for (const d of declarations ?? []) {
+    if (!d.course_id) continue;
+    declCounts.set(d.course_id, (declCounts.get(d.course_id) ?? 0) + 1);
+  }
+
+  return courses.map((c) => ({
+    id: c.id,
+    courseLabel: c.courseLabel,
+    enrollmentCount: enrollCounts.get(c.id) ?? 0,
+    declarationCount: declCounts.get(c.id) ?? 0,
+  }));
+}
+
+export interface CourseStudentOption {
+  id: string;
+  first_names: string;
+  last_names: string;
+  run: string;
+}
+
+/** Estudiantes con matrícula vigente en un curso, orden alfabético por
+ * apellido -- nunca incluye retirados (status !== 'activa' en enrollments
+ * ya los excluye). */
+export async function listCourseStudentsForDeclaration(courseId: string, search?: string): Promise<CourseStudentOption[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("enrollments")
+    .select("students!inner(id, first_names, last_names, run)")
+    .eq("course_id", courseId)
+    .eq("status", "activa");
+  if (search) {
+    query = query.or(`first_names.ilike.%${search}%,last_names.ilike.%${search}%`, { referencedTable: "students" });
+  }
+  const { data } = await query;
+  type Row = { students: CourseStudentOption };
+  const rows = ((data ?? []) as unknown as Row[]).map((r) => r.students);
+  return rows.sort((a, b) => a.last_names.localeCompare(b.last_names, "es") || a.first_names.localeCompare(b.first_names, "es"));
 }
 
 // ---------------------------------------------------------------------------

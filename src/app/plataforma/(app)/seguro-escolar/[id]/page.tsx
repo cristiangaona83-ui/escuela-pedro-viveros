@@ -31,8 +31,15 @@ export const metadata: Metadata = { title: "Declaración — Seguro Escolar" };
 
 const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
 
-export default async function DeclaracionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DeclaracionDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ edit?: string }>;
+}) {
   const { id } = await params;
+  const { edit } = await searchParams;
   const session = await getSessionContext();
   const canManage = canWrite(session?.roles ?? [], [...MANAGE_ROLES]);
 
@@ -174,7 +181,7 @@ export default async function DeclaracionDetailPage({ params }: { params: Promis
         </div>
         <div className="flex items-center gap-2">
           <Badge tone={SEGURO_ESCOLAR_STATUS_TONE[declaration.status]}>{SEGURO_ESCOLAR_STATUS_LABELS[declaration.status]}</Badge>
-          <DeclarationActionsMenu declaration={declaration} canManage={canManage} />
+          <DeclarationActionsMenu declaration={declaration} canManage={canManage} autoOpenEdit={edit === "1"} />
         </div>
       </div>
 

@@ -1117,6 +1117,7 @@ export type SeguroEscolarClosureCause = "alta_medica" | "invalidez" | "abandono_
 export type SeguroEscolarStatus = "borrador" | "emitido" | "entregado" | "en_seguimiento" | "cerrado" | "anulado";
 export type SeguroEscolarAttachmentType = "seguro_firmado" | "documento_atencion" | "certificado" | "documento_centro_asistencial" | "respaldo_seguimiento" | "otro";
 export type SeguroEscolarFollowupStatus = "pendiente" | "realizado" | "cancelado";
+export type SeguroEscolarCareMeasure = "permanece_establecimiento" | "retiro_apoderado" | "derivacion_centro_asistencial" | "traslado_ambulancia" | "otro";
 
 export type SeguroEscolarDeclarationRow = {
   id: string;
@@ -1150,6 +1151,16 @@ export type SeguroEscolarDeclarationRow = {
   witness_b_name: string | null;
   witness_b_lastname: string | null;
   witness_b_id: string | null;
+  location: string | null;
+  activity: string | null;
+  initial_care: string | null;
+  care_staff_name: string | null;
+  care_time: string | null;
+  care_measure: SeguroEscolarCareMeasure | null;
+  referral_departure_time: string | null;
+  referral_accompanying_adult: string | null;
+  referral_transport_means: string | null;
+  observations: string | null;
   section_d_mode: SeguroEscolarSectionDMode;
   assistance_establishment: string | null;
   health_service_code: string | null;
@@ -1285,6 +1296,10 @@ export interface Database {
       next_seguro_escolar_folio: {
         Args: { p_year: number };
         Returns: number;
+      };
+      permanently_delete_seguro_escolar_declaration: {
+        Args: { p_declaration_id: string };
+        Returns: string[];
       };
       update_student_fields: {
         Args: {

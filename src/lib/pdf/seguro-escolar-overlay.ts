@@ -166,6 +166,10 @@ export async function generateSeguroEscolarPdf(input: GenerateSeguroEscolarPdfIn
 }
 
 async function drawSignature(doc: PDFDocument, page: PDFPage, signatureDataUri: string | null, stampDataUri: string | null) {
+  // Timbre a la derecha de la firma, dentro del recuadro "FIRMA Y TIMBRE"
+  // del formulario -- cada imagen conserva su propia proporción (nunca se
+  // deforma): se fija un ancho/alto máximo y el otro lado se calcula a
+  // partir de las dimensiones reales del PNG/JPG.
   try {
     if (signatureDataUri) {
       const img = await embedPngOrJpg(doc, signatureDataUri);
@@ -175,8 +179,11 @@ async function drawSignature(doc: PDFDocument, page: PDFPage, signatureDataUri: 
     }
     if (stampDataUri) {
       const img = await embedPngOrJpg(doc, stampDataUri);
-      const size = 60;
-      page.drawImage(img, { x: fx(0.8), y: fyTop(0.502) - size, width: size, height: size });
+      const maxSize = 60;
+      const ratio = img.width / img.height;
+      const w = ratio >= 1 ? maxSize : maxSize * ratio;
+      const h = ratio >= 1 ? maxSize / ratio : maxSize;
+      page.drawImage(img, { x: fx(0.8), y: fyTop(0.502) - h, width: w, height: h });
     }
   } catch {
     // Firma/timbre no disponibles -- el PDF se genera igual, sin ellos.

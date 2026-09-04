@@ -5,6 +5,7 @@ import type {
   SeguroEscolarFollowupStatus,
   SeguroEscolarIncapacityType,
   SeguroEscolarClosureCause,
+  SeguroEscolarCareMeasure,
 } from "@/types/database";
 
 export const SEGURO_ESCOLAR_STATUS_LABELS: Record<SeguroEscolarStatus, string> = {
@@ -29,6 +30,22 @@ export const SEGURO_ESCOLAR_STATUS_TONE: Record<SeguroEscolarStatus, "neutral" |
 export const SEGURO_ESCOLAR_ACCIDENT_TYPE_LABELS: Record<SeguroEscolarAccidentType, string> = {
   trayecto: "De trayecto (1)",
   escuela: "En la escuela (2)",
+};
+
+/** Mismo dato que SEGURO_ESCOLAR_ACCIDENT_TYPE_LABELS, sin la codificación
+ * del formulario oficial -- para el registro institucional propio (PDF y
+ * formularios), que ya no replica esos códigos. */
+export const SEGURO_ESCOLAR_ACCIDENT_TYPE_LABELS_PLAIN: Record<SeguroEscolarAccidentType, string> = {
+  trayecto: "Accidente de trayecto",
+  escuela: "Accidente en el establecimiento",
+};
+
+export const SEGURO_ESCOLAR_CARE_MEASURE_LABELS: Record<SeguroEscolarCareMeasure, string> = {
+  permanece_establecimiento: "Permanece en el establecimiento",
+  retiro_apoderado: "Retiro por apoderado",
+  derivacion_centro_asistencial: "Derivación a centro asistencial",
+  traslado_ambulancia: "Traslado en ambulancia",
+  otro: "Otro",
 };
 
 export const SEGURO_ESCOLAR_ATTACHMENT_TYPE_LABELS: Record<SeguroEscolarAttachmentType, string> = {

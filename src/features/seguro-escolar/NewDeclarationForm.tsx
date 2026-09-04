@@ -9,8 +9,9 @@ import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Badge } from "@/components/ui/Badge";
 import { createClient } from "@/lib/supabase/client";
 import { splitLastNames, accidentWeekday, WEEKDAY_LABELS } from "@/features/seguro-escolar/utils";
+import { SEGURO_ESCOLAR_CARE_MEASURE_LABELS } from "@/features/seguro-escolar/labels";
 import type { SeguroEscolarStudentContext } from "@/services/seguro-escolar";
-import type { SeguroEscolarAccidentType } from "@/types/database";
+import type { SeguroEscolarAccidentType, SeguroEscolarCareMeasure } from "@/types/database";
 
 const CIRCUMSTANCE_MAX = 900;
 
@@ -34,9 +35,12 @@ export function NewDeclarationForm({ student, userId }: { student: SeguroEscolar
   const [accidentType, setAccidentType] = useState<SeguroEscolarAccidentType>("escuela");
   const [accidentDate, setAccidentDate] = useState(new Date().toISOString().slice(0, 10));
   const [circumstance, setCircumstance] = useState("");
+  const [careMeasure, setCareMeasure] = useState<SeguroEscolarCareMeasure | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const requiresReferral = careMeasure === "derivacion_centro_asistencial" || careMeasure === "traslado_ambulancia";
 
   const weekday = accidentDate ? accidentWeekday(accidentDate) : null;
 
@@ -88,6 +92,16 @@ export function NewDeclarationForm({ student, userId }: { student: SeguroEscolar
       witness_b_name: accidentType === "trayecto" ? String(form.get("witness_b_name") || "").trim() || null : null,
       witness_b_lastname: accidentType === "trayecto" ? String(form.get("witness_b_lastname") || "").trim() || null : null,
       witness_b_id: accidentType === "trayecto" ? String(form.get("witness_b_id") || "").trim() || null : null,
+      location: String(form.get("location") || "").trim() || null,
+      activity: String(form.get("activity") || "").trim() || null,
+      initial_care: String(form.get("initial_care") || "").trim() || null,
+      care_staff_name: String(form.get("care_staff_name") || "").trim() || null,
+      care_time: String(form.get("care_time") || "") || null,
+      care_measure: (careMeasure || null) as SeguroEscolarCareMeasure | null,
+      referral_departure_time: requiresReferral ? String(form.get("referral_departure_time") || "") || null : null,
+      referral_accompanying_adult: requiresReferral ? String(form.get("referral_accompanying_adult") || "").trim() || null : null,
+      referral_transport_means: requiresReferral ? String(form.get("referral_transport_means") || "").trim() || null : null,
+      observations: String(form.get("observations") || "").trim() || null,
       status,
       created_by: userId,
     };
@@ -227,12 +241,20 @@ export function NewDeclarationForm({ student, userId }: { student: SeguroEscolar
             </FormField>
           </div>
 
-          <FormField label="Accidente" htmlFor="accident_type" required>
-            <Select id="accident_type" name="accident_type" value={accidentType} onChange={(e) => setAccidentType(e.target.value as SeguroEscolarAccidentType)}>
-              <option value="escuela">En la escuela (2)</option>
-              <option value="trayecto">De trayecto (1)</option>
-            </Select>
-          </FormField>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField label="Accidente" htmlFor="accident_type" required>
+              <Select id="accident_type" name="accident_type" value={accidentType} onChange={(e) => setAccidentType(e.target.value as SeguroEscolarAccidentType)}>
+                <option value="escuela">En la escuela (2)</option>
+                <option value="trayecto">De trayecto (1)</option>
+              </Select>
+            </FormField>
+            <FormField label="Lugar" htmlFor="location">
+              <Input id="location" name="location" />
+            </FormField>
+            <FormField label="Actividad que realizaba" htmlFor="activity">
+              <Input id="activity" name="activity" />
+            </FormField>
+          </div>
 
           {accidentType === "trayecto" && (
             <div className="rounded-lg border border-slate-200 p-4">
@@ -276,6 +298,55 @@ export function NewDeclarationForm({ student, userId }: { student: SeguroEscolar
             />
           </FormField>
           <p className="-mt-2 text-right text-xs text-slate-400">{circumstance.length}/{CIRCUMSTANCE_MAX}</p>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody className="space-y-4">
+          <h3 className="text-sm font-semibold text-slate-900">Atención y procedimiento</h3>
+          <FormField label="Atención inicial realizada" htmlFor="initial_care">
+            <Textarea id="initial_care" name="initial_care" rows={3} />
+          </FormField>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField label="Funcionario que atendió" htmlFor="care_staff_name">
+              <Input id="care_staff_name" name="care_staff_name" />
+            </FormField>
+            <FormField label="Hora de atención" htmlFor="care_time">
+              <Input id="care_time" name="care_time" type="time" />
+            </FormField>
+            <FormField label="Medida adoptada" htmlFor="care_measure">
+              <Select id="care_measure" name="care_measure" value={careMeasure} onChange={(e) => setCareMeasure(e.target.value as SeguroEscolarCareMeasure | "")}>
+                <option value="">—</option>
+                {Object.entries(SEGURO_ESCOLAR_CARE_MEASURE_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </Select>
+            </FormField>
+          </div>
+
+          {requiresReferral && (
+            <div className="rounded-lg border border-slate-200 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Derivación</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <FormField label="Hora de salida" htmlFor="referral_departure_time">
+                  <Input id="referral_departure_time" name="referral_departure_time" type="time" />
+                </FormField>
+                <FormField label="Adulto acompañante" htmlFor="referral_accompanying_adult">
+                  <Input id="referral_accompanying_adult" name="referral_accompanying_adult" />
+                </FormField>
+                <FormField label="Medio de traslado" htmlFor="referral_transport_means">
+                  <Input id="referral_transport_means" name="referral_transport_means" />
+                </FormField>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                El centro asistencial de destino se registra en la Sección D del expediente, una vez recibido el documento devuelto.
+              </p>
+            </div>
+          )}
+
+          <FormField label="Observaciones" htmlFor="observations">
+            <Textarea id="observations" name="observations" rows={3} />
+          </FormField>
         </CardBody>
       </Card>
 
