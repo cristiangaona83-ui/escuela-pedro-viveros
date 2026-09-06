@@ -509,6 +509,8 @@ export type BulletinEmailLogRow = {
   sent_at: string | null;
 }
 
+export type DocumentStatus = "borrador" | "publicada" | "archivada";
+
 export type DocumentRow = {
   id: string;
   title: string;
@@ -519,6 +521,9 @@ export type DocumentRow = {
   is_public: boolean;
   uploaded_by: string | null;
   created_at: string;
+  document_number: string | null;
+  document_date: string | null;
+  status: DocumentStatus;
 }
 
 export type EventRow = {

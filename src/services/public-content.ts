@@ -115,6 +115,9 @@ const STATIC_DOCUMENT_ROWS: DocumentRow[] = STATIC_INSTITUTIONAL_DOCUMENTS.map((
   is_public: true,
   uploaded_by: null,
   created_at: new Date(0).toISOString(),
+  document_number: null,
+  document_date: null,
+  status: "publicada",
 }));
 
 export async function getPublicDocuments(): Promise<DocumentRow[]> {
