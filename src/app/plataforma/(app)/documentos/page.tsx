@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FolderOpen, Pencil, Megaphone, ChevronRight } from "lucide-react";
+import { FolderOpen, Pencil } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/Field";
 import { DocumentForm } from "@/features/documents/DocumentForm";
 import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
 import { DocumentDownloadLink } from "@/features/documents/DocumentDownloadLink";
-import { listDocuments, listDocumentCategories, countCircularesInformativas } from "@/services/documents";
+import { listDocuments, listDocumentCategories } from "@/services/documents";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -23,11 +23,10 @@ export default async function DocumentosPlataformaPage({
   searchParams: Promise<{ categoria?: string }>;
 }) {
   const { categoria } = await searchParams;
-  const [documents, categories, session, circularesCount] = await Promise.all([
+  const [documents, categories, session] = await Promise.all([
     listDocuments(categoria),
     listDocumentCategories(),
     getSessionContext(),
-    countCircularesInformativas(),
   ]);
 
   const roles = session?.roles ?? [];
@@ -41,23 +40,6 @@ export default async function DocumentosPlataformaPage({
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Documentos</h1>
       <p className="mt-1 text-sm text-slate-500">Publica PEI, Reglamento Interno, protocolos y circulares. Marca cuáles son públicos.</p>
-
-      <Link href="/plataforma/documentos/circulares" className="mt-6 block">
-        <Card className="transition hover:border-brand-300 hover:shadow-sm">
-          <CardBody className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                <Megaphone className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-semibold text-slate-900">Circulares Informativas</p>
-                <p className="text-xs text-slate-500">{circularesCount} circular{circularesCount === 1 ? "" : "es"} registrada{circularesCount === 1 ? "" : "s"}</p>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-slate-300" />
-          </CardBody>
-        </Card>
-      </Link>
 
       <div className={`mt-6 grid gap-6 ${allowedToCreate ? "lg:grid-cols-[1fr_360px]" : ""}`}>
         <Card>

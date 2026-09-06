@@ -509,7 +509,21 @@ export type BulletinEmailLogRow = {
   sent_at: string | null;
 }
 
-export type DocumentStatus = "borrador" | "publicada" | "archivada";
+/** Circulares Informativas -- sección independiente del sitio público
+ * (no confundir con la categoría de Documentos internos de la Plataforma). */
+export type CircularInformativaRow = {
+  id: string;
+  title: string;
+  document_number: string | null;
+  circular_date: string;
+  description: string | null;
+  file_url: string;
+  display_order: number;
+  visible: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export type DocumentRow = {
   id: string;
@@ -521,9 +535,6 @@ export type DocumentRow = {
   is_public: boolean;
   uploaded_by: string | null;
   created_at: string;
-  document_number: string | null;
-  document_date: string | null;
-  status: DocumentStatus;
 }
 
 export type EventRow = {
@@ -1459,6 +1470,7 @@ export interface Database {
       bulletin_recipients: CrudTable<BulletinRecipientRow>;
       bulletin_email_log: CrudTable<BulletinEmailLogRow>;
       documents: CrudTable<DocumentRow>;
+      circulares_informativas: CrudTable<CircularInformativaRow>;
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;
       school_config: CrudTable<SchoolConfigRow>;

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
+  CircularInformativaRow,
   ContentCardRow,
   ContentCardSection,
   CourseRow,
@@ -115,9 +116,6 @@ const STATIC_DOCUMENT_ROWS: DocumentRow[] = STATIC_INSTITUTIONAL_DOCUMENTS.map((
   is_public: true,
   uploaded_by: null,
   created_at: new Date(0).toISOString(),
-  document_number: null,
-  document_date: null,
-  status: "publicada",
 }));
 
 export async function getPublicDocuments(): Promise<DocumentRow[]> {
@@ -132,6 +130,24 @@ export async function getPublicDocuments(): Promise<DocumentRow[]> {
     return [...STATIC_DOCUMENT_ROWS, ...(data ?? [])];
   } catch {
     return STATIC_DOCUMENT_ROWS;
+  }
+}
+
+/** Circulares Informativas visibles, para la sección propia del sitio público
+ * (independiente de Documentos y de Informativos Semanales). */
+export async function getPublicCircularesInformativas(): Promise<CircularInformativaRow[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("circulares_informativas")
+      .select("*")
+      .eq("visible", true)
+      .order("display_order", { ascending: true })
+      .order("circular_date", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    return [];
   }
 }
 

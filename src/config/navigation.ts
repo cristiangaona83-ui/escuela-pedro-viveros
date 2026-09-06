@@ -64,6 +64,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Certificados", href: "/plataforma/certificados", icon: "Award", roles: ["director", "utp", "administrativo", "superadmin"], group: "general" },
   { label: "Documentos", href: "/plataforma/documentos", icon: "FolderOpen", group: "general" },
   { label: "Informativos Semanales", href: "/plataforma/informativos", icon: "Megaphone", group: "general" },
+  { label: "Circulares Informativas", href: "/plataforma/circulares-informativas", icon: "ScrollText", group: "general" },
   { label: "Calendario", href: "/plataforma/calendario", icon: "Calendar", group: "general" },
   { label: "Noticias", href: "/plataforma/noticias", icon: "Newspaper", group: "general" },
   { label: "Galería", href: "/plataforma/galeria", icon: "Images", group: "general" },

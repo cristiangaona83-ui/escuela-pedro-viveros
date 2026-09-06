@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 export const PUBLIC_BUCKET = "archivos-publicos";
 export const PRIVATE_BUCKET = "archivos-internos";
 
-export type FileKind = "document" | "image" | "signature" | "video" | "case_attachment" | "suspension_document" | "stamp" | "seguro_escolar_document" | "circular_document";
+export type FileKind = "document" | "image" | "signature" | "video" | "case_attachment" | "suspension_document" | "stamp" | "seguro_escolar_document";
 
 export class FileValidationError extends Error {}
 
@@ -25,9 +25,6 @@ const MAX_SIZE_BYTES: Record<FileKind, number> = {
   // Seguro Escolar: formulario firmado escaneado, documentos del centro
   // asistencial, certificados -- mismo límite y formatos que case_attachment.
   seguro_escolar_document: 15 * 1024 * 1024,
-  // Circulares informativas (Documentos) -- mismo límite que "document";
-  // a diferencia de "document" (solo PDF), admite también DOCX.
-  circular_document: 15 * 1024 * 1024,
   // Timbre institucional -- a diferencia de "signature", sí admite JPEG
   // (pedido explícito), aunque PNG con transparencia es lo preferido.
   stamp: 3 * 1024 * 1024,
@@ -46,7 +43,6 @@ const ALLOWED_MIME_BY_KIND: Record<FileKind, string[]> = {
   suspension_document: ["application/pdf", DOCX_MIME, "image/jpeg", "image/png"],
   seguro_escolar_document: ["application/pdf", "image/jpeg", "image/png"],
   stamp: ["image/png", "image/jpeg", "image/webp"],
-  circular_document: ["application/pdf", DOCX_MIME],
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -113,7 +109,6 @@ async function validateFile(file: File, kind: FileKind): Promise<string> {
       suspension_document: "Solo se aceptan archivos PDF, DOCX, JPG o PNG.",
       stamp: "Solo se aceptan imágenes PNG, JPG, JPEG o WEBP.",
       seguro_escolar_document: "Solo se aceptan archivos PDF, JPG o PNG.",
-      circular_document: "Solo se aceptan archivos PDF o DOCX.",
     };
     throw new FileValidationError(messages[kind]);
   }
