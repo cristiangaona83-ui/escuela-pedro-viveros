@@ -25,10 +25,13 @@ import type { DeclarationDetail } from "@/services/seguro-escolar";
 export function DeclarationActionsMenu({
   declaration,
   canManage,
+  canDelete,
   autoOpenEdit = false,
 }: {
   declaration: DeclarationDetail;
   canManage: boolean;
+  /** Eliminación administrativa definitiva (RPC 0047) -- más restrictiva que canManage: solo director/superadmin/inspectoria_general. */
+  canDelete: boolean;
   /** Abre el modal de edición de inmediato -- usado cuando se llega desde "Editar" en el listado (?edit=1). */
   autoOpenEdit?: boolean;
 }) {
@@ -76,7 +79,7 @@ export function DeclarationActionsMenu({
   if (canManage && declaration.status !== "anulado") {
     moreItems.push({ label: "Anular declaración", icon: Ban, onSelect: () => setAnnulOpen(true) });
   }
-  if (canManage) {
+  if (canDelete) {
     moreItems.push({ label: "Eliminar Seguro Escolar", icon: Trash2, danger: true, onSelect: () => setDeleteOpen(true) });
   }
 

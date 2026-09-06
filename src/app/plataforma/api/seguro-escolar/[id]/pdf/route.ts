@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
-const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
+const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general", "administrativo", "convivencia"] as const;
 
 /** Sanitiza el nombre sugerido de archivo -- sin acentos/caracteres
  * especiales que puedan romper el header Content-Disposition o el sistema

@@ -29,7 +29,8 @@ import { CaseTabs, type CaseTab } from "@/features/convivencia/CaseTabs";
 
 export const metadata: Metadata = { title: "Declaración — Seguro Escolar" };
 
-const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
+const ACCESS_ROLES = ["director", "superadmin", "inspectoria_general", "administrativo", "convivencia"] as const;
+const DELETE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
 
 export default async function DeclaracionDetailPage({
   params,
@@ -41,7 +42,8 @@ export default async function DeclaracionDetailPage({
   const { id } = await params;
   const { edit } = await searchParams;
   const session = await getSessionContext();
-  const canManage = canWrite(session?.roles ?? [], [...MANAGE_ROLES]);
+  const canManage = canWrite(session?.roles ?? [], [...ACCESS_ROLES]);
+  const canDelete = canWrite(session?.roles ?? [], [...DELETE_ROLES]);
 
   if (!canManage) {
     return (
@@ -181,7 +183,7 @@ export default async function DeclaracionDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <Badge tone={SEGURO_ESCOLAR_STATUS_TONE[declaration.status]}>{SEGURO_ESCOLAR_STATUS_LABELS[declaration.status]}</Badge>
-          <DeclarationActionsMenu declaration={declaration} canManage={canManage} autoOpenEdit={edit === "1"} />
+          <DeclarationActionsMenu declaration={declaration} canManage={canManage} canDelete={canDelete} autoOpenEdit={edit === "1"} />
         </div>
       </div>
 

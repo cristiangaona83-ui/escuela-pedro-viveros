@@ -14,20 +14,21 @@ import { SEGURO_ESCOLAR_STATUS_LABELS, SEGURO_ESCOLAR_STATUS_TONE } from "@/feat
 import { DeleteDeclarationDialog } from "@/features/seguro-escolar/DeleteDeclarationDialog";
 import type { DeclarationListItem } from "@/services/seguro-escolar";
 
-export function SeguroEscolarTable({ declarations }: { declarations: DeclarationListItem[] }) {
+export function SeguroEscolarTable({ declarations, canDelete }: { declarations: DeclarationListItem[]; canDelete: boolean }) {
   const router = useRouter();
   const showToast = useToast();
   const [deleteTarget, setDeleteTarget] = useState<DeclarationListItem | null>(null);
 
   function menuItemsFor(d: DeclarationListItem): ActionsMenuItem[] {
     const base = `/plataforma/seguro-escolar/${d.id}`;
-    return [
+    const items: ActionsMenuItem[] = [
       { label: "Ver", icon: Eye, onSelect: () => router.push(base) },
       { label: "Editar", icon: Pencil, onSelect: () => router.push(`${base}?edit=1`), disabled: d.status === "anulado" },
       { label: "Descargar PDF", icon: Download, onSelect: () => window.open(`/plataforma/api/seguro-escolar/${d.id}/pdf?download=1`, "_blank") },
       { label: "Imprimir", icon: Printer, onSelect: () => window.open(`/plataforma/api/seguro-escolar/${d.id}/pdf`, "_blank") },
-      { label: "Eliminar", icon: Trash2, danger: true, onSelect: () => setDeleteTarget(d) },
     ];
+    if (canDelete) items.push({ label: "Eliminar", icon: Trash2, danger: true, onSelect: () => setDeleteTarget(d) });
+    return items;
   }
 
   if (declarations.length === 0) {

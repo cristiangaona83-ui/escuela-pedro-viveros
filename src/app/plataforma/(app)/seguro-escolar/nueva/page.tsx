@@ -15,7 +15,7 @@ import { NewDeclarationForm } from "@/features/seguro-escolar/NewDeclarationForm
 
 export const metadata: Metadata = { title: "Nueva Declaración — Seguro Escolar" };
 
-const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
+const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general", "administrativo", "convivencia"] as const;
 
 export default async function NuevaDeclaracionPage({
   searchParams,

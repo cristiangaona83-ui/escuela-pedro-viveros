@@ -14,7 +14,8 @@ import type { SeguroEscolarAccidentType, SeguroEscolarStatus } from "@/types/dat
 
 export const metadata: Metadata = { title: "Seguro Escolar" };
 
-const MANAGE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
+const ACCESS_ROLES = ["director", "superadmin", "inspectoria_general", "administrativo", "convivencia"] as const;
+const DELETE_ROLES = ["director", "superadmin", "inspectoria_general"] as const;
 
 export default async function SeguroEscolarPage({
   searchParams,
@@ -23,7 +24,8 @@ export default async function SeguroEscolarPage({
 }) {
   const sp = await searchParams;
   const session = await getSessionContext();
-  const allowed = canWrite(session?.roles ?? [], [...MANAGE_ROLES]);
+  const allowed = canWrite(session?.roles ?? [], [...ACCESS_ROLES]);
+  const canDelete = canWrite(session?.roles ?? [], [...DELETE_ROLES]);
 
   if (!allowed) {
     return (
@@ -101,7 +103,7 @@ export default async function SeguroEscolarPage({
             <SeguroEscolarFiltersBar courses={courses.map((c) => ({ id: c.id, label: `${c.level} ${c.letter}`.trim() }))} />
           </div>
           <div className="mt-4">
-            <SeguroEscolarTable declarations={declarations} />
+            <SeguroEscolarTable declarations={declarations} canDelete={canDelete} />
           </div>
         </CardBody>
       </Card>
