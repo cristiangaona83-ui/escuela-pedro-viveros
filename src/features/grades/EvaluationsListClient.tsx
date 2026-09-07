@@ -34,11 +34,24 @@ export function EvaluationsListClient({
   year,
   periodId,
   userId,
+  canManageGrades = true,
 }: {
   data: CourseSubjectEvaluations;
   year: string;
   periodId: string;
   userId: string;
+  /**
+   * Muestra "Administrar calificaciones" y "Ver historial" -- ambos
+   * destinos (`/plataforma/calificaciones/.../evaluaciones/[id]`, con las
+   * RPC set_grade_administrative/delete_grade_administrative de la
+   * migración 0039; y `/plataforma/calificaciones/historial`) están
+   * acotados a director/utp/superadmin en sus propias páginas -- ver el
+   * comentario en services/grade-admin.ts. Por defecto true para no cambiar
+   * en nada la pantalla original de Calificaciones (siempre acotada a esos
+   * roles); /plataforma/evaluaciones (accesible también para docentes) pasa
+   * false para no ofrecer accesos que esas páginas/RPC igual rechazarían.
+   */
+  canManageGrades?: boolean;
 }) {
   const router = useRouter();
   const [formTarget, setFormTarget] = useState<{ mode: "create" } | { mode: "edit"; evaluation: EvaluationListItem } | null>(null);
@@ -47,20 +60,25 @@ export function EvaluationsListClient({
   const extraParams = `year=${year}&period=${periodId}`;
 
   function menuItemsFor(evaluation: EvaluationListItem): ActionsMenuItem[] {
-    return [
+    const items: ActionsMenuItem[] = [
       { label: "Editar evaluación", icon: Pencil, onSelect: () => setFormTarget({ mode: "edit", evaluation }) },
-      {
-        label: "Administrar calificaciones",
-        icon: ClipboardEdit,
-        onSelect: () => router.push(`/plataforma/calificaciones/${data.courseId}/${data.subjectId}/evaluaciones/${evaluation.id}?${extraParams}`),
-      },
-      {
-        label: "Ver historial",
-        icon: History,
-        onSelect: () => router.push(`/plataforma/calificaciones/historial?evaluation=${evaluation.id}`),
-      },
-      { label: "Eliminar evaluación", icon: Trash2, danger: true, onSelect: () => setDeleteTarget(evaluation) },
     ];
+    if (canManageGrades) {
+      items.push(
+        {
+          label: "Administrar calificaciones",
+          icon: ClipboardEdit,
+          onSelect: () => router.push(`/plataforma/calificaciones/${data.courseId}/${data.subjectId}/evaluaciones/${evaluation.id}?${extraParams}`),
+        },
+        {
+          label: "Ver historial",
+          icon: History,
+          onSelect: () => router.push(`/plataforma/calificaciones/historial?evaluation=${evaluation.id}`),
+        }
+      );
+    }
+    items.push({ label: "Eliminar evaluación", icon: Trash2, danger: true, onSelect: () => setDeleteTarget(evaluation) });
+    return items;
   }
 
   return (

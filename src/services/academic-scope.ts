@@ -4,6 +4,7 @@ import { getSessionContext } from "@/features/auth/session";
 export interface CourseSubjectOption {
   course_id: string;
   course_label: string;
+  course_level: string;
   subject_id: string;
   subject_name: string;
 }
@@ -34,6 +35,7 @@ export async function getTeachableCourseSubjects(): Promise<CourseSubjectOption[
     return {
       course_id: r.course_id,
       course_label: r.courses ? `${r.courses.level} ${r.courses.letter}` : "",
+      course_level: r.courses?.level ?? "",
       subject_id: r.subject_id,
       subject_name: r.subjects?.name ?? "",
     };
