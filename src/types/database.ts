@@ -564,6 +564,19 @@ export type ContactMessageRow = {
   created_at: string;
 }
 
+export type TestimonialStatus = "pendiente" | "aprobado" | "rechazado";
+
+export type TestimonialRow = {
+  id: string;
+  full_name: string;
+  relationship: string | null;
+  message: string;
+  status: TestimonialStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
 export type SchoolConfigRow = {
   key: string;
   value: Record<string, unknown>;
@@ -1477,6 +1490,7 @@ export interface Database {
       circulares_informativas: CrudTable<CircularInformativaRow>;
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;
+      testimonials: CrudTable<TestimonialRow>;
       school_config: CrudTable<SchoolConfigRow>;
       institutional_signatures: CrudTable<InstitutionalSignatureRow>;
       content_cards: CrudTable<ContentCardRow>;

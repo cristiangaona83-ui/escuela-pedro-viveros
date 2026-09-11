@@ -9,6 +9,7 @@ export const PUBLIC_NAV = [
   { label: "Noticias", href: "/noticias" },
   { label: "Galería", href: "/galeria" },
   { label: "Documentos", href: "/documentos" },
+  { label: "Testimonios", href: "/testimonios" },
   { label: "Contacto", href: "/contacto" },
 ] as const;
 
@@ -65,6 +66,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Documentos", href: "/plataforma/documentos", icon: "FolderOpen", group: "general" },
   { label: "Informativos Semanales", href: "/plataforma/informativos", icon: "Megaphone", group: "general" },
   { label: "Circulares Informativas", href: "/plataforma/circulares-informativas", icon: "ScrollText", group: "general" },
+  { label: "Testimonios", href: "/plataforma/testimonios", icon: "MessageCircleHeart", roles: ["director", "administrativo", "superadmin"], group: "general" },
   { label: "Calendario", href: "/plataforma/calendario", icon: "Calendar", group: "general" },
   { label: "Noticias", href: "/plataforma/noticias", icon: "Newspaper", group: "general" },
   { label: "Galería", href: "/plataforma/galeria", icon: "Images", group: "general" },

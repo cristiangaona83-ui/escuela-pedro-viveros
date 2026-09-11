@@ -13,6 +13,7 @@ import type {
   StaffSection,
   StaffSectionMembershipRow,
   SubjectTeacherRow,
+  TestimonialRow,
   WeeklyBulletinRow,
 } from "@/types/database";
 import { STATIC_INSTITUTIONAL_DOCUMENTS } from "@/config/institutional-documents";
@@ -245,6 +246,22 @@ export async function getContentCards(section: ContentCardSection): Promise<Cont
     created_at: now,
     updated_at: now,
   }));
+}
+
+/** Testimonios aprobados, para la sección pública -- los pendientes/rechazados nunca llegan aquí (la RLS de `testimonials_select_approved` ya solo devuelve status='aprobado', esta condición es además defensa en profundidad). */
+export async function getApprovedTestimonials(): Promise<TestimonialRow[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("*")
+      .eq("status", "aprobado")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function submitContactMessage(input: {
