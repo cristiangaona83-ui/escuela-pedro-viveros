@@ -173,22 +173,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {testimonials.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
-                Experiencias de nuestras familias
-              </h2>
-              <p className="mt-2 max-w-2xl text-slate-500">
-                Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño.
-              </p>
-            </div>
-            <LinkButton href="/testimonios" variant="secondary">
-              Comparte tu experiencia
-            </LinkButton>
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
+              Experiencias de nuestras familias
+            </h2>
+            <p className="mt-2 max-w-2xl text-slate-500">
+              Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño.
+            </p>
           </div>
+          <LinkButton href="/testimonios" variant="secondary">
+            Comparte tu experiencia
+          </LinkButton>
+        </div>
 
+        {testimonials.length > 0 ? (
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {testimonials.map((t) => (
               <Card key={t.id} className="h-full">
@@ -203,8 +203,16 @@ export default async function HomePage() {
               </Card>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="mt-8">
+            <EmptyState
+              icon={Quote}
+              title="Aún no hay testimonios publicados"
+              description="¿Eres apoderado o apoderada? Cuéntanos tu experiencia con el botón de arriba -- se publicará aquí una vez revisada."
+            />
+          </div>
+        )}
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-xl bg-brand-900 px-6 py-14 text-center sm:px-12">
