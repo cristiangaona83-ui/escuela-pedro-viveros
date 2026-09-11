@@ -142,7 +142,6 @@ export function GalleryGrid({ items }: { items: GalleryRow[] }) {
                   </>
                 )}
               </div>
-              <p className="mt-1.5 truncate text-xs font-medium text-slate-600">{item.title}</p>
             </button>
           );
         })}
