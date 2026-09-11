@@ -9,6 +9,11 @@ import type { InstitutionalProfile } from "@/services/school-config";
 export interface SubjectAverageRow {
   subjectName: string;
   average: number | null;
+  /** false para una asignatura vinculada a otra (ej. un Taller vinculado a
+   * Lenguaje, ver 0053_subjects_linked_subject.sql) -- igual aparece como
+   * su propia fila en la tabla, pero queda fuera del promedio general
+   * (ver generalAverageFromRows en services/report-data.ts). */
+  countsForAverage: boolean;
 }
 
 /**

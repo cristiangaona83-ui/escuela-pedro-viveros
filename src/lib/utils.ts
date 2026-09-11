@@ -5,9 +5,26 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export function formatDate(value: string | Date | null | undefined, opts?: Intl.DateTimeFormatOptions) {
   if (!value) return "—";
-  const date = typeof value === "string" ? new Date(value) : value;
+  // Una fecha "sola" (columna `date` de Postgres, ej. "2026-09-11", sin hora)
+  // NO lleva zona horaria -- pero `new Date("2026-09-11")` la interpreta como
+  // medianoche UTC. Al formatear en un componente cliente, Intl usa la zona
+  // horaria local del navegador (Chile, UTC-3/-4): esa medianoche UTC cae en
+  // el día anterior en hora local, y la fecha se muestra un día antes de la
+  // que realmente se guardó. Para una fecha "sola", se arma el Date con sus
+  // componentes año/mes/día directamente (sin pasar por UTC), evitando el
+  // corrimiento. Un timestamp completo (con hora) sí es un instante real y
+  // sigue usando el parseo normal.
+  let date: Date;
+  if (typeof value === "string" && DATE_ONLY_RE.test(value)) {
+    const [y, m, d] = value.split("-").map(Number);
+    date = new Date(y, m - 1, d);
+  } else {
+    date = typeof value === "string" ? new Date(value) : value;
+  }
   return new Intl.DateTimeFormat("es-CL", opts ?? { day: "2-digit", month: "long", year: "numeric" }).format(date);
 }
 

@@ -18,24 +18,25 @@ interface EvaluationRow {
   id: string;
   subject_id: string;
   weight: number;
-  subjects: { name: string } | null;
+  subjects: { name: string; linked_subject_id: string | null } | null;
 }
 
-/** Promedio por asignatura a partir de las evaluaciones de un curso/período y las notas de UN estudiante -- misma fórmula para el informe individual y el masivo, para que nunca muestren números distintos. */
+/** Promedio por asignatura a partir de las evaluaciones de un curso/período y las notas de UN estudiante -- misma fórmula para el informe individual y el masivo, para que nunca muestren números distintos.
+ * Una asignatura vinculada a otra (`linked_subject_id` no nulo, ej. un Taller vinculado a Lenguaje) igual aparece como su propia fila con su propio promedio, pero queda marcada `countsForAverage: false` para que generalAverageFromRows la excluya del promedio general -- sin ninguna lógica especial por nombre, solo por tener el vínculo seteado. */
 function aggregateSubjectRows(evaluations: EvaluationRow[], scoreByEvalId: Map<string, number | null>): SubjectAverageRow[] {
-  const bySubject = new Map<string, { name: string; scores: { score: number | null; weight: number }[] }>();
+  const bySubject = new Map<string, { name: string; linked: boolean; scores: { score: number | null; weight: number }[] }>();
   for (const e of evaluations) {
-    const entry = bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", scores: [] };
+    const entry = bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", linked: e.subjects?.linked_subject_id != null, scores: [] };
     entry.scores.push({ score: scoreByEvalId.get(e.id) ?? null, weight: e.weight });
     bySubject.set(e.subject_id, entry);
   }
   return Array.from(bySubject.values())
-    .map((s) => ({ subjectName: s.name, average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG) }))
+    .map((s) => ({ subjectName: s.name, average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG), countsForAverage: !s.linked }))
     .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
 }
 
 function generalAverageFromRows(rows: SubjectAverageRow[]): number | null {
-  const validAverages = rows.map((r) => r.average).filter((a): a is number => a !== null);
+  const validAverages = rows.filter((r) => r.countsForAverage).map((r) => r.average).filter((a): a is number => a !== null);
   return validAverages.length ? roundGrade(validAverages.reduce((a, b) => a + b, 0) / validAverages.length, DEFAULT_GRADING_CONFIG) : null;
 }
 
@@ -61,7 +62,7 @@ export async function getStudentSubjectAverages(
 
   let evalQuery = supabase
     .from("evaluations")
-    .select("id, subject_id, weight, subjects(name)")
+    .select("id, subject_id, weight, subjects(name, linked_subject_id)")
     .eq("course_id", course.id);
   if (periodId) evalQuery = evalQuery.eq("period_id", periodId);
   const { data: evaluations } = await evalQuery;
@@ -118,7 +119,7 @@ export async function getCourseSubjectAverages(
   const students = ((enrollments ?? []) as unknown as EnrollmentJoin[]).filter((e) => e.students);
   if (students.length === 0) return [];
 
-  let evalQuery = supabase.from("evaluations").select("id, subject_id, weight, subjects(name)").eq("course_id", courseId);
+  let evalQuery = supabase.from("evaluations").select("id, subject_id, weight, subjects(name, linked_subject_id)").eq("course_id", courseId);
   if (periodId) evalQuery = evalQuery.eq("period_id", periodId);
   const { data: evaluations } = await evalQuery;
   const evaluationRows = (evaluations ?? []) as unknown as EvaluationRow[];

@@ -4,10 +4,10 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { FormField, Input } from "@/components/ui/Field";
+import { FormField, Input, Select } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 
-export function SubjectForm() {
+export function SubjectForm({ linkableSubjects }: { linkableSubjects: { id: string; name: string }[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +21,7 @@ export function SubjectForm() {
     const { error: dbError } = await supabase.from("subjects").insert({
       code: String(form.get("code") || "").toUpperCase().trim(),
       name: String(form.get("name") || "").trim(),
+      linked_subject_id: String(form.get("linked_subject_id") || "") || null,
     });
     setLoading(false);
     if (dbError) {
@@ -38,6 +39,18 @@ export function SubjectForm() {
       </FormField>
       <FormField label="Nombre" htmlFor="name" required>
         <Input id="name" name="name" required />
+      </FormField>
+      <FormField
+        label="Vincular a asignatura troncal"
+        htmlFor="linked_subject_id"
+        hint="Opcional -- su nota aparecerá en el informe académico pero no contará en el promedio general (ej. Taller vinculado a Lenguaje)."
+      >
+        <Select id="linked_subject_id" name="linked_subject_id" defaultValue="">
+          <option value="">Sin vincular</option>
+          {linkableSubjects.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </Select>
       </FormField>
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">

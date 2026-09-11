@@ -76,6 +76,10 @@ export type SubjectRow = {
   code: string;
   name: string;
   active: boolean;
+  /** Asignatura troncal a la que esta asignatura está vinculada (ej. un
+   * Taller vinculado a Lenguaje) -- su nota aparece en el informe académico
+   * pero no cuenta en el promedio general. Ver 0053_subjects_linked_subject.sql. */
+  linked_subject_id: string | null;
 }
 
 export type TeacherAssignmentRow = {
