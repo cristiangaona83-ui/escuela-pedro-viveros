@@ -16,8 +16,8 @@ export default async function TestimoniosPage() {
     <>
       <PageHeader
         eyebrow="Comunidad escolar"
-        title="Testimonios de nuestras familias"
-        description="Apoderados y apoderadas comparten su experiencia y la de sus hijos e hijas en la Escuela Profesor Pedro Viveros Ormeño."
+        title="Experiencias de nuestras familias"
+        description="Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño."
       />
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">

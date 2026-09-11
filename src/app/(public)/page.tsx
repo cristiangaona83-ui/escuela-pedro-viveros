@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Newspaper, Clock } from "lucide-react";
+import { ArrowRight, Newspaper, Clock, Quote } from "lucide-react";
 import { Hero } from "@/components/public/Hero";
 import { NewsCard } from "@/components/public/NewsCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
-import { getPublishedNews, getContentCards } from "@/services/public-content";
+import { Card, CardBody } from "@/components/ui/Card";
+import { getPublishedNews, getContentCards, getApprovedTestimonials } from "@/services/public-content";
 import { getInstitutionalProfile, getHomeAdmissionContent, getHomeScheduleContent } from "@/services/school-config";
 import { resolveContentCardIcon } from "@/config/content-icons";
 import { SITE } from "@/config/site";
@@ -12,12 +13,13 @@ import { ALIGN_CLASS } from "@/lib/content-align";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [news, profile, admission, schedule, highlights] = await Promise.all([
+  const [news, profile, admission, schedule, highlights, testimonials] = await Promise.all([
     getPublishedNews(3),
     getInstitutionalProfile(),
     getHomeAdmissionContent(),
     getHomeScheduleContent(),
     getContentCards("inicio_destacados"),
+    getApprovedTestimonials(3),
   ]);
 
   return (
@@ -170,6 +172,39 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {testimonials.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
+                Experiencias de nuestras familias
+              </h2>
+              <p className="mt-2 max-w-2xl text-slate-500">
+                Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño.
+              </p>
+            </div>
+            <LinkButton href="/testimonios" variant="secondary">
+              Comparte tu experiencia
+            </LinkButton>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {testimonials.map((t) => (
+              <Card key={t.id} className="h-full">
+                <CardBody className="flex h-full flex-col gap-3">
+                  <Quote className="h-6 w-6 shrink-0 text-brand-300" />
+                  <p className="flex-1 text-sm leading-relaxed text-slate-700">{t.message}</p>
+                  <div className="border-t border-slate-100 pt-3">
+                    <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>
+                    {t.relationship && <p className="text-xs text-slate-500">{t.relationship}</p>}
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-xl bg-brand-900 px-6 py-14 text-center sm:px-12">

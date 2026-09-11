@@ -248,15 +248,17 @@ export async function getContentCards(section: ContentCardSection): Promise<Cont
   }));
 }
 
-/** Testimonios aprobados, para la sección pública -- los pendientes/rechazados nunca llegan aquí (la RLS de `testimonials_select_approved` ya solo devuelve status='aprobado', esta condición es además defensa en profundidad). */
-export async function getApprovedTestimonials(): Promise<TestimonialRow[]> {
+/** Testimonios aprobados, para la sección pública -- los pendientes/rechazados nunca llegan aquí (la RLS de `testimonials_select_approved` ya solo devuelve status='aprobado', esta condición es además defensa en profundidad). `limit` opcional para la vista previa de la portada. */
+export async function getApprovedTestimonials(limit?: number): Promise<TestimonialRow[]> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("testimonials")
       .select("*")
       .eq("status", "aprobado")
       .order("created_at", { ascending: false });
+    if (limit) query = query.limit(limit);
+    const { data, error } = await query;
     if (error) throw error;
     return data ?? [];
   } catch {

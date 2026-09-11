@@ -9,7 +9,6 @@ export const PUBLIC_NAV = [
   { label: "Noticias", href: "/noticias" },
   { label: "Galería", href: "/galeria" },
   { label: "Documentos", href: "/documentos" },
-  { label: "Testimonios", href: "/testimonios" },
   { label: "Contacto", href: "/contacto" },
 ] as const;
 
