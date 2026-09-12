@@ -9,6 +9,13 @@ import { getApprovedTestimonials } from "@/services/public-content";
 
 export const metadata: Metadata = { title: "Testimonios" };
 
+function initials(fullName: string): string {
+  const words = fullName.trim().split(/\s+/);
+  const first = words[0]?.[0] ?? "";
+  const last = words[words.length - 1]?.[0] ?? "";
+  return (first + last).toUpperCase();
+}
+
 export default async function TestimoniosPage() {
   const testimonials = await getApprovedTestimonials();
 
@@ -24,17 +31,20 @@ export default async function TestimoniosPage() {
         {testimonials.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t) => (
-              <Card key={t.id} className="h-full">
-                <CardBody className="flex h-full flex-col gap-3">
-                  <Quote className="h-6 w-6 shrink-0 text-brand-300" />
-                  <p className="flex-1 text-justify text-sm leading-relaxed text-slate-700">{t.message}</p>
-                  <div className="border-t border-slate-100 pt-3">
+              <div key={t.id} className="flex h-full flex-col rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+                <Quote className="h-7 w-7 shrink-0 fill-accent-500 text-accent-500" />
+                <p className="mt-3 flex-1 text-justify text-sm leading-relaxed text-slate-700">{t.message}</p>
+                <div className="mt-5 flex items-center gap-3 border-t border-brand-50 pt-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white">
+                    {initials(t.full_name)}
+                  </span>
+                  <div>
                     <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>
-                    {t.relationship && <p className="text-xs text-slate-500">{t.relationship}</p>}
+                    {t.relationship && <p className="text-xs font-medium text-brand-700">{t.relationship}</p>}
                     <p className="mt-0.5 text-xs text-slate-400">{formatDate(t.created_at)}</p>
                   </div>
-                </CardBody>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         ) : (

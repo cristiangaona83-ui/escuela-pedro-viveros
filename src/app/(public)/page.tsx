@@ -4,13 +4,19 @@ import { Hero } from "@/components/public/Hero";
 import { NewsCard } from "@/components/public/NewsCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
-import { Card, CardBody } from "@/components/ui/Card";
 import { getPublishedNews, getContentCards, getApprovedTestimonials } from "@/services/public-content";
 import { getInstitutionalProfile, getHomeAdmissionContent, getHomeScheduleContent } from "@/services/school-config";
 import { resolveContentCardIcon } from "@/config/content-icons";
 import { SITE } from "@/config/site";
 import { ALIGN_CLASS } from "@/lib/content-align";
 import { cn } from "@/lib/utils";
+
+function initials(fullName: string): string {
+  const words = fullName.trim().split(/\s+/);
+  const first = words[0]?.[0] ?? "";
+  const last = words[words.length - 1]?.[0] ?? "";
+  return (first + last).toUpperCase();
+}
 
 export default async function HomePage() {
   const [news, profile, admission, schedule, highlights, testimonials] = await Promise.all([
@@ -173,45 +179,53 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="font-heading text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl">
-              Experiencias de nuestras familias
-            </h2>
-            <p className="mt-2 max-w-2xl text-slate-500">
-              Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño.
-            </p>
+      <section className="bg-brand-900 py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-100">
+                Comunidad escolar
+              </span>
+              <h2 className="mt-3 font-heading text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                Experiencias de nuestras familias
+              </h2>
+              <p className="mt-2 max-w-2xl text-brand-100/90">
+                Lo que madres, padres y apoderados nos cuentan sobre su experiencia en la Escuela Profesor Pedro Viveros Ormeño.
+              </p>
+            </div>
+            <LinkButton href="/testimonios" variant="outline">
+              Comparte tu experiencia
+            </LinkButton>
           </div>
-          <LinkButton href="/testimonios" variant="secondary">
-            Comparte tu experiencia
-          </LinkButton>
-        </div>
 
-        {testimonials.length > 0 ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {testimonials.map((t) => (
-              <Card key={t.id} className="h-full">
-                <CardBody className="flex h-full flex-col gap-3">
-                  <Quote className="h-6 w-6 shrink-0 text-brand-300" />
-                  <p className="flex-1 text-justify text-sm leading-relaxed text-slate-700">{t.message}</p>
-                  <div className="border-t border-slate-100 pt-3">
-                    <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>
-                    {t.relationship && <p className="text-xs text-slate-500">{t.relationship}</p>}
+          {testimonials.length > 0 ? (
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {testimonials.map((t) => (
+                <div key={t.id} className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-lg">
+                  <Quote className="h-8 w-8 shrink-0 fill-accent-500 text-accent-500" />
+                  <p className="mt-3 flex-1 text-justify text-sm leading-relaxed text-slate-700">{t.message}</p>
+                  <div className="mt-5 flex items-center gap-3 border-t border-brand-50 pt-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white">
+                      {initials(t.full_name)}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>
+                      {t.relationship && <p className="text-xs font-medium text-brand-700">{t.relationship}</p>}
+                    </div>
                   </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-8">
-            <EmptyState
-              icon={Quote}
-              title="Aún no hay testimonios publicados"
-              description="¿Eres apoderado o apoderada? Cuéntanos tu experiencia con el botón de arriba -- se publicará aquí una vez revisada."
-            />
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-6 py-14 text-center">
+              <Quote className="mx-auto h-8 w-8 text-brand-200" />
+              <p className="mt-3 font-medium text-white">Aún no hay testimonios publicados</p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-brand-100/80">
+                ¿Eres apoderado o apoderada? Cuéntanos tu experiencia con el botón de arriba — se publicará aquí una vez revisada.
+              </p>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
