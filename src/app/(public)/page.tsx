@@ -194,7 +194,7 @@ export default async function HomePage() {
               <Card key={t.id} className="h-full">
                 <CardBody className="flex h-full flex-col gap-3">
                   <Quote className="h-6 w-6 shrink-0 text-brand-300" />
-                  <p className="flex-1 text-sm leading-relaxed text-slate-700">{t.message}</p>
+                  <p className="flex-1 text-justify text-sm leading-relaxed text-slate-700">{t.message}</p>
                   <div className="border-t border-slate-100 pt-3">
                     <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>
                     {t.relationship && <p className="text-xs text-slate-500">{t.relationship}</p>}
