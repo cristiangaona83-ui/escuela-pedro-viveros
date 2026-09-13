@@ -37,7 +37,7 @@ export interface LinkedSubjectRow {
  */
 
 /** Alto de la zona reservada para la firma del Director sobre "Director" -- ver comentario en CertificateSignatureFooter. */
-const SIGNATURE_MARK_HEIGHT = 92;
+const SIGNATURE_MARK_HEIGHT = 100;
 
 /** Ancho de la firma del Director cuando va sola vs. cuando va acompañada del timbre (se angosta un poco para que la fila quepa dentro de signatureBlock sin salirse). */
 const DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP = 120;
@@ -54,8 +54,12 @@ const STAMP_SIZE = 60;
  * Reglas de "nunca romper el documento":
  *  - Sin firma: se muestra solo la línea en blanco de siempre (`lineStyle`
  *    permite igualar el override puntual que ya tenía cada documento).
- *  - Con firma y sin timbre: se ve exactamente igual que antes de que
- *    existiera esta función (mismo ancho de imagen, sin timbre).
+ *  - Con firma (con o sin timbre): la imagen va SOBRE una línea igual a la
+ *    del bloque del Profesor(a) Jefe -- mismo `pdfStyles.signatureLine`,
+ *    solo que con un margen superior chico (no el margen grande pensado
+ *    para firmar a mano) ya que la firma ya está sobre ella. Así el bloque
+ *    del Director siempre queda con línea, con o sin firma digital
+ *    cargada, igual que el resto de los pies de firma.
  *  - Con firma y timbre: fila horizontal, timbre con `objectFit: "contain"`
  *    (no se deforma, mantiene proporción) en una caja fija -- nunca tapa la
  *    firma ni el texto de abajo (nombre/cargo, fuera de esta función).
@@ -75,16 +79,25 @@ export function DirectorSignatureImage({
   if (!directorSignatureDataUri) {
     return <View style={lineStyle ? { ...pdfStyles.signatureLine, ...lineStyle } : pdfStyles.signatureLine} />;
   }
+  const underline = <View style={lineStyle ? { ...pdfStyles.signatureLine, ...lineStyle } : { ...pdfStyles.signatureLine, marginTop: 4 }} />;
   if (!stampDataUri) {
-    // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML
-    return <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />;
+    return (
+      <View style={{ width: "100%", alignItems: "center" }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
+        <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />
+        {underline}
+      </View>
+    );
   }
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", columnGap: 6 }}>
-      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
-      <Image src={directorSignatureDataUri} style={{ width: DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP, alignSelf: "center" }} />
-      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
-      <Image src={stampDataUri} style={{ width: STAMP_SIZE, height: STAMP_SIZE, objectFit: "contain" }} />
+    <View style={{ width: "100%", alignItems: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", columnGap: 6 }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
+        <Image src={directorSignatureDataUri} style={{ width: DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP, alignSelf: "center" }} />
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
+        <Image src={stampDataUri} style={{ width: STAMP_SIZE, height: STAMP_SIZE, objectFit: "contain" }} />
+      </View>
+      {underline}
     </View>
   );
 }
@@ -263,7 +276,8 @@ export function CertificateSignatureFooter({
           la misma altura sin importar que el bloque del Director tenga una línea extra (nombre del
           establecimiento) debajo. SIGNATURE_MARK_HEIGHT ~= alto de la firma sin timbre (la más alta de
           las dos variantes) a pdfStyles.directorSignatureImage.width con la proporción real del
-          archivo (1672x941), con un pelo de margen. */}
+          archivo (1672x941), más la línea que va debajo de la firma (ver DirectorSignatureImage), con
+          un pelo de margen. */}
       <View style={[pdfStyles.footerRow, { marginTop: 8, alignItems: "flex-start" }]}>
         <View style={pdfStyles.signatureBlock}>
           <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
