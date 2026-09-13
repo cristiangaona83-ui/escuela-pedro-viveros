@@ -16,7 +16,6 @@ const CYCLE_1_TO_4 = [
   "Artes Visuales",
   "Música",
   "Educación Física y Salud",
-  "Orientación",
   "Tecnología",
 ];
 
@@ -29,10 +28,20 @@ const CYCLE_7_TO_8 = [
   "Ciencias Naturales",
   "Artes Visuales y Música",
   "Educación Física y Salud",
-  "Orientación",
   "Tecnología",
   "Idioma Extranjero: Inglés",
 ];
+
+/**
+ * Asignaturas que se evalúan y aparecen en Evaluaciones/Calificaciones, pero
+ * que NO se consideran en los certificados oficiales (Semestral, Anual,
+ * Cierre de Año) ni en el promedio general -- Orientación, según el
+ * Certificado Anual de Estudio oficial usado como referencia, no figura como
+ * calificación en ese documento. No afecta Carga Docente, Evaluaciones ni
+ * Calificaciones: solo se filtra al armar los certificados (ver
+ * buildSubjectReport en services/report-data.ts).
+ */
+export const SUBJECTS_EXCLUDED_FROM_REPORTS = new Set(["Orientación"]);
 
 /** "5° Básico" -> 5. Solo reconoce niveles de Enseñanza Básica (1° a 8°). */
 function basicaGrade(level: string): number | null {
