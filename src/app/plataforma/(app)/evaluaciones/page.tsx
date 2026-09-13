@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Folder, ClipboardList } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getTeachableCourseSubjects } from "@/services/academic-scope";
 import { listEvaluationScopeCounts } from "@/services/evaluations";
 import { levelSortIndex } from "@/services/courses";
@@ -50,7 +51,8 @@ export default async function EvaluacionesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Evaluaciones</h1>
+      <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Evaluaciones" }]} />
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900">Evaluaciones</h1>
       <p className="mt-1 text-sm text-slate-500">Selecciona un curso para ver y administrar sus evaluaciones por asignatura.</p>
 
       <div className="mt-6">

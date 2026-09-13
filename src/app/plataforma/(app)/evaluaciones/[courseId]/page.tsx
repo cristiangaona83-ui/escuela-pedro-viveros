@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ClipboardList } from "lucide-react";
+import { BookOpen, ClipboardList } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getTeachableCourseSubjects } from "@/services/academic-scope";
 import { listEvaluationScopeCounts } from "@/services/evaluations";
 import { getSessionContext } from "@/features/auth/session";
@@ -34,9 +35,7 @@ export default async function EvaluacionesCursoPage({ params }: { params: Promis
   if (subjects.length === 0) {
     return (
       <div>
-        <Link href="/plataforma/evaluaciones" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Evaluaciones
-        </Link>
+        <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Evaluaciones", href: "/plataforma/evaluaciones" }]} />
         <div className="mt-6">
           <EmptyState icon={BookOpen} title="Curso no disponible" description="No tienes asignaturas asignadas en este curso." />
         </div>
@@ -53,9 +52,13 @@ export default async function EvaluacionesCursoPage({ params }: { params: Promis
 
   return (
     <div>
-      <Link href="/plataforma/evaluaciones" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-        <ArrowLeft className="h-3.5 w-3.5" /> Evaluaciones
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Evaluaciones", href: "/plataforma/evaluaciones" },
+          { label: courseLabel },
+        ]}
+      />
 
       <h1 className="mt-2 text-2xl font-semibold text-slate-900">{courseLabel}</h1>
       <p className="mt-1 text-sm text-slate-500">Selecciona una asignatura para ver sus evaluaciones.</p>

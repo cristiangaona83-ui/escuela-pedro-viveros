@@ -4,6 +4,7 @@ import { Users, BookOpen, CheckCircle2, History } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { GradeEntryGrid } from "@/features/grades/GradeEntryGrid";
 import { CalificacionesFilterBar } from "@/features/grades/CalificacionesFilterBar";
 import { getTeachableCourseSubjects, listOpenPeriods } from "@/services/academic-scope";
@@ -50,7 +51,8 @@ export default async function CalificacionesPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Calificaciones</h1>
+      <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Calificaciones" }]} />
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900">Calificaciones</h1>
       <p className="mt-1 text-sm text-slate-500">
         Libro de notas digital. Escala {gradingConfig.scaleMin.toFixed(1)} a {gradingConfig.scaleMax.toFixed(1)}, nota mínima de
         aprobación {gradingConfig.approvalMinimum.toFixed(1)}.

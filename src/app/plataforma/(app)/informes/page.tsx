@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FileBarChart, AlertTriangle, Users } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
 import { listAcademicYears, getActiveAcademicYear, levelSortIndex } from "@/services/courses";
 import { listOpenPeriods } from "@/services/academic-scope";
@@ -70,7 +71,8 @@ export default async function InformesPage({
 
   return (
     <div>
-      <div className="flex items-center gap-3">
+      <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Informes" }]} />
+      <div className="mt-2 flex items-center gap-3">
         <FileBarChart className="h-6 w-6 text-brand-700" />
         <h1 className="text-2xl font-semibold text-slate-900">Informes</h1>
       </div>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getCourseSubjectEvaluations } from "@/services/grade-overview";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -50,21 +50,15 @@ export default async function GestionarEvaluacionesPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-brand-700">
-        <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Calificaciones
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/calificaciones/${courseId}?${extraParams}`} className="hover:underline">
-          {data.courseLabel}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/calificaciones/${courseId}/${subjectId}?${extraParams}`} className="hover:underline">
-          {data.subjectName}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <span className="text-slate-500">Gestionar evaluaciones</span>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Calificaciones", href: "/plataforma/calificaciones" },
+          { label: data.courseLabel, href: `/plataforma/calificaciones/${courseId}?${extraParams}` },
+          { label: data.subjectName, href: `/plataforma/calificaciones/${courseId}/${subjectId}?${extraParams}` },
+          { label: "Gestionar evaluaciones" },
+        ]}
+      />
 
       <h1 className="mt-2 text-2xl font-semibold text-slate-900">
         Evaluaciones — {data.subjectName} · {data.courseLabel}

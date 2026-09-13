@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { Select } from "@/components/ui/Field";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EvaluationsListClient } from "@/features/grades/EvaluationsListClient";
 import { getCourseSubjectEvaluations } from "@/services/grade-overview";
 import { getTeachableCourseSubjects, listOpenPeriods } from "@/services/academic-scope";
@@ -78,17 +78,14 @@ export default async function EvaluacionesAsignaturaPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-brand-700">
-        <Link href="/plataforma/evaluaciones" className="inline-flex items-center gap-1 hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Evaluaciones
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/evaluaciones/${courseId}`} className="hover:underline">
-          {data.courseLabel}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <span className="text-slate-500">{data.subjectName}</span>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Evaluaciones", href: "/plataforma/evaluaciones" },
+          { label: data.courseLabel, href: `/plataforma/evaluaciones/${courseId}` },
+          { label: data.subjectName },
+        ]}
+      />
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>

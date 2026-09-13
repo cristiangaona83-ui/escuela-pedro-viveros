@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users, ClipboardList, CheckCircle2, Clock, Settings } from "lucide-react";
+import { Users, ClipboardList, CheckCircle2, Clock, Settings } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getSubjectGradeMatrix } from "@/services/grade-overview";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -53,17 +53,14 @@ export default async function CalificacionesAsignaturaPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-brand-700">
-        <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Calificaciones
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/calificaciones/${courseId}?${extraParams}`} className="hover:underline">
-          {matrix.courseLabel}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <span className="text-slate-500">{matrix.subjectName}</span>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Calificaciones", href: "/plataforma/calificaciones" },
+          { label: matrix.courseLabel, href: `/plataforma/calificaciones/${courseId}?${extraParams}` },
+          { label: matrix.subjectName },
+        ]}
+      />
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>

@@ -24,7 +24,7 @@ export type PlatformNavItem = {
 
 export const NAV_GROUP_LABELS: Record<PlatformNavGroup, string> = {
   principal: "",
-  utp: "UTP",
+  utp: "Gestión Pedagógica",
   inspectoria: "Inspectoría General",
   convivencia: "Convivencia Educativa",
   pie: "PIE",
@@ -32,27 +32,33 @@ export const NAV_GROUP_LABELS: Record<PlatformNavGroup, string> = {
   direccion: "Dirección",
 };
 
-// Reorganizado por unidad de gestión real del establecimiento (Áreas de
-// Gestión: UTP / Inspectoría General / Convivencia Educativa / PIE), más
+// Reorganizado por unidad de gestión real del establecimiento (Gestión
+// Pedagógica / Inspectoría General / Convivencia Educativa / PIE), más
 // "general" (compartido entre todos) y "direccion" (solo director/
 // superadmin). Ninguna ruta cambió de lugar ni de permisos respecto de
 // antes -- esto es solo cómo se agrupan visualmente en el menú lateral.
+// Cursos y Estudiantes se movieron de "principal" a "utp" (Gestión
+// Pedagógica) porque son el núcleo de la data que ese módulo gestiona;
+// "Panel General" es un acceso directo nuevo al hub ya existente en
+// /plataforma/areas/utp (antes solo alcanzable un clic más adentro, desde
+// Áreas de Gestión) -- no es una ruta nueva.
 export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Panel Principal", href: "/plataforma/dashboard", icon: "LayoutDashboard", group: "principal" },
   { label: "Áreas de Gestión", href: "/plataforma/areas", icon: "LayoutGrid", group: "principal" },
-  { label: "Estudiantes", href: "/plataforma/estudiantes", icon: "Users", roles: ["director", "utp", "administrativo", "docente", "pie", "convivencia", "superadmin", "inspectoria_general"], group: "principal" },
-  { label: "Cursos", href: "/plataforma/cursos", icon: "School", roles: ["director", "utp", "administrativo", "docente", "inspectoria_general"], group: "principal" },
 
+  { label: "Panel General", href: "/plataforma/areas/utp", icon: "Gauge", roles: ["director", "utp", "superadmin"], group: "utp" },
+  { label: "Cursos", href: "/plataforma/cursos", icon: "School", roles: ["director", "utp", "administrativo", "docente", "inspectoria_general"], group: "utp" },
+  { label: "Estudiantes", href: "/plataforma/estudiantes", icon: "Users", roles: ["director", "utp", "administrativo", "docente", "pie", "convivencia", "superadmin", "inspectoria_general"], group: "utp" },
   { label: "Asignaturas", href: "/plataforma/asignaturas", icon: "BookOpen", roles: ["director", "utp", "superadmin"], group: "utp" },
+  { label: "Carga docente", href: "/plataforma/cursos/carga-docente", icon: "Briefcase", roles: ["director", "utp", "superadmin"], group: "utp" },
+  { label: "Jefaturas", href: "/plataforma/cursos/jefaturas", icon: "UserCog", roles: ["director", "utp", "superadmin"], group: "utp" },
   { label: "Evaluaciones", href: "/plataforma/evaluaciones", icon: "ClipboardList", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },
   { label: "Calificaciones", href: "/plataforma/calificaciones", icon: "NotebookPen", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },
+  { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "superadmin"], group: "utp" },
+  { label: "Seguimiento Pedagógico", href: "/plataforma/seguimiento", icon: "Activity", roles: ["director", "utp", "docente", "convivencia", "superadmin"], group: "utp" },
   { label: "Objetivos de Aprendizaje", href: "/plataforma/objetivos", icon: "Target", roles: ["director", "utp", "superadmin"], group: "utp" },
   { label: "Planificaciones", href: "/plataforma/planificaciones", icon: "FileEdit", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },
-  { label: "Seguimiento Pedagógico", href: "/plataforma/seguimiento", icon: "Activity", roles: ["director", "utp", "docente", "convivencia", "superadmin"], group: "utp" },
   { label: "Acompañamiento al Aula", href: "/plataforma/acompanamiento", icon: "Eye", roles: ["director", "utp", "superadmin", "docente"], group: "utp" },
-  { label: "Jefaturas", href: "/plataforma/cursos/jefaturas", icon: "UserCog", roles: ["director", "utp", "superadmin"], group: "utp" },
-  { label: "Carga docente", href: "/plataforma/cursos/carga-docente", icon: "Briefcase", roles: ["director", "utp", "superadmin"], group: "utp" },
-  { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "superadmin"], group: "utp" },
 
   { label: "Asistencia", href: "/plataforma/asistencia", icon: "CalendarCheck", roles: ["director", "utp", "docente", "convivencia", "superadmin", "inspectoria_general"], group: "inspectoria" },
   { label: "Seguro Escolar", href: "/plataforma/seguro-escolar", icon: "ShieldAlert", roles: ["director", "superadmin", "inspectoria_general", "administrativo", "convivencia"], group: "inspectoria" },

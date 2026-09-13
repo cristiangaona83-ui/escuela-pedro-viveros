@@ -3,6 +3,7 @@ import { BookOpen } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
 import { SubjectForm } from "@/features/subjects/SubjectForm";
 import { LinkedSubjectSelect } from "@/features/subjects/LinkedSubjectSelect";
@@ -26,7 +27,8 @@ export default async function AsignaturasPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Asignaturas</h1>
+      <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Asignaturas" }]} />
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900">Asignaturas</h1>
       <p className="mt-1 text-sm text-slate-500">Catálogo configurable de asignaturas del establecimiento.</p>
 
       <div className={`mt-6 grid gap-6 ${allowedToWrite ? "lg:grid-cols-[1fr_320px]" : ""}`}>

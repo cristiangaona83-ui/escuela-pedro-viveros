@@ -5,6 +5,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { listCourses } from "@/services/courses";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -19,7 +20,8 @@ export default async function CursosPlataformaPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <Breadcrumbs items={[{ label: "Gestión Pedagógica", href: "/plataforma/areas/utp" }, { label: "Cursos" }]} />
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Cursos</h1>
           <p className="mt-1 text-sm text-slate-500">Gestión de niveles, jefaturas y asignaciones docentes.</p>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users, FileBarChart } from "lucide-react";
+import { Users, FileBarChart } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getCourseGradeDetail } from "@/services/grade-overview";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -52,9 +52,13 @@ export default async function CalificacionesCursoPage({
 
   return (
     <div>
-      <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-        <ArrowLeft className="h-3.5 w-3.5" /> Calificaciones
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Calificaciones", href: "/plataforma/calificaciones" },
+          { label: detail.courseLabel },
+        ]}
+      />
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>

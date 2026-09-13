@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getEvaluationGradeSheet } from "@/services/grade-overview";
 import { getGradingConfig } from "@/services/school-config";
 import { getSessionContext } from "@/features/auth/session";
@@ -51,21 +51,15 @@ export default async function AdministrarCalificacionesPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-brand-700">
-        <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Calificaciones
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/calificaciones/${courseId}?${extraParams}`} className="hover:underline">
-          {sheet.courseLabel}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <Link href={`/plataforma/calificaciones/${courseId}/${subjectId}/evaluaciones?${extraParams}`} className="hover:underline">
-          {sheet.subjectName}
-        </Link>
-        <span className="text-slate-400">/</span>
-        <span className="text-slate-500">{sheet.evaluationName}</span>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Calificaciones", href: "/plataforma/calificaciones" },
+          { label: sheet.courseLabel, href: `/plataforma/calificaciones/${courseId}?${extraParams}` },
+          { label: sheet.subjectName, href: `/plataforma/calificaciones/${courseId}/${subjectId}/evaluaciones?${extraParams}` },
+          { label: sheet.evaluationName },
+        ]}
+      />
 
       <h1 className="mt-2 text-2xl font-semibold text-slate-900">{sheet.evaluationName}</h1>
       <p className="mt-1 text-sm text-slate-500">

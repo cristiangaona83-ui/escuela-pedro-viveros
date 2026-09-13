@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Users, CheckCircle2, Clock } from "lucide-react";
+import { Users, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
 import { getCourseSubjectAverages } from "@/services/report-data";
 import { getCourseGradeDetail } from "@/services/grade-overview";
@@ -72,9 +72,13 @@ export default async function InformesCursoPage({
 
   return (
     <div>
-      <Link href="/plataforma/informes" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-        <ArrowLeft className="h-3.5 w-3.5" /> Informes
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Informes", href: "/plataforma/informes" },
+          { label: `${courseLabel} — ${TIPO_LABEL[tipo]}` },
+        ]}
+      />
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>

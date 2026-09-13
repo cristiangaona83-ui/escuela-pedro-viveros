@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, Users, History } from "lucide-react";
+import { Users, History } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getGradeChangeHistory } from "@/services/grade-history";
 import { listCourseOptions } from "@/services/courses";
 import { listSubjectOptions } from "@/services/subjects";
@@ -46,9 +46,13 @@ export default async function GradeHistoryPage({
 
   return (
     <div>
-      <Link href="/plataforma/calificaciones" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-        <ArrowLeft className="h-3.5 w-3.5" /> Calificaciones
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Calificaciones", href: "/plataforma/calificaciones" },
+          { label: "Historial de modificaciones" },
+        ]}
+      />
 
       <div className="mt-2 flex items-center gap-3">
         <History className="h-6 w-6 text-brand-700" />

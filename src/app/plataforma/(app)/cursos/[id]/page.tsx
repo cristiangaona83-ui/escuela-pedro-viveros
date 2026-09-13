@@ -5,6 +5,7 @@ import { Users, BookOpen } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getCourse } from "@/services/courses";
 
 export const metadata: Metadata = { title: "Detalle del curso" };
@@ -31,7 +32,14 @@ export default async function CursoDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">{course.level} {course.letter}</h1>
+      <Breadcrumbs
+        items={[
+          { label: "Gestión Pedagógica", href: "/plataforma/areas/utp" },
+          { label: "Cursos", href: "/plataforma/cursos" },
+          { label: `${course.level} ${course.letter}`.trim() },
+        ]}
+      />
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900">{course.level} {course.letter}</h1>
       <p className="mt-1 text-sm text-slate-500">Profesor jefe: {teacherName ?? "Sin asignar"}</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
