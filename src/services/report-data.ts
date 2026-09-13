@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
+import { sortByOfficialSubjectOrder } from "@/config/curriculum-subjects";
 import type { SubjectAverageRow, LinkedSubjectRow } from "@/lib/pdf/OfficialCertificateShared";
 
 export interface StudentReportData {
@@ -43,10 +44,14 @@ type SubjectBucket = { name: string; linkedTo: string | null; scores: ScoreEntry
  *
  * Sin ninguna lógica especial por nombre de asignatura: el comportamiento
  * depende únicamente de que `linked_subject_id` esté seteado.
+ *
+ * `rows` se ordena según el Plan de Estudio oficial del ciclo de
+ * `courseLevel` (ver src/config/curriculum-subjects.ts), no alfabéticamente.
  */
 function buildSubjectReport(
   evaluations: EvaluationRow[],
-  scoreByEvalId: Map<string, number | null>
+  scoreByEvalId: Map<string, number | null>,
+  courseLevel: string
 ): { rows: SubjectAverageRow[]; linkedRows: LinkedSubjectRow[] } {
   const bySubject = new Map<string, SubjectBucket>();
   for (const e of evaluations) {
@@ -71,9 +76,11 @@ function buildSubjectReport(
     linkedRows.push({ subjectName: bucket.name, average: computeWeightedAverage(bucket.scores, DEFAULT_GRADING_CONFIG), linkedToName });
   }
 
-  const rows = Array.from(mainScores.values())
-    .map((s) => ({ subjectName: s.name, average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG) }))
-    .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+  const unsortedRows = Array.from(mainScores.values()).map((s) => ({
+    subjectName: s.name,
+    average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG),
+  }));
+  const rows = sortByOfficialSubjectOrder(unsortedRows, courseLevel);
   linkedRows.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
 
   return { rows, linkedRows };
@@ -118,7 +125,7 @@ export async function getStudentSubjectAverages(
     : { data: [] };
 
   const scoreByEval = new Map((grades ?? []).map((g) => [g.evaluation_id, g.score]));
-  const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoreByEval);
+  const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoreByEval, course.level);
   const generalAverage = generalAverageFromRows(rows);
 
   return {
@@ -188,7 +195,7 @@ export async function getCourseSubjectAverages(
     .sort((a, b) => a.students!.last_names.localeCompare(b.students!.last_names) || a.students!.first_names.localeCompare(b.students!.first_names))
     .map((e) => {
       const s = e.students!;
-      const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoresByStudent.get(s.id) ?? new Map());
+      const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoresByStudent.get(s.id) ?? new Map(), course.level);
       return {
         studentId: s.id,
         studentName: `${s.first_names} ${s.last_names}`,

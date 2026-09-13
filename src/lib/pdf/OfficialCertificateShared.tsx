@@ -184,15 +184,26 @@ export function GradesWordsTable({
  */
 export function LinkedSubjectsNote({ rows }: { rows: LinkedSubjectRow[] }) {
   if (rows.length === 0) return null;
+  const cellPad = { padding: 3, fontSize: 8 };
   return (
     <View style={{ marginTop: 6 }}>
       <Text style={compactHeading}>Talleres complementarios</Text>
-      {rows.map((r) => (
-        <Text key={r.subjectName} style={compactParagraph}>
-          {r.subjectName}: {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")} (incorporado al promedio de{" "}
-          {r.linkedToName})
-        </Text>
-      ))}
+      <View style={pdfStyles.table}>
+        <View style={pdfStyles.tableRowHeader}>
+          <Text style={[pdfStyles.th, cellPad]}>Taller</Text>
+          <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: 0.4 }]}>Calificación</Text>
+          <Text style={[pdfStyles.th, cellPad]}>Incorporada al promedio de</Text>
+        </View>
+        {rows.map((r) => (
+          <View style={pdfStyles.tableRow} key={r.subjectName}>
+            <Text style={[pdfStyles.td, cellPad]}>{r.subjectName}</Text>
+            <Text style={[pdfStyles.tdCenter, cellPad, { flex: 0.4 }]}>
+              {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
+            </Text>
+            <Text style={[pdfStyles.td, cellPad]}>{r.linkedToName}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
