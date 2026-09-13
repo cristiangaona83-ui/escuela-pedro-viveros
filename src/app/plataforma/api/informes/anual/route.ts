@@ -109,6 +109,7 @@ export async function POST(request: Request) {
       courseFormalName,
       year: year.year,
       rows: report.rows,
+      linkedRows: report.linkedRows,
       generalAverage: report.generalAverage,
       attendanceRate,
       promotionSentence,

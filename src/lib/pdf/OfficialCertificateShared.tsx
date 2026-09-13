@@ -9,11 +9,17 @@ import type { InstitutionalProfile } from "@/services/school-config";
 export interface SubjectAverageRow {
   subjectName: string;
   average: number | null;
-  /** false para una asignatura vinculada a otra (ej. un Taller vinculado a
-   * Lenguaje, ver 0053_subjects_linked_subject.sql) -- igual aparece como
-   * su propia fila en la tabla, pero queda fuera del promedio general
-   * (ver generalAverageFromRows en services/report-data.ts). */
-  countsForAverage: boolean;
+}
+
+/** Una asignatura vinculada a otra (ej. un Taller vinculado a Lenguaje, ver
+ * 0053_subjects_linked_subject.sql) -- su nota NO es una fila más de
+ * `SubjectAverageRow`: ya fue absorbida en el promedio de `linkedToName`
+ * (ver buildSubjectReport en services/report-data.ts). Se reporta aparte
+ * solo para el apartado "Talleres complementarios" del certificado. */
+export interface LinkedSubjectRow {
+  subjectName: string;
+  average: number | null;
+  linkedToName: string;
 }
 
 /**
@@ -164,6 +170,28 @@ export function GradesWordsTable({
           </Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{gradeToWords(r.average)}</Text>}
         </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * Apartado "Talleres complementarios" -- lista los Talleres vinculados a una
+ * asignatura troncal (ver `linked_subject_id`, 0053_subjects_linked_subject.sql)
+ * con su propio promedio, aclarando a qué asignatura fue incorporada esa nota.
+ * No se muestra nada (ni el título) cuando no hay Talleres vinculados, para
+ * no alterar el certificado de cursos que no los usan.
+ */
+export function LinkedSubjectsNote({ rows }: { rows: LinkedSubjectRow[] }) {
+  if (rows.length === 0) return null;
+  return (
+    <View style={{ marginTop: 6 }}>
+      <Text style={compactHeading}>Talleres complementarios</Text>
+      {rows.map((r) => (
+        <Text key={r.subjectName} style={compactParagraph}>
+          {r.subjectName}: {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")} (incorporado al promedio de{" "}
+          {r.linkedToName})
+        </Text>
       ))}
     </View>
   );

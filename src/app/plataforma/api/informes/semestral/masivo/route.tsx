@@ -84,6 +84,7 @@ export async function POST(request: Request) {
           periodName={period.name}
           year={year}
           rows={report.rows}
+          linkedRows={report.linkedRows}
           generalAverage={report.generalAverage}
           attendanceRate={attendanceRates.get(report.studentId) ?? null}
           homeroomTeacherName={homeroomTeacher}

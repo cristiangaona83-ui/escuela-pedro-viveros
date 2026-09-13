@@ -1,9 +1,9 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { CertificateInstitutionalHeader, GradesWordsTable, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
+import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
 import { formatRun } from "@/lib/utils";
-import type { SubjectAverageRow } from "./OfficialCertificateShared";
+import type { SubjectAverageRow, LinkedSubjectRow } from "./OfficialCertificateShared";
 import type { InstitutionalProfile } from "@/services/school-config";
 
 export interface CertificadoSemestralEstudiosProps {
@@ -14,6 +14,7 @@ export interface CertificadoSemestralEstudiosProps {
   periodName: string;
   year: number;
   rows: SubjectAverageRow[];
+  linkedRows: LinkedSubjectRow[];
   generalAverage: number | null;
   attendanceRate: number | null;
   homeroomTeacherName: string | null;
@@ -33,6 +34,7 @@ export function CertificadoSemestralEstudiosPage({
   periodName,
   year,
   rows,
+  linkedRows,
   generalAverage,
   attendanceRate,
   homeroomTeacherName,
@@ -60,6 +62,7 @@ export function CertificadoSemestralEstudiosPage({
         </Text>
 
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación" />
+        <LinkedSubjectsNote rows={linkedRows} />
 
         <View style={{ marginTop: 8 }}>
           <Text style={compactParagraph}>

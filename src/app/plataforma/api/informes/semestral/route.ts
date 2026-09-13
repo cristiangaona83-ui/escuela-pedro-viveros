@@ -105,6 +105,7 @@ export async function POST(request: Request) {
       periodName: period.name,
       year,
       rows: report.rows,
+      linkedRows: report.linkedRows,
       generalAverage: report.generalAverage,
       attendanceRate,
       homeroomTeacherName: homeroomTeacher,

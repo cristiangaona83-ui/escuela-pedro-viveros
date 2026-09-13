@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
-import type { SubjectAverageRow } from "@/lib/pdf/OfficialCertificateShared";
+import type { SubjectAverageRow, LinkedSubjectRow } from "@/lib/pdf/OfficialCertificateShared";
 
 export interface StudentReportData {
   studentId: string;
@@ -11,6 +11,8 @@ export interface StudentReportData {
   courseLetter: string;
   courseId: string;
   rows: SubjectAverageRow[];
+  /** Asignaturas vinculadas a otra (ej. un Taller vinculado a Lenguaje, ver 0053_subjects_linked_subject.sql) -- no aparecen en `rows` ni cuentan aparte en el promedio general: sus notas ya quedaron incorporadas al promedio de la asignatura troncal a la que apuntan. Se listan aquí solo a modo informativo, para el apartado "Talleres complementarios" del informe. */
+  linkedRows: LinkedSubjectRow[];
   generalAverage: number | null;
 }
 
@@ -21,22 +23,64 @@ interface EvaluationRow {
   subjects: { name: string; linked_subject_id: string | null } | null;
 }
 
-/** Promedio por asignatura a partir de las evaluaciones de un curso/período y las notas de UN estudiante -- misma fórmula para el informe individual y el masivo, para que nunca muestren números distintos.
- * Una asignatura vinculada a otra (`linked_subject_id` no nulo, ej. un Taller vinculado a Lenguaje) igual aparece como su propia fila con su propio promedio, pero queda marcada `countsForAverage: false` para que generalAverageFromRows la excluya del promedio general -- sin ninguna lógica especial por nombre, solo por tener el vínculo seteado. */
-function aggregateSubjectRows(evaluations: EvaluationRow[], scoreByEvalId: Map<string, number | null>): SubjectAverageRow[] {
-  const bySubject = new Map<string, { name: string; linked: boolean; scores: { score: number | null; weight: number }[] }>();
+type ScoreEntry = { score: number | null; weight: number };
+type SubjectBucket = { name: string; linkedTo: string | null; scores: ScoreEntry[] };
+
+/**
+ * Arma las filas de asignaturas de un estudiante a partir de las
+ * evaluaciones de su curso/período -- misma fórmula para el informe
+ * individual y el masivo, para que nunca muestren números distintos.
+ *
+ * Una asignatura vinculada a otra (`linked_subject_id` no nulo, ej. un
+ * Taller vinculado a Lenguaje) NO aparece como fila propia en la tabla
+ * principal: sus evaluaciones se suman al mismo pool de la asignatura
+ * troncal de destino, como si fueran evaluaciones de esa asignatura --
+ * así el promedio de Lenguaje que se muestra ya las incorpora, y el
+ * promedio general (que se calcula sobre `rows`) nunca las cuenta dos
+ * veces ni por separado. El Taller igual se reporta en `linkedRows`, con
+ * su propio promedio aislado, solo para mostrarlo en el apartado
+ * "Talleres complementarios" -- ese número nunca se sale de ahí.
+ *
+ * Sin ninguna lógica especial por nombre de asignatura: el comportamiento
+ * depende únicamente de que `linked_subject_id` esté seteado.
+ */
+function buildSubjectReport(
+  evaluations: EvaluationRow[],
+  scoreByEvalId: Map<string, number | null>
+): { rows: SubjectAverageRow[]; linkedRows: LinkedSubjectRow[] } {
+  const bySubject = new Map<string, SubjectBucket>();
   for (const e of evaluations) {
-    const entry = bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", linked: e.subjects?.linked_subject_id != null, scores: [] };
+    const entry: SubjectBucket =
+      bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", linkedTo: e.subjects?.linked_subject_id ?? null, scores: [] };
     entry.scores.push({ score: scoreByEvalId.get(e.id) ?? null, weight: e.weight });
     bySubject.set(e.subject_id, entry);
   }
-  return Array.from(bySubject.values())
-    .map((s) => ({ subjectName: s.name, average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG), countsForAverage: !s.linked }))
+
+  // Asignaturas troncales (sin vínculo): parten con sus propias evaluaciones; más abajo absorben las de cualquier Taller que apunte a ellas.
+  const mainScores = new Map<string, { name: string; scores: ScoreEntry[] }>();
+  for (const [id, bucket] of bySubject) {
+    if (bucket.linkedTo === null) mainScores.set(id, { name: bucket.name, scores: [...bucket.scores] });
+  }
+
+  const linkedRows: LinkedSubjectRow[] = [];
+  for (const [, bucket] of bySubject) {
+    if (bucket.linkedTo === null) continue;
+    const target = mainScores.get(bucket.linkedTo);
+    if (target) target.scores.push(...bucket.scores);
+    const linkedToName = target?.name ?? bySubject.get(bucket.linkedTo)?.name ?? "otra asignatura";
+    linkedRows.push({ subjectName: bucket.name, average: computeWeightedAverage(bucket.scores, DEFAULT_GRADING_CONFIG), linkedToName });
+  }
+
+  const rows = Array.from(mainScores.values())
+    .map((s) => ({ subjectName: s.name, average: computeWeightedAverage(s.scores, DEFAULT_GRADING_CONFIG) }))
     .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+  linkedRows.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+
+  return { rows, linkedRows };
 }
 
 function generalAverageFromRows(rows: SubjectAverageRow[]): number | null {
-  const validAverages = rows.filter((r) => r.countsForAverage).map((r) => r.average).filter((a): a is number => a !== null);
+  const validAverages = rows.map((r) => r.average).filter((a): a is number => a !== null);
   return validAverages.length ? roundGrade(validAverages.reduce((a, b) => a + b, 0) / validAverages.length, DEFAULT_GRADING_CONFIG) : null;
 }
 
@@ -74,7 +118,7 @@ export async function getStudentSubjectAverages(
     : { data: [] };
 
   const scoreByEval = new Map((grades ?? []).map((g) => [g.evaluation_id, g.score]));
-  const rows = aggregateSubjectRows(evaluationRows, scoreByEval);
+  const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoreByEval);
   const generalAverage = generalAverageFromRows(rows);
 
   return {
@@ -86,6 +130,7 @@ export async function getStudentSubjectAverages(
     courseLetter: course.letter,
     courseId: course.id,
     rows,
+    linkedRows,
     generalAverage,
   };
 }
@@ -143,7 +188,7 @@ export async function getCourseSubjectAverages(
     .sort((a, b) => a.students!.last_names.localeCompare(b.students!.last_names) || a.students!.first_names.localeCompare(b.students!.first_names))
     .map((e) => {
       const s = e.students!;
-      const rows = aggregateSubjectRows(evaluationRows, scoresByStudent.get(s.id) ?? new Map());
+      const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoresByStudent.get(s.id) ?? new Map());
       return {
         studentId: s.id,
         studentName: `${s.first_names} ${s.last_names}`,
@@ -153,6 +198,7 @@ export async function getCourseSubjectAverages(
         courseLetter: course.letter,
         courseId: course.id,
         rows,
+        linkedRows,
         generalAverage: generalAverageFromRows(rows),
       };
     });

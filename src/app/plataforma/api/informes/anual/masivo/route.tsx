@@ -74,6 +74,7 @@ export async function POST(request: Request) {
             courseFormalName={courseFormalName}
             year={year.year}
             rows={report.rows}
+            linkedRows={report.linkedRows}
             generalAverage={report.generalAverage}
             attendanceRate={attendanceRates.get(report.studentId) ?? null}
             promotionSentence={promotionSentence}
