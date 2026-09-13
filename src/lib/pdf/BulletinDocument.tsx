@@ -45,6 +45,18 @@ const HEADING_MIN_PRESENCE_AHEAD = 28;
 
 type Mark = { type: string; attrs?: Record<string, unknown> };
 
+/**
+ * `ALLOWED_FONT_SIZES` (10/11/12/14/16/18/20/24) son valores en **px** -- el
+ * mismo número que el editor aplica como `font-size:${n}px` en la página web
+ * (ver renderInlineHTML en lib/bulletin-content.ts). react-pdf/pdfkit, en
+ * cambio, interpreta `fontSize` en **puntos**, no píxeles: usar el mismo
+ * número tal cual haría que un tamaño de 20px en la web saliera como 20pt en
+ * el PDF -- un ~33% más grande de lo que se ve en pantalla (1px CSS = 0,75pt,
+ * la conversión estándar a 96dpi). Por eso todo tamaño de fuente elegido en
+ * el editor se convierte con este factor antes de pasarlo a <Text>.
+ */
+const PX_TO_PT = 0.75;
+
 function inlineStyleFor(marks: Mark[] | undefined): Style {
   const has = (type: string) => marks?.some((m) => m.type === type) ?? false;
   const bold = has("bold");
@@ -62,7 +74,7 @@ function inlineStyleFor(marks: Mark[] | undefined): Style {
   const color = textStyleMark?.attrs?.color;
   if (isSafeColor(color)) style.color = color;
   const fontSizePx = safeFontSizePx(textStyleMark?.attrs?.fontSize);
-  if (fontSizePx) style.fontSize = fontSizePx;
+  if (fontSizePx) style.fontSize = fontSizePx * PX_TO_PT;
 
   const highlightMark = marks?.find((m) => m.type === "highlight");
   if (highlightMark) {
