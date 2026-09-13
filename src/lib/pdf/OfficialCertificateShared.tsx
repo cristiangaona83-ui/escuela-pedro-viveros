@@ -208,6 +208,26 @@ export function LinkedSubjectsNote({ rows }: { rows: LinkedSubjectRow[] }) {
   );
 }
 
+/**
+ * Cuadro de resumen (Promedio General, Porcentaje de Asistencia, etc.) --
+ * cada fila es un par etiqueta/valor, en el mismo estilo de tabla que
+ * GradesWordsTable y LinkedSubjectsNote, para que todos los datos del
+ * certificado se vean con el mismo lenguaje visual.
+ */
+export function SummaryStatsBox({ rows }: { rows: { label: string; value: string }[] }) {
+  const cellPad = { padding: 3, fontSize: 8 };
+  return (
+    <View style={[pdfStyles.table, { marginTop: 8 }]}>
+      {rows.map((r) => (
+        <View style={pdfStyles.tableRow} key={r.label}>
+          <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
+          <Text style={[pdfStyles.td, cellPad, { flex: 1.4 }]}>{r.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function CertificateSignatureFooter({
   homeroomTeacherName,
   issuedAt,

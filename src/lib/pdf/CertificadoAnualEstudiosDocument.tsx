@@ -1,6 +1,6 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
+import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, SummaryStatsBox, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow, LinkedSubjectRow } from "./OfficialCertificateShared";
@@ -69,18 +69,24 @@ export function CertificadoAnualEstudiosPage({
         </Text>
 
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación final" />
-        <LinkedSubjectsNote rows={linkedRows} />
 
-        <View style={{ marginTop: 8 }}>
-          <Text style={compactParagraph}>
-            <Text style={pdfStyles.bold}>Promedio General: </Text>
-            {generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ",")} — {gradeToWords(generalAverage)}
-          </Text>
-          <Text style={compactParagraph}>
-            <Text style={pdfStyles.bold}>Porcentaje de Asistencia: </Text>
-            {attendanceRate === null ? "Sin información" : `${attendanceRate.toFixed(0)} %`}
-          </Text>
-        </View>
+        <SummaryStatsBox
+          rows={[
+            {
+              label: "Promedio General",
+              value:
+                generalAverage === null
+                  ? "—"
+                  : `${generalAverage.toFixed(1).replace(".", ",")} — ${gradeToWords(generalAverage)}`,
+            },
+            {
+              label: "Porcentaje de Asistencia",
+              value: attendanceRate === null ? "Sin información" : `${attendanceRate.toFixed(0)} %`,
+            },
+          ]}
+        />
+
+        <LinkedSubjectsNote rows={linkedRows} />
 
         <View style={{ marginTop: 4 }}>
           <Text style={compactHeading}>Situación Final</Text>
