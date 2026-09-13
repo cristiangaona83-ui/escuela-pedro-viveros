@@ -42,24 +42,34 @@ const SIGNATURE_MARK_HEIGHT = 100;
 /** Ancho de la firma del Director cuando va sola vs. cuando va acompañada del timbre (se angosta un poco para que la fila quepa dentro de signatureBlock sin salirse). */
 const DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP = 120;
 const STAMP_SIZE = 60;
+const SIGNATURE_ROW_GAP = 6;
+
+/** Ancho de la línea bajo la firma en cada variante -- ancho fijo (no "100%") a propósito, ver comentario de más abajo. */
+const NO_STAMP_LINE_WIDTH = pdfStyles.directorSignatureImage.width as number;
+const WITH_STAMP_LINE_WIDTH = DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP + SIGNATURE_ROW_GAP + STAMP_SIZE;
 
 /**
  * Firma del Director + timbre institucional, uno al lado del otro (firma a
  * la izquierda, timbre a la derecha -- nunca debajo). Componente central:
  * se usa en todos los documentos que hoy muestran la firma del Director
- * (CertificateSignatureFooter más abajo, y CertificateAlumnoRegular.tsx),
- * así que agregar el timbre acá se propaga a todos ellos sin tocarlos uno
- * por uno.
+ * (CertificateSignatureFooter más abajo, CertificateAlumnoRegular.tsx y
+ * SeguroEscolarInstitutionalDocument.tsx), así que agregar el timbre acá
+ * se propaga a todos ellos sin tocarlos uno por uno.
  *
  * Reglas de "nunca romper el documento":
- *  - Sin firma: se muestra solo la línea en blanco de siempre (`lineStyle`
- *    permite igualar el override puntual que ya tenía cada documento).
- *  - Con firma (con o sin timbre): la imagen va SOBRE una línea igual a la
- *    del bloque del Profesor(a) Jefe -- mismo `pdfStyles.signatureLine`,
- *    solo que con un margen superior chico (no el margen grande pensado
- *    para firmar a mano) ya que la firma ya está sobre ella. Así el bloque
- *    del Director siempre queda con línea, con o sin firma digital
- *    cargada, igual que el resto de los pies de firma.
+ *  - Siempre hay línea (con firma, sin firma, con o sin timbre) -- mismo
+ *    `pdfStyles.signatureLine`, igual que el bloque del Profesor(a) Jefe.
+ *  - El ancho de la línea SIEMPRE se pasa como número fijo (nunca
+ *    `width: "100%"`): este componente se usa dentro de contenedores con
+ *    `alignItems: "center"` (no "stretch") en CertificateAlumnoRegular.tsx y
+ *    SeguroEscolarInstitutionalDocument.tsx, y ahí una vista sin ancho propio
+ *    se autoajusta a su contenido en vez de heredar el ancho del padre -- un
+ *    hijo con `width: "100%"` resuelve contra un ancho todavía indefinido y
+ *    termina invisible (ancho 0, bug real que tenían ambos documentos). Por
+ *    defecto usa `NO_STAMP_LINE_WIDTH` / `WITH_STAMP_LINE_WIDTH` (el ancho
+ *    de la firma/timbre); `lineStyle.width` permite pasar otro número --
+ *    CertificateSignatureFooter pasa `pdfStyles.signatureBlock.width` para
+ *    que combine con el ancho real del bloque del Profesor(a) Jefe al lado.
  *  - Con firma y timbre: fila horizontal, timbre con `objectFit: "contain"`
  *    (no se deforma, mantiene proporción) en una caja fija -- nunca tapa la
  *    firma ni el texto de abajo (nombre/cargo, fuera de esta función).
@@ -73,31 +83,30 @@ export function DirectorSignatureImage({
 }: {
   directorSignatureDataUri?: string | null;
   stampDataUri?: string | null;
-  /** Override puntual (hoy solo se usa para marginTop:0 en CertificateSignatureFooter, que ya reserva su propia altura). */
-  lineStyle?: { marginTop?: number };
+  /** Override puntual de la línea -- CertificateSignatureFooter pasa marginTop:0 y width:pdfStyles.signatureBlock.width. */
+  lineStyle?: { marginTop?: number; width?: number };
 }) {
   if (!directorSignatureDataUri) {
-    return <View style={lineStyle ? { ...pdfStyles.signatureLine, ...lineStyle } : pdfStyles.signatureLine} />;
+    return <View style={{ ...pdfStyles.signatureLine, width: NO_STAMP_LINE_WIDTH, ...lineStyle }} />;
   }
-  const underline = <View style={lineStyle ? { ...pdfStyles.signatureLine, ...lineStyle } : { ...pdfStyles.signatureLine, marginTop: 4 }} />;
   if (!stampDataUri) {
     return (
-      <View style={{ width: "100%", alignItems: "center" }}>
+      <View style={{ alignItems: "center" }}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
         <Image src={directorSignatureDataUri} style={pdfStyles.directorSignatureImage} />
-        {underline}
+        <View style={{ ...pdfStyles.signatureLine, marginTop: 4, width: NO_STAMP_LINE_WIDTH, ...lineStyle }} />
       </View>
     );
   }
   return (
-    <View style={{ width: "100%", alignItems: "center" }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", columnGap: 6 }}>
+    <View style={{ alignItems: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", columnGap: SIGNATURE_ROW_GAP }}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
         <Image src={directorSignatureDataUri} style={{ width: DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP, alignSelf: "center" }} />
         {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer, no es <img> HTML */}
         <Image src={stampDataUri} style={{ width: STAMP_SIZE, height: STAMP_SIZE, objectFit: "contain" }} />
       </View>
-      {underline}
+      <View style={{ ...pdfStyles.signatureLine, marginTop: 4, width: WITH_STAMP_LINE_WIDTH, ...lineStyle }} />
     </View>
   );
 }
@@ -288,7 +297,11 @@ export function CertificateSignatureFooter({
         </View>
         <View style={pdfStyles.signatureBlock}>
           <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
-            <DirectorSignatureImage directorSignatureDataUri={directorSignatureDataUri} stampDataUri={stampDataUri} lineStyle={{ marginTop: 0 }} />
+            <DirectorSignatureImage
+              directorSignatureDataUri={directorSignatureDataUri}
+              stampDataUri={stampDataUri}
+              lineStyle={{ marginTop: 0, width: pdfStyles.signatureBlock.width }}
+            />
           </View>
           <Text style={pdfStyles.signatureName}>{profile.director}</Text>
           <Text style={pdfStyles.signatureTitle}>{profile.directorTitle}</Text>
