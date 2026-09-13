@@ -150,10 +150,10 @@ export function CertificateInstitutionalHeader({ title, year, profile }: { title
  * sola tabla (un solo recuadro), como en el certificado oficial de
  * referencia: el promedio y la asistencia van al final de la MISMA tabla,
  * no en un cuadro aparte, separados de las asignaturas solo por un borde
- * superior más marcado. El encabezado "Calificación" va alineado a la
- * derecha (no centrado) para que quede justo encima de los valores, que
- * también se alinean a la derecha -- así toda la columna, asignaturas y
- * resumen incluido, queda bajo el mismo encabezado.
+ * superior más marcado. El encabezado "Calificación" y los valores debajo
+ * (notas, promedio, asistencia) van todos centrados -- misma alineación en
+ * encabezado y valores, para que toda la columna quede justo debajo del
+ * título, al medio.
  */
 export function GradesWordsTable({
   rows,
@@ -173,13 +173,13 @@ export function GradesWordsTable({
     <View style={[pdfStyles.table, { marginTop: 8 }]}>
       <View style={pdfStyles.tableRowHeader}>
         <Text style={[pdfStyles.th, cellPad]}>Asignatura o Actividad de Aprendizaje</Text>
-        <Text style={[pdfStyles.th, cellPad, { textAlign: "right", flex: scoreFlex }]}>{scoreColumnLabel}</Text>
+        <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: scoreFlex }]}>{scoreColumnLabel}</Text>
         {showWords && <Text style={[pdfStyles.th, cellPad, { flex: 0.75 }]}>En palabras</Text>}
       </View>
       {rows.map((r) => (
         <View style={pdfStyles.tableRow} key={r.subjectName}>
           <Text style={[pdfStyles.td, cellPad]}>{r.subjectName}</Text>
-          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>
+          <Text style={[pdfStyles.tdCenter, cellPad, { flex: scoreFlex }]}>
             {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
           </Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{gradeToWords(r.average)}</Text>}
@@ -188,7 +188,7 @@ export function GradesWordsTable({
       {summaryRows?.map((r, i) => (
         <View style={i === 0 ? [pdfStyles.tableRow, { borderTopWidth: 1, borderTopColor: "#1c2624" }] : pdfStyles.tableRow} key={r.label}>
           <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
-          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>{r.value}</Text>
+          <Text style={[pdfStyles.tdCenter, cellPad, { flex: scoreFlex }]}>{r.value}</Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.words ?? ""}</Text>}
         </View>
       ))}
@@ -218,7 +218,7 @@ export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow
       <View style={[pdfStyles.table, { marginTop: 2 }]}>
         <View style={pdfStyles.tableRowHeader}>
           <Text style={[pdfStyles.th, cellPad]}>Taller</Text>
-          <Text style={[pdfStyles.th, cellPad, { textAlign: "right", flex: scoreFlex }]}>Calificación</Text>
+          <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: scoreFlex }]}>Calificación</Text>
           {showWords && <Text style={[pdfStyles.th, cellPad, { flex: 0.75 }]}>Incorporada al promedio de</Text>}
         </View>
         {rows.map((r) => (
@@ -226,7 +226,7 @@ export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow
             <Text style={[pdfStyles.td, cellPad]}>
               {showWords ? r.subjectName : `${r.subjectName} (vinculado a ${r.linkedToName})`}
             </Text>
-            <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>
+            <Text style={[pdfStyles.tdCenter, cellPad, { flex: scoreFlex }]}>
               {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
             </Text>
             {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.linkedToName}</Text>}
