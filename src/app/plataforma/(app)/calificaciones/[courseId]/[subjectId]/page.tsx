@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Users, ClipboardList, CheckCircle2, Clock, Settings } from "lucide-react";
+import { Users, ClipboardList, CheckCircle2, Clock, Settings, UserSquare2, History } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LinkButton } from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import { formatGrade } from "@/lib/utils";
 import { SubjectGradeMatrixTable } from "@/features/grades/SubjectGradeMatrixTable";
+import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_ROLES = ["director", "utp", "superadmin"] as const;
 
@@ -49,6 +50,18 @@ export default async function CalificacionesAsignaturaPage({
     );
   }
 
+  // Docente responsable -- consulta liviana propia de esta vista (no la trae
+  // getSubjectGradeMatrix, que se enfoca en la matriz de notas).
+  const supabase = await createClient();
+  const { data: assignment } = await supabase
+    .from("teacher_assignments")
+    .select("profiles(full_name)")
+    .eq("course_id", courseId)
+    .eq("subject_id", subjectId)
+    .eq("active", true)
+    .maybeSingle();
+  const teacherName = (assignment as unknown as { profiles: { full_name: string } | null } | null)?.profiles?.full_name ?? null;
+
   const extraParams = `year=${year}${period ? `&period=${period}` : ""}`;
 
   return (
@@ -69,6 +82,9 @@ export default async function CalificacionesAsignaturaPage({
         </h1>
         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
           <span className="inline-flex items-center gap-1">
+            <UserSquare2 className="h-3.5 w-3.5" /> {teacherName ?? "Sin docente asignado"}
+          </span>
+          <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" /> {matrix.students.length} estudiante{matrix.students.length === 1 ? "" : "s"}
           </span>
           <span className="inline-flex items-center gap-1">
@@ -86,9 +102,14 @@ export default async function CalificacionesAsignaturaPage({
           {matrix.completionPercent !== null && <span>{matrix.completionPercent}% completado</span>}
         </p>
         </div>
-        <LinkButton href={`/plataforma/calificaciones/${courseId}/${subjectId}/evaluaciones?${extraParams}`} variant="secondary" size="sm">
-          <Settings className="h-4 w-4" /> Gestionar evaluaciones
-        </LinkButton>
+        <div className="flex flex-wrap gap-2">
+          <LinkButton href={`/plataforma/calificaciones/${courseId}/${subjectId}/evaluaciones?${extraParams}`} variant="secondary" size="sm">
+            <Settings className="h-4 w-4" /> Gestionar evaluaciones
+          </LinkButton>
+          <LinkButton href={`/plataforma/calificaciones/historial?course=${courseId}&subject=${subjectId}`} variant="secondary" size="sm">
+            <History className="h-4 w-4" /> Historial
+          </LinkButton>
+        </div>
       </div>
 
       <Card className="mt-6">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Users, BookOpen, UserSquare2, ClipboardList, FileBarChart, BarChart3, CheckCircle2, Clock } from "lucide-react";
+import { Users, BookOpen, UserSquare2, ClipboardList, FileBarChart, BarChart3, CheckCircle2, Clock, History } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -245,7 +245,16 @@ export default async function CursoDetailPage({
         )}
 
         {tab === "calificaciones" && canGrades && gradeDetail && (
-          <CourseSubjectList courseId={id} subjects={gradeDetail.subjects} extraParams={`year=${academicYearId}`} />
+          <div>
+            <div className="flex justify-end">
+              <LinkButton href={`/plataforma/calificaciones/historial?course=${id}`} variant="secondary" size="sm">
+                <History className="h-4 w-4" /> Historial de este curso
+              </LinkButton>
+            </div>
+            <div className="mt-4">
+              <CourseSubjectList courseId={id} subjects={gradeDetail.subjects} extraParams={`year=${academicYearId}`} />
+            </div>
+          </div>
         )}
 
         {tab === "informes" && canInformes && (
