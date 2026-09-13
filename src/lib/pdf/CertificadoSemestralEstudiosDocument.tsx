@@ -60,13 +60,12 @@ export function CertificadoSemestralEstudiosPage({
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación" />
 
         <SummaryStatsBox
+          showWords
           rows={[
             {
               label: "Promedio General del Semestre",
-              value:
-                generalAverage === null
-                  ? "—"
-                  : `${generalAverage.toFixed(1).replace(".", ",")} — ${gradeToWords(generalAverage)}`,
+              value: generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ","),
+              words: generalAverage === null ? "" : gradeToWords(generalAverage),
             },
             {
               label: "Porcentaje de Asistencia",
@@ -75,7 +74,7 @@ export function CertificadoSemestralEstudiosPage({
           ]}
         />
 
-        <LinkedSubjectsNote rows={linkedRows} />
+        <LinkedSubjectsNote rows={linkedRows} showWords />
 
         <View style={{ marginTop: 4 }}>
           <Text style={compactHeading}>Observaciones</Text>

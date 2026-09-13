@@ -66,13 +66,12 @@ export function CertificadoAnualEstudiosPage({
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación final" />
 
         <SummaryStatsBox
+          showWords
           rows={[
             {
               label: "Promedio General",
-              value:
-                generalAverage === null
-                  ? "—"
-                  : `${generalAverage.toFixed(1).replace(".", ",")} — ${gradeToWords(generalAverage)}`,
+              value: generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ","),
+              words: generalAverage === null ? "" : gradeToWords(generalAverage),
             },
             {
               label: "Porcentaje de Asistencia",
@@ -81,7 +80,7 @@ export function CertificadoAnualEstudiosPage({
           ]}
         />
 
-        <LinkedSubjectsNote rows={linkedRows} />
+        <LinkedSubjectsNote rows={linkedRows} showWords />
 
         <View style={{ marginTop: 4 }}>
           <Text style={compactHeading}>Situación Final</Text>

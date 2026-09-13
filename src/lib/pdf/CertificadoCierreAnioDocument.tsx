@@ -62,6 +62,7 @@ export function CertificadoCierreAnioPage({
         <GradesWordsTable rows={rows} showWords={false} scoreColumnLabel="Calificación final" />
 
         <SummaryStatsBox
+          showWords={false}
           rows={[
             {
               label: "Promedio General Final",
@@ -74,7 +75,7 @@ export function CertificadoCierreAnioPage({
           ]}
         />
 
-        <LinkedSubjectsNote rows={linkedRows} />
+        <LinkedSubjectsNote rows={linkedRows} showWords={false} />
 
         <View style={{ marginTop: 4 }}>
           <Text style={compactHeading}>Situación de Cierre</Text>

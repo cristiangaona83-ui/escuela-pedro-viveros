@@ -181,26 +181,34 @@ export function GradesWordsTable({
  * con su propio promedio, aclarando a qué asignatura fue incorporada esa nota.
  * No se muestra nada (ni el título) cuando no hay Talleres vinculados, para
  * no alterar el certificado de cursos que no los usan.
+ *
+ * `showWords` debe ser el mismo valor que recibió `GradesWordsTable` en el
+ * mismo certificado -- así la columna "Calificación" usa exactamente el
+ * mismo ancho (flex) en ambas tablas y el número queda alineado bajo la
+ * columna de notas de la tabla principal, en vez de quedar corrido.
  */
-export function LinkedSubjectsNote({ rows }: { rows: LinkedSubjectRow[] }) {
+export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow[]; showWords: boolean }) {
   if (rows.length === 0) return null;
   const cellPad = { padding: 3, fontSize: 8 };
+  const scoreFlex = showWords ? 0.55 : 0.4;
   return (
     <View style={{ marginTop: 6 }}>
       <Text style={compactHeading}>Talleres complementarios</Text>
       <View style={pdfStyles.table}>
         <View style={pdfStyles.tableRowHeader}>
           <Text style={[pdfStyles.th, cellPad]}>Taller</Text>
-          <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: 0.4 }]}>Calificación</Text>
-          <Text style={[pdfStyles.th, cellPad]}>Incorporada al promedio de</Text>
+          <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: scoreFlex }]}>Calificación</Text>
+          {showWords && <Text style={[pdfStyles.th, cellPad, { flex: 0.75 }]}>Incorporada al promedio de</Text>}
         </View>
         {rows.map((r) => (
           <View style={pdfStyles.tableRow} key={r.subjectName}>
-            <Text style={[pdfStyles.td, cellPad]}>{r.subjectName}</Text>
-            <Text style={[pdfStyles.tdCenter, cellPad, { flex: 0.4 }]}>
+            <Text style={[pdfStyles.td, cellPad]}>
+              {showWords ? r.subjectName : `${r.subjectName} (vinculado a ${r.linkedToName})`}
+            </Text>
+            <Text style={[pdfStyles.tdCenter, cellPad, { flex: scoreFlex }]}>
               {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
             </Text>
-            <Text style={[pdfStyles.td, cellPad]}>{r.linkedToName}</Text>
+            {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.linkedToName}</Text>}
           </View>
         ))}
       </View>
@@ -212,16 +220,29 @@ export function LinkedSubjectsNote({ rows }: { rows: LinkedSubjectRow[] }) {
  * Cuadro de resumen (Promedio General, Porcentaje de Asistencia, etc.) --
  * cada fila es un par etiqueta/valor, en el mismo estilo de tabla que
  * GradesWordsTable y LinkedSubjectsNote, para que todos los datos del
- * certificado se vean con el mismo lenguaje visual.
+ * certificado se vean con el mismo lenguaje visual. Sin `marginTop` propio
+ * (se pega directo a la tabla de asignaturas, que ya trae su propio margen
+ * superior). `showWords` -- ver comentario de LinkedSubjectsNote -- alinea
+ * la columna `value` bajo la columna "Calificación" de la tabla principal;
+ * cuando es true, `words` se muestra en una tercera columna alineada bajo
+ * "En palabras" (ej. el promedio general en palabras).
  */
-export function SummaryStatsBox({ rows }: { rows: { label: string; value: string }[] }) {
+export function SummaryStatsBox({
+  rows,
+  showWords,
+}: {
+  rows: { label: string; value: string; words?: string }[];
+  showWords: boolean;
+}) {
   const cellPad = { padding: 3, fontSize: 8 };
+  const valueFlex = showWords ? 0.55 : 0.4;
   return (
-    <View style={[pdfStyles.table, { marginTop: 8 }]}>
+    <View style={pdfStyles.table}>
       {rows.map((r) => (
         <View style={pdfStyles.tableRow} key={r.label}>
           <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
-          <Text style={[pdfStyles.td, cellPad, { flex: 1.4 }]}>{r.value}</Text>
+          <Text style={[pdfStyles.tdCenter, cellPad, { flex: valueFlex }]}>{r.value}</Text>
+          {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.words ?? ""}</Text>}
         </View>
       ))}
     </View>
