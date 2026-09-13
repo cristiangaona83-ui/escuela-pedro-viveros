@@ -40,8 +40,27 @@ const CYCLE_7_TO_8 = [
  * calificación en ese documento. No afecta Carga Docente, Evaluaciones ni
  * Calificaciones: solo se filtra al armar los certificados (ver
  * buildSubjectReport en services/report-data.ts).
+ *
+ * La comparación se hace sin tildes/mayúsculas/espacios extra
+ * (`normalizeSubjectName`) para no depender de que el nombre en el catálogo
+ * (editable en Asignaturas) esté escrito con exactamente los mismos acentos
+ * o mayúsculas que acá.
  */
-export const SUBJECTS_EXCLUDED_FROM_REPORTS = new Set(["Orientación"]);
+const EXCLUDED_FROM_REPORTS_NORMALIZED = new Set(["orientacion"]);
+
+/** Sin tildes, sin mayúsculas, sin espacios extra -- "Orientación ", "ORIENTACIÓN" y "orientacion" comparan igual. */
+function normalizeSubjectName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function isExcludedFromReports(name: string | null | undefined): boolean {
+  if (!name) return false;
+  return EXCLUDED_FROM_REPORTS_NORMALIZED.has(normalizeSubjectName(name));
+}
 
 /** "5° Básico" -> 5. Solo reconoce niveles de Enseñanza Básica (1° a 8°). */
 function basicaGrade(level: string): number | null {

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
-import { sortByOfficialSubjectOrder, SUBJECTS_EXCLUDED_FROM_REPORTS } from "@/config/curriculum-subjects";
+import { sortByOfficialSubjectOrder, isExcludedFromReports } from "@/config/curriculum-subjects";
 import type { SubjectAverageRow, LinkedSubjectRow } from "@/lib/pdf/OfficialCertificateShared";
 
 export interface StudentReportData {
@@ -44,10 +44,10 @@ type SubjectBucket = { name: string; linkedTo: string | null; scores: ScoreEntry
  *
  * El vínculo Taller→troncal no depende del nombre de la asignatura, solo de
  * que `linked_subject_id` esté seteado. La única excepción por nombre es
- * `SUBJECTS_EXCLUDED_FROM_REPORTS` (hoy solo Orientación): esas asignaturas
- * se evalúan y califican con normalidad en Evaluaciones/Calificaciones, pero
- * no figuran en el certificado oficial ni cuentan en el promedio general
- * (ver comentario de esa constante en curriculum-subjects.ts).
+ * `isExcludedFromReports` (hoy solo Orientación): esas asignaturas se
+ * evalúan y califican con normalidad en Evaluaciones/Calificaciones, pero no
+ * figuran en el certificado oficial ni cuentan en el promedio general (ver
+ * comentario de esa función en curriculum-subjects.ts).
  *
  * `rows` se ordena según el Plan de Estudio oficial del ciclo de
  * `courseLevel` (ver src/config/curriculum-subjects.ts), no alfabéticamente.
@@ -59,7 +59,7 @@ function buildSubjectReport(
 ): { rows: SubjectAverageRow[]; linkedRows: LinkedSubjectRow[] } {
   const bySubject = new Map<string, SubjectBucket>();
   for (const e of evaluations) {
-    if (SUBJECTS_EXCLUDED_FROM_REPORTS.has(e.subjects?.name ?? "")) continue;
+    if (isExcludedFromReports(e.subjects?.name)) continue;
     const entry: SubjectBucket =
       bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", linkedTo: e.subjects?.linked_subject_id ?? null, scores: [] };
     entry.scores.push({ score: scoreByEvalId.get(e.id) ?? null, weight: e.weight });
