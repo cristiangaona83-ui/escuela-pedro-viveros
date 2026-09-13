@@ -145,30 +145,51 @@ export function CertificateInstitutionalHeader({ title, year, profile }: { title
   );
 }
 
+/**
+ * Tabla de asignaturas + Promedio General/Porcentaje de Asistencia -- una
+ * sola tabla (un solo recuadro), como en el certificado oficial de
+ * referencia: el promedio y la asistencia van al final de la MISMA tabla,
+ * no en un cuadro aparte, separados de las asignaturas solo por un borde
+ * superior más marcado. El encabezado "Calificación" va alineado a la
+ * derecha (no centrado) para que quede justo encima de los valores, que
+ * también se alinean a la derecha -- así toda la columna, asignaturas y
+ * resumen incluido, queda bajo el mismo encabezado.
+ */
 export function GradesWordsTable({
   rows,
+  summaryRows,
   showWords,
   scoreColumnLabel = "Calificación final",
 }: {
   rows: SubjectAverageRow[];
+  /** Filas de resumen (Promedio General, Porcentaje de Asistencia) al final de la misma tabla. */
+  summaryRows?: { label: string; value: string; words?: string }[];
   showWords: boolean;
   scoreColumnLabel?: string;
 }) {
   const cellPad = { padding: 3, fontSize: 8 };
+  const scoreFlex = showWords ? 0.55 : 0.4;
   return (
     <View style={[pdfStyles.table, { marginTop: 8 }]}>
       <View style={pdfStyles.tableRowHeader}>
         <Text style={[pdfStyles.th, cellPad]}>Asignatura o Actividad de Aprendizaje</Text>
-        <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: showWords ? 0.55 : 0.4 }]}>{scoreColumnLabel}</Text>
+        <Text style={[pdfStyles.th, cellPad, { textAlign: "right", flex: scoreFlex }]}>{scoreColumnLabel}</Text>
         {showWords && <Text style={[pdfStyles.th, cellPad, { flex: 0.75 }]}>En palabras</Text>}
       </View>
       {rows.map((r) => (
         <View style={pdfStyles.tableRow} key={r.subjectName}>
           <Text style={[pdfStyles.td, cellPad]}>{r.subjectName}</Text>
-          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: showWords ? 0.55 : 0.4 }]}>
+          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>
             {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
           </Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{gradeToWords(r.average)}</Text>}
+        </View>
+      ))}
+      {summaryRows?.map((r, i) => (
+        <View style={i === 0 ? [pdfStyles.tableRow, { borderTopWidth: 1, borderTopColor: "#1c2624" }] : pdfStyles.tableRow} key={r.label}>
+          <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
+          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>{r.value}</Text>
+          {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.words ?? ""}</Text>}
         </View>
       ))}
     </View>
@@ -194,10 +215,10 @@ export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow
   return (
     <View style={{ marginTop: 6 }}>
       <Text style={compactHeading}>Talleres complementarios</Text>
-      <View style={pdfStyles.table}>
+      <View style={[pdfStyles.table, { marginTop: 2 }]}>
         <View style={pdfStyles.tableRowHeader}>
           <Text style={[pdfStyles.th, cellPad]}>Taller</Text>
-          <Text style={[pdfStyles.th, cellPad, { textAlign: "center", flex: scoreFlex }]}>Calificación</Text>
+          <Text style={[pdfStyles.th, cellPad, { textAlign: "right", flex: scoreFlex }]}>Calificación</Text>
           {showWords && <Text style={[pdfStyles.th, cellPad, { flex: 0.75 }]}>Incorporada al promedio de</Text>}
         </View>
         {rows.map((r) => (
@@ -212,39 +233,6 @@ export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow
           </View>
         ))}
       </View>
-    </View>
-  );
-}
-
-/**
- * Cuadro de resumen (Promedio General, Porcentaje de Asistencia, etc.) --
- * cada fila es un par etiqueta/valor, en el mismo estilo de tabla que
- * GradesWordsTable y LinkedSubjectsNote, para que todos los datos del
- * certificado se vean con el mismo lenguaje visual. Sin `marginTop` propio
- * (se pega directo a la tabla de asignaturas, que ya trae su propio margen
- * superior). `showWords` -- ver comentario de LinkedSubjectsNote -- alinea
- * la columna `value` bajo la columna "Calificación" de la tabla principal;
- * cuando es true, `words` se muestra en una tercera columna alineada bajo
- * "En palabras" (ej. el promedio general en palabras).
- */
-export function SummaryStatsBox({
-  rows,
-  showWords,
-}: {
-  rows: { label: string; value: string; words?: string }[];
-  showWords: boolean;
-}) {
-  const cellPad = { padding: 3, fontSize: 8 };
-  const valueFlex = showWords ? 0.55 : 0.4;
-  return (
-    <View style={pdfStyles.table}>
-      {rows.map((r) => (
-        <View style={pdfStyles.tableRow} key={r.label}>
-          <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
-          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: valueFlex }]}>{r.value}</Text>
-          {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.words ?? ""}</Text>}
-        </View>
-      ))}
     </View>
   );
 }

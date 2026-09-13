@@ -1,6 +1,6 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, SummaryStatsBox, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
+import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow, LinkedSubjectRow } from "./OfficialCertificateShared";
@@ -57,11 +57,11 @@ export function CertificadoSemestralEstudiosPage({
           normas de evaluación, calificación y promoción escolar establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
-        <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación" />
-
-        <SummaryStatsBox
+        <GradesWordsTable
+          rows={rows}
           showWords
-          rows={[
+          scoreColumnLabel="Calificación"
+          summaryRows={[
             {
               label: "Promedio General del Semestre",
               value: generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ","),
@@ -81,10 +81,8 @@ export function CertificadoSemestralEstudiosPage({
           <Text style={compactParagraph}>
             Las calificaciones consignadas corresponden al período académico señalado y han sido registradas conforme a las disposiciones
             establecidas en el {profile.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del
-            establecimiento.
-          </Text>
-          <Text style={compactParagraph}>
-            Se extiende el presente certificado a petición de la persona interesada, para los fines que estime pertinentes.
+            establecimiento. Se extiende el presente certificado a petición de la persona interesada, para los fines que estime
+            pertinentes.
           </Text>
         </View>
 

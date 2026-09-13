@@ -1,6 +1,6 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, SummaryStatsBox, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
+import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow, LinkedSubjectRow } from "./OfficialCertificateShared";
 import type { InstitutionalProfile } from "@/services/school-config";
@@ -59,11 +59,11 @@ export function CertificadoCierreAnioPage({
           {profile.officialRecognition.planDecree} y con las normas establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
-        <GradesWordsTable rows={rows} showWords={false} scoreColumnLabel="Calificación final" />
-
-        <SummaryStatsBox
+        <GradesWordsTable
+          rows={rows}
           showWords={false}
-          rows={[
+          scoreColumnLabel="Calificación final"
+          summaryRows={[
             {
               label: "Promedio General Final",
               value: generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ","),
@@ -81,15 +81,9 @@ export function CertificadoCierreAnioPage({
           <Text style={compactHeading}>Situación de Cierre</Text>
           <Text style={compactParagraph}>
             <Text style={pdfStyles.bold}>Situación Final: </Text>
-            {promoted ? "PROMOVIDA/O" : "NO PROMOVIDA/O"}
-          </Text>
-          <Text style={compactParagraph}>
-            <Text style={pdfStyles.bold}>Curso aprobado: </Text>
-            {courseFormalName}
-          </Text>
-          <Text style={compactParagraph}>
-            <Text style={pdfStyles.bold}>Curso al que es promovida/o: </Text>
-            {promoted ? nextCourseFormalName ?? "Concluye la Enseñanza Básica en el establecimiento" : "No corresponde"}
+            {promoted ? "PROMOVIDA/O" : "NO PROMOVIDA/O"}. <Text style={pdfStyles.bold}>Curso aprobado: </Text>
+            {courseFormalName}. <Text style={pdfStyles.bold}>Curso al que es promovida/o: </Text>
+            {promoted ? nextCourseFormalName ?? "Concluye la Enseñanza Básica en el establecimiento" : "No corresponde"}.
           </Text>
         </View>
 
@@ -97,10 +91,8 @@ export function CertificadoCierreAnioPage({
           <Text style={compactHeading}>Observaciones</Text>
           <Text style={compactParagraph}>
             El proceso académico correspondiente al año escolar {year} ha finalizado, conforme a las disposiciones establecidas en el{" "}
-            {profile.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del establecimiento.
-          </Text>
-          <Text style={compactParagraph}>
-            Se extiende el presente certificado para dejar constancia del cierre de su proceso académico correspondiente al año escolar
+            {profile.officialRecognition.evaluationDecree} y en el Reglamento de Evaluación y Promoción Escolar del establecimiento. Se
+            extiende el presente certificado para dejar constancia del cierre de su proceso académico correspondiente al año escolar
             señalado.
           </Text>
         </View>

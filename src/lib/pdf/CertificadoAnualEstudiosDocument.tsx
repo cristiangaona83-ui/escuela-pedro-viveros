@@ -1,6 +1,6 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./styles";
-import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, SummaryStatsBox, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
+import { CertificateInstitutionalHeader, GradesWordsTable, LinkedSubjectsNote, CertificateSignatureFooter, compactParagraph, compactHeading } from "./OfficialCertificateShared";
 import { gradeToWords } from "./academic-certificate-wording";
 import { formatRun } from "@/lib/utils";
 import type { SubjectAverageRow, LinkedSubjectRow } from "./OfficialCertificateShared";
@@ -63,11 +63,11 @@ export function CertificadoAnualEstudiosPage({
           evaluación, calificación y promoción escolar establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
-        <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación final" />
-
-        <SummaryStatsBox
+        <GradesWordsTable
+          rows={rows}
           showWords
-          rows={[
+          scoreColumnLabel="Calificación final"
+          summaryRows={[
             {
               label: "Promedio General",
               value: generalAverage === null ? "—" : generalAverage.toFixed(1).replace(".", ","),
