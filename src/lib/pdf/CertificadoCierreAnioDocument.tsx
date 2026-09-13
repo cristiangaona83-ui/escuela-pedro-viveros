@@ -52,15 +52,11 @@ export function CertificadoCierreAnioPage({
 
         <Text style={compactParagraph}>
           La {profile.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
-          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que:
-        </Text>
-        <Text style={compactParagraph}>
-          <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>, RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>,
-        </Text>
-        <Text style={compactParagraph}>
-          estudiante de <Text style={pdfStyles.bold}>{courseFormalName}</Text>, ha finalizado el año escolar {year}, registrando las
-          siguientes calificaciones finales, asistencia y situación de promoción, de acuerdo con el Plan y Programas de Estudio aprobado
-          por {profile.officialRecognition.planDecree} y con las normas establecidas en el {profile.officialRecognition.evaluationDecree}.
+          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que: <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>,
+          RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>, estudiante de{" "}
+          <Text style={pdfStyles.bold}>{courseFormalName}</Text>, ha finalizado el año escolar {year}, registrando las siguientes
+          calificaciones finales, asistencia y situación de promoción, de acuerdo con el Plan y Programas de Estudio aprobado por{" "}
+          {profile.officialRecognition.planDecree} y con las normas establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
         <GradesWordsTable rows={rows} showWords={false} scoreColumnLabel="Calificación final" />

@@ -50,15 +50,11 @@ export function CertificadoSemestralEstudiosPage({
 
         <Text style={compactParagraph}>
           La {profile.name}, reconocida oficialmente por el Ministerio de Educación de la República de Chile, según Resolución RECOFI{" "}
-          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que:
-        </Text>
-        <Text style={compactParagraph}>
-          <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>, RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>,
-        </Text>
-        <Text style={compactParagraph}>
-          estudiante de <Text style={pdfStyles.bold}>{courseFormalName}</Text>, registra las siguientes calificaciones correspondientes al{" "}
-          {periodName} del año escolar {year}, de acuerdo con el Plan y Programas de Estudio aprobado por {profile.officialRecognition.planDecree}{" "}
-          y con las normas de evaluación, calificación y promoción escolar establecidas en el {profile.officialRecognition.evaluationDecree}.
+          {profile.officialRecognition.recofi}, RBD {profile.rbd}, certifica que: <Text style={pdfStyles.bold}>{studentName.toUpperCase()}</Text>,
+          RUN <Text style={pdfStyles.bold}>{formatRun(studentRun)}</Text>, estudiante de{" "}
+          <Text style={pdfStyles.bold}>{courseFormalName}</Text>, registra las siguientes calificaciones correspondientes al {periodName} del
+          año escolar {year}, de acuerdo con el Plan y Programas de Estudio aprobado por {profile.officialRecognition.planDecree} y con las
+          normas de evaluación, calificación y promoción escolar establecidas en el {profile.officialRecognition.evaluationDecree}.
         </Text>
 
         <GradesWordsTable rows={rows} showWords scoreColumnLabel="Calificación" />
