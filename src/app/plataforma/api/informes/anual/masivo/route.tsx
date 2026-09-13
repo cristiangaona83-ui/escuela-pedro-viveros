@@ -61,9 +61,9 @@ export async function POST(request: Request) {
         const promotionSentence = promoted
           ? (() => {
               const next = nextFormalCourseName(report.courseLevel);
-              return `En consecuencia, corresponde su promoción a ${next ?? "el nivel siguiente"}${next ? "" : ", concluyendo la Enseñanza Básica en el establecimiento"}.`;
+              return `En consecuencia, el/la estudiante es promovido/a a ${next ?? "el nivel siguiente"}${next ? "" : ", concluyendo la Enseñanza Básica en el establecimiento"}.`;
             })()
-          : `En consecuencia, no corresponde su promoción, permaneciendo en ${courseFormalName}.`;
+          : `En consecuencia, el/la estudiante no es promovido/a, permaneciendo en ${courseFormalName}.`;
 
         return (
           <CertificadoAnualEstudiosPage

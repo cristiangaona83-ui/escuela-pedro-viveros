@@ -37,11 +37,11 @@ export interface LinkedSubjectRow {
  */
 
 /** Alto de la zona reservada para la firma del Director sobre "Director" -- ver comentario en CertificateSignatureFooter. */
-const SIGNATURE_MARK_HEIGHT = 68;
+const SIGNATURE_MARK_HEIGHT = 92;
 
 /** Ancho de la firma del Director cuando va sola vs. cuando va acompañada del timbre (se angosta un poco para que la fila quepa dentro de signatureBlock sin salirse). */
-const DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP = 90;
-const STAMP_SIZE = 46;
+const DIRECTOR_SIGNATURE_WIDTH_WITH_STAMP = 120;
+const STAMP_SIZE = 60;
 
 /**
  * Firma del Director + timbre institucional, uno al lado del otro (firma a
@@ -165,7 +165,7 @@ export function GradesWordsTable({
       {rows.map((r) => (
         <View style={pdfStyles.tableRow} key={r.subjectName}>
           <Text style={[pdfStyles.td, cellPad]}>{r.subjectName}</Text>
-          <Text style={[pdfStyles.tdCenter, cellPad, { flex: showWords ? 0.55 : 0.4 }]}>
+          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: showWords ? 0.55 : 0.4 }]}>
             {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
           </Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{gradeToWords(r.average)}</Text>}
@@ -205,7 +205,7 @@ export function LinkedSubjectsNote({ rows, showWords }: { rows: LinkedSubjectRow
             <Text style={[pdfStyles.td, cellPad]}>
               {showWords ? r.subjectName : `${r.subjectName} (vinculado a ${r.linkedToName})`}
             </Text>
-            <Text style={[pdfStyles.tdCenter, cellPad, { flex: scoreFlex }]}>
+            <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: scoreFlex }]}>
               {r.average === null ? "—" : r.average.toFixed(1).replace(".", ",")}
             </Text>
             {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.linkedToName}</Text>}
@@ -241,7 +241,7 @@ export function SummaryStatsBox({
       {rows.map((r) => (
         <View style={pdfStyles.tableRow} key={r.label}>
           <Text style={[pdfStyles.td, cellPad, pdfStyles.bold]}>{r.label}</Text>
-          <Text style={[pdfStyles.tdCenter, cellPad, { flex: valueFlex }]}>{r.value}</Text>
+          <Text style={[pdfStyles.td, cellPad, { textAlign: "right", flex: valueFlex }]}>{r.value}</Text>
           {showWords && <Text style={[pdfStyles.td, cellPad, { flex: 0.75 }]}>{r.words ?? ""}</Text>}
         </View>
       ))}
@@ -273,8 +273,9 @@ export function CertificateSignatureFooter({
       {/* alignItems "flex-start" (no el "flex-end" de pdfStyles.footerRow) + una zona reservada de la
           misma altura en ambos bloques antes del nombre: así "Profesor(a) Jefe" y "Director" quedan a
           la misma altura sin importar que el bloque del Director tenga una línea extra (nombre del
-          establecimiento) debajo. SIGNATURE_MARK_HEIGHT ~= alto de la firma a 130pt de ancho con la
-          proporción real del archivo (1672x941 -> ~73pt), con un pelo de margen. */}
+          establecimiento) debajo. SIGNATURE_MARK_HEIGHT ~= alto de la firma sin timbre (la más alta de
+          las dos variantes) a pdfStyles.directorSignatureImage.width con la proporción real del
+          archivo (1672x941), con un pelo de margen. */}
       <View style={[pdfStyles.footerRow, { marginTop: 8, alignItems: "flex-start" }]}>
         <View style={pdfStyles.signatureBlock}>
           <View style={{ height: SIGNATURE_MARK_HEIGHT, width: "100%", justifyContent: "flex-end", alignItems: "center" }}>
