@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
+import { Selection } from "@tiptap/pm/state";
+import type { EditorView } from "@tiptap/pm/view";
 import {
   Bold,
   Italic,
@@ -29,10 +31,15 @@ import {
   Trash2,
   Combine,
   Ungroup,
+  ImagePlus,
+  Info,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BULLETIN_EXTENSIONS, ALLOWED_FONT_SIZES } from "@/lib/bulletin-content";
+import { BULLETIN_EXTENSIONS, ALLOWED_FONT_SIZES, ALLOWED_IMAGE_WIDTHS, BULLETIN_IMAGES_FOLDER, safeImageWidth } from "@/lib/bulletin-content";
+import { uploadPublicFile, FileValidationError } from "@/lib/supabase/storage";
+import { downscaleImage } from "@/lib/image/downscale";
+import { useToast } from "@/components/ui/Toast";
 import { AlignmentControl } from "@/components/ui/AlignmentControl";
 import { normalizeAlign, type Align } from "@/lib/content-align";
 
@@ -149,8 +156,29 @@ function ColorPicker({
   );
 }
 
+function imageFilesFrom(list: FileList | null | undefined): File[] {
+  return Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
+}
+
 export function BulletinEditor({ content, onChange }: { content: JSONContent; onChange: (json: JSONContent) => void }) {
   const [tableSize, setTableSize] = useState({ rows: 3, cols: 3 });
+  const showToast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /** Sube cada imagen (reducida si es muy grande) y la inserta en la posición dada, o donde está el cursor. */
+  async function insertImages(view: EditorView, files: File[], pos?: number) {
+    for (const file of files) {
+      try {
+        const src = await uploadPublicFile(BULLETIN_IMAGES_FOLDER, await downscaleImage(file), "bulletin_image");
+        const node = view.state.schema.nodes.image.create({ src, alt: "", width: 100 });
+        let tr = view.state.tr;
+        if (pos !== undefined && pos <= tr.doc.content.size) tr = tr.setSelection(Selection.near(tr.doc.resolve(pos)));
+        view.dispatch(tr.replaceSelectionWith(node).scrollIntoView());
+      } catch (e) {
+        showToast("error", e instanceof FileValidationError ? e.message : "No se pudo subir la imagen.");
+      }
+    }
+  }
 
   const editor = useEditor({
     extensions: BULLETIN_EXTENSIONS,
@@ -162,10 +190,38 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
         class:
           "bulletin-content min-h-[360px] rounded-b-lg border border-t-0 border-slate-200 bg-white px-6 py-5 text-sm text-slate-800 focus:outline-none sm:px-10 sm:py-8 max-w-[720px] mx-auto shadow-sm",
       },
+      handlePaste: (view, event) => {
+        const files = imageFilesFrom(event.clipboardData?.files);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        void insertImages(view, files);
+        return true;
+      },
+      handleDrop: (view, event) => {
+        const files = imageFilesFrom(event.dataTransfer?.files);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
+        void insertImages(view, files, pos);
+        return true;
+      },
     },
   });
 
   if (!editor) return null;
+
+  function handleImageFilePicked(e: ChangeEvent<HTMLInputElement>) {
+    const files = imageFilesFrom(e.target.files);
+    e.target.value = "";
+    if (files.length > 0) void insertImages(editor!.view, files);
+  }
+
+  function setImageAlt() {
+    const previous = (editor!.getAttributes("image").alt as string | undefined) ?? "";
+    const alt = window.prompt("Descripción de la imagen (para lectores de pantalla)", previous);
+    if (alt === null) return;
+    editor!.chain().focus().updateAttributes("image", { alt: alt.trim() }).run();
+  }
 
   function setLink() {
     const previousUrl = editor!.getAttributes("link").href as string | undefined;
@@ -183,6 +239,7 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
   }
 
   const inTable = editor.isActive("table");
+  const inImage = editor.isActive("image");
   const currentAlign: Align = normalizeAlign(
     (["center", "right", "justify"] as const).find((a) => editor.isActive({ textAlign: a })),
     "left"
@@ -329,6 +386,8 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
           onClick={() => editor.chain().focus().unsetLink().run()}
         />
         <ToolbarButton label="Línea horizontal" icon={Minus} onClick={() => editor.chain().focus().setHorizontalRule().run()} />
+        <ToolbarButton label="Insertar imagen (también puedes pegarla o arrastrarla)" icon={ImagePlus} onClick={() => fileInputRef.current?.click()} />
+        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" multiple hidden onChange={handleImageFilePicked} />
         <Divider />
 
         <div className="relative inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-1">
@@ -400,7 +459,27 @@ export function BulletinEditor({ content, onChange }: { content: JSONContent; on
         </div>
       )}
 
-      <EditorContent editor={editor} className={cn("rounded-b-lg border border-t-0 border-slate-200 bg-slate-100 p-4 sm:p-6", inTable && "rounded-t-none border-t-0")} />
+      {inImage && (
+        <div className="flex flex-wrap items-center gap-1 border-x border-slate-200 bg-brand-50/60 px-2 py-1.5">
+          <span className="mr-1 text-xs font-medium text-brand-700">Imagen:</span>
+          <select
+            aria-label="Tamaño de la imagen"
+            value={String(safeImageWidth(editor.getAttributes("image").width))}
+            onChange={(e) => editor.chain().focus().updateAttributes("image", { width: Number(e.target.value) }).run()}
+            className="h-8 rounded-md border border-slate-200 bg-white px-1.5 text-xs text-slate-700"
+          >
+            {ALLOWED_IMAGE_WIDTHS.map((w) => (
+              <option key={w} value={w}>
+                Ancho {w}%
+              </option>
+            ))}
+          </select>
+          <ToolbarButton label="Descripción de la imagen" icon={Info} onClick={setImageAlt} />
+          <ToolbarButton label="Eliminar imagen" icon={Trash2} onClick={() => editor.chain().focus().deleteSelection().run()} />
+        </div>
+      )}
+
+      <EditorContent editor={editor} className={cn("rounded-b-lg border border-t-0 border-slate-200 bg-slate-100 p-4 sm:p-6", (inTable || inImage) && "rounded-t-none border-t-0")} />
     </div>
   );
 }

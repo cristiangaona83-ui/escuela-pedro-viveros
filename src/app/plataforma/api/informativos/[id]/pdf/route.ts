@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { getBulletinById } from "@/services/weekly-bulletins-admin";
 import { BulletinDocument, type BulletinPageSize } from "@/lib/pdf/BulletinDocument";
+import { inlineBulletinImages } from "@/lib/pdf/bulletin-images";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import type { JSONContent } from "@tiptap/core";
@@ -37,7 +38,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       title: bulletin.title,
       weekLabel: bulletin.week_label,
       publishDate: bulletin.publish_date,
-      content: bulletin.content as JSONContent,
+      content: await inlineBulletinImages(bulletin.content as JSONContent),
       pageSize,
     })
   );

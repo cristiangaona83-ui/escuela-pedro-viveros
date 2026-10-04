@@ -1,10 +1,10 @@
-import { Document, Page, View, Text, Link as PdfLink, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image as PdfImage, Link as PdfLink, StyleSheet } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 import type { JSONContent } from "@tiptap/core";
 import { pdfStyles } from "./styles";
 import { DocumentHeader } from "./DocumentHeader";
 import { SITE } from "@/config/site";
-import { isSafeColor, isSafeUrl, safeAlignment, safeFontSizePx, formatBulletinDate, type BulletinAlignment } from "@/lib/bulletin-content";
+import { isSafeColor, isSafeUrl, safeAlignment, safeFontSizePx, safeImageWidth, formatBulletinDate, type BulletinAlignment } from "@/lib/bulletin-content";
 
 const bulletinStyles = StyleSheet.create({
   weekLine: { fontSize: 10.5, textAlign: "center", marginTop: -14, marginBottom: 20, color: "#5c6b66" },
@@ -16,6 +16,7 @@ const bulletinStyles = StyleSheet.create({
   listBullet: { width: 16, fontSize: 10.5, color: "#274a3a" },
   listContent: { flex: 1 },
   hr: { borderTopWidth: 1, borderTopColor: "#b8d1c4", marginVertical: 12 },
+  imageWrap: { alignItems: "center", marginVertical: 8 },
   table: { marginBottom: 10, borderWidth: 1, borderColor: "#b8d1c4" },
   tableRow: { flexDirection: "row" },
   tableCell: { flex: 1, borderColor: "#b8d1c4", borderRightWidth: 1, borderBottomWidth: 1, padding: 5 },
@@ -241,6 +242,18 @@ function renderBlocks(nodes: JSONContent[] | undefined, keyPrefix = "b", depth =
         return renderTable(node, key);
       case "horizontalRule":
         return <View key={key} style={bulletinStyles.hr} />;
+      case "image": {
+        // Solo data URI PNG/JPEG: las rutas que generan el PDF ya descargaron y
+        // embebieron cada imagen (ver inlineBulletinImages) -- react-pdf no
+        // soporta WEBP y nunca debe depender de descargar nada al renderizar.
+        const src = node.attrs?.src;
+        if (typeof src !== "string" || !/^data:image\/(png|jpeg);base64,/.test(src)) return null;
+        return (
+          <View key={key} style={bulletinStyles.imageWrap} wrap={false}>
+            <PdfImage src={src} style={{ width: `${safeImageWidth(node.attrs?.width)}%`, maxHeight: 460, objectFit: "contain" }} />
+          </View>
+        );
+      }
       default:
         return null;
     }

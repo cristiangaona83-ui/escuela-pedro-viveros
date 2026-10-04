@@ -1,5 +1,5 @@
 import type { Extensions, JSONContent } from "@tiptap/core";
-import { Extension } from "@tiptap/core";
+import { Extension, Node, mergeAttributes } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -14,6 +14,13 @@ import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table
 /** Tamaños de fuente permitidos en el editor — lista cerrada a propósito
  * (no un selector libre) para mantener consistencia institucional. */
 export const ALLOWED_FONT_SIZES = [10, 11, 12, 14, 16, 18, 20, 24] as const;
+
+/** Anchos de imagen permitidos (% del ancho del contenido) -- lista cerrada, igual criterio que los tamaños de fuente. */
+export const ALLOWED_IMAGE_WIDTHS = [25, 50, 75, 100] as const;
+
+/** Carpeta del bucket público donde se guardan las imágenes de los informativos (ya cubierta por las políticas de Storage de 0023). */
+export const BULLETIN_IMAGES_FOLDER = "informativos/imagenes";
+const BULLETIN_IMAGES_PUBLIC_PATH = `/storage/v1/object/public/archivos-publicos/${BULLETIN_IMAGES_FOLDER}/`;
 
 export const ALLOWED_ALIGNMENTS = ["left", "center", "right", "justify"] as const;
 export type BulletinAlignment = (typeof ALLOWED_ALIGNMENTS)[number];
@@ -107,6 +114,51 @@ const BulletinTableHeader = TableHeader.extend({
   },
 });
 
+/** Imagen en bloque (centrada, ancho en % del contenido) -- nodo propio en vez
+ * de `@tiptap/extension-image` para no agregar una dependencia por algo tan
+ * acotado. El `src` siempre es una URL pública de la carpeta de imágenes de
+ * informativos (ver BULLETIN_IMAGES_FOLDER); cualquier otra se descarta al
+ * renderizar (ver isBulletinImageUrl). */
+const BulletinImage = Node.create({
+  name: "image",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: "" },
+      width: {
+        default: 100,
+        parseHTML: (element: HTMLElement) => parseInt(element.style.width, 10) || 100,
+      },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "img[src]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { width, ...rest } = HTMLAttributes as { width?: number } & Record<string, unknown>;
+    return ["img", mergeAttributes(rest, { style: `width:${safeImageWidth(width)}%` })];
+  },
+  addCommands() {
+    return {
+      setImage:
+        (attrs: { src: string; alt?: string }) =>
+        ({ commands }) =>
+          commands.insertContent({ type: this.name, attrs }),
+    };
+  },
+});
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    image: {
+      setImage: (attrs: { src: string; alt?: string }) => ReturnType;
+    };
+  }
+}
+
 /**
  * Extensiones del editor de Informativos Semanales — un set amplio, similar
  * a las funciones más usadas de Word, pero cerrado a lo que realmente se
@@ -139,6 +191,7 @@ export const BULLETIN_EXTENSIONS: Extensions = [
   TableRow,
   BulletinTableHeader,
   BulletinTableCell,
+  BulletinImage,
 ];
 
 export const EMPTY_BULLETIN_CONTENT: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
@@ -185,6 +238,21 @@ export function safeFontSizePx(value: unknown): number | null {
   if (typeof value !== "string") return null;
   const parsed = parseInt(value, 10);
   return (ALLOWED_FONT_SIZES as readonly number[]).includes(parsed) ? parsed : null;
+}
+
+export function safeImageWidth(value: unknown): number {
+  return typeof value === "number" && (ALLOWED_IMAGE_WIDTHS as readonly number[]).includes(value) ? value : 100;
+}
+
+/** Solo imágenes del propio bucket público de informativos (https) -- nunca una URL arbitraria ni `data:`. */
+export function isBulletinImageUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.pathname.startsWith(BULLETIN_IMAGES_PUBLIC_PATH);
+  } catch {
+    return false;
+  }
 }
 
 /** Solo http(s), mailto o rutas relativas del propio sitio — nunca `javascript:`, `data:` u otros esquemas. */
@@ -326,6 +394,12 @@ function renderBlocksHTML(nodes: JSONContent[] | undefined): string {
           return renderTableHTML(node);
         case "horizontalRule":
           return "<hr>";
+        case "image": {
+          const src = node.attrs?.src;
+          if (!isBulletinImageUrl(src)) return "";
+          const alt = typeof node.attrs?.alt === "string" ? node.attrs.alt : "";
+          return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" style="width:${safeImageWidth(node.attrs?.width)}%" loading="lazy">`;
+        }
         default:
           return "";
       }
