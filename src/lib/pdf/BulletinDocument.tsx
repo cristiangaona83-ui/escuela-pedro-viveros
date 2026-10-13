@@ -5,6 +5,8 @@ import { pdfStyles } from "./styles";
 import { DocumentHeader } from "./DocumentHeader";
 import { SITE } from "@/config/site";
 import { isSafeColor, isSafeUrl, safeAlignment, safeFontSizePx, safeImageWidth, formatBulletinDate, type BulletinAlignment } from "@/lib/bulletin-content";
+import { looksLikeDirectorName } from "@/lib/director-name";
+import type { DirectorSignature } from "@/lib/pdf/director-signature";
 
 const bulletinStyles = StyleSheet.create({
   weekLine: { fontSize: 10.5, textAlign: "center", marginTop: -14, marginBottom: 20, color: "#5c6b66" },
@@ -260,6 +262,45 @@ function renderBlocks(nodes: JSONContent[] | undefined, keyPrefix = "b", depth =
   });
 }
 
+const SIGNATURE_WIDTH_ALONE = 150;
+const SIGNATURE_WIDTH_WITH_STAMP = 120;
+const STAMP_SIZE = 60;
+
+/** react-pdf solo soporta PNG y JPEG -- una firma/timbre WEBP se omite en vez de romper el PDF. */
+function isPdfImageDataUri(value: string | null | undefined): value is string {
+  return typeof value === "string" && /^data:image\/(png|jpeg);base64,/.test(value);
+}
+
+const FLEX_ALIGN: Record<BulletinAlignment, "flex-start" | "center" | "flex-end"> = {
+  left: "flex-start",
+  justify: "flex-start",
+  center: "center",
+  right: "flex-end",
+};
+
+function SignatureImages({ signature, align }: { signature: DirectorSignature; align: BulletinAlignment }) {
+  const stamp = isPdfImageDataUri(signature.stampDataUri) ? signature.stampDataUri : null;
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", columnGap: 6, alignSelf: FLEX_ALIGN[align], marginTop: 10, marginBottom: 2 }} wrap={false}>
+      <PdfImage src={signature.signatureDataUri} style={{ width: stamp ? SIGNATURE_WIDTH_WITH_STAMP : SIGNATURE_WIDTH_ALONE }} />
+      {stamp && <PdfImage src={stamp} style={{ width: STAMP_SIZE, height: STAMP_SIZE, objectFit: "contain" }} />}
+    </View>
+  );
+}
+
+function paragraphPlainText(node: JSONContent): string {
+  return (node.content ?? []).map((n) => (n.type === "hardBreak" ? " " : n.text ?? "")).join("");
+}
+
+/** Último bloque de texto corto que es el nombre del Director (la firma impresa): la firma y el timbre van justo arriba. -1 si no aparece. */
+function findSignatureAnchorIndex(nodes: JSONContent[], directorName: string): number {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    if ((n.type === "paragraph" || n.type === "heading") && looksLikeDirectorName(paragraphPlainText(n), directorName)) return i;
+  }
+  return -1;
+}
+
 export function BulletinDocument({
   number,
   title,
@@ -267,6 +308,7 @@ export function BulletinDocument({
   publishDate,
   content,
   pageSize = "carta",
+  signature,
 }: {
   number: number;
   title: string;
@@ -274,7 +316,13 @@ export function BulletinDocument({
   publishDate: string;
   content: JSONContent;
   pageSize?: BulletinPageSize;
+  signature?: DirectorSignature | null;
 }) {
+  const blocks = content?.content ?? [];
+  const activeSignature = signature && isPdfImageDataUri(signature.signatureDataUri) ? signature : null;
+  const anchorIndex = activeSignature ? findSignatureAnchorIndex(blocks, activeSignature.directorName) : -1;
+  const anchorAlign = anchorIndex >= 0 ? safeAlignment(blocks[anchorIndex].attrs?.textAlign) : "center";
+
   return (
     <Document title={`Informativo Semanal N.º ${number} - ${title}`}>
       <Page size={PAGE_SIZE[pageSize]} style={pdfStyles.page} wrap>
@@ -282,7 +330,26 @@ export function BulletinDocument({
         <Text style={pdfStyles.title}>INFORMATIVO SEMANAL N.º {number}</Text>
         <Text style={bulletinStyles.weekLine}>{weekLabel}</Text>
 
-        <View>{renderBlocks(content?.content)}</View>
+        <View>
+          {activeSignature && anchorIndex >= 0 ? (
+            <>
+              {renderBlocks(blocks.slice(0, anchorIndex))}
+              <SignatureImages signature={activeSignature} align={anchorAlign} />
+              {renderBlocks(blocks.slice(anchorIndex), "after")}
+            </>
+          ) : (
+            <>
+              {renderBlocks(blocks)}
+              {activeSignature && (
+                <View style={{ alignItems: "center", marginTop: 20 }} wrap={false}>
+                  <SignatureImages signature={activeSignature} align="center" />
+                  <Text style={{ fontSize: 10.5, fontFamily: "Helvetica-Bold", color: "#1c2624" }}>{activeSignature.directorName}</Text>
+                  <Text style={{ fontSize: 9.5, color: "#5c6b66" }}>{activeSignature.directorTitle}</Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
 
         <View style={bulletinStyles.footer}>
           <Text style={bulletinStyles.footerSlogan}>{SITE.slogan}</Text>

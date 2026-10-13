@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // pdfjs-dist (lectura de texto de PDFs, ver src/lib/pdf/stamp-circular.ts)
+  // se carga desde node_modules tal cual: empaquetarlo rompe su worker.
+  serverExternalPackages: ["pdfjs-dist"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.supabase.co" },

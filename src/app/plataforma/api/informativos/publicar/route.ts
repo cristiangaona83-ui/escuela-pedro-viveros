@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
 import { BulletinDocument } from "@/lib/pdf/BulletinDocument";
 import { inlineBulletinImages } from "@/lib/pdf/bulletin-images";
+import { getDirectorSignature } from "@/lib/pdf/director-signature";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import type { JSONContent } from "@tiptap/core";
@@ -28,13 +29,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Informativo no encontrado" }, { status: 404 });
   }
 
+  const [content, signature] = await Promise.all([inlineBulletinImages(bulletin.content as JSONContent), getDirectorSignature()]);
   const buffer = await renderToBuffer(
     BulletinDocument({
       number: bulletin.number,
       title: bulletin.title,
       weekLabel: bulletin.week_label,
       publishDate: bulletin.publish_date,
-      content: await inlineBulletinImages(bulletin.content as JSONContent),
+      content,
+      signature,
     })
   );
 

@@ -7,9 +7,30 @@ import { Button } from "@/components/ui/Button";
 import { FormField, Input, Textarea } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import { uploadPublicFile, deletePublicFile, pathFromPublicUrl, FileValidationError } from "@/lib/supabase/storage";
+import { useToast } from "@/components/ui/Toast";
 import type { CircularInformativaRow } from "@/types/database";
 
 const FOLDER = "circulares-informativas";
+
+/** Agrega la firma y el timbre del Director al PDF recién subido (ver /plataforma/api/circulares-informativas/firmar). Devuelve la URL del PDF firmado. */
+async function addDirectorSignature(
+  fileUrl: string,
+  notify: (tone: "success" | "error" | "info", message: string) => void
+): Promise<string> {
+  const res = await fetch("/plataforma/api/circulares-informativas/firmar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileUrl }),
+  });
+  const json = (await res.json().catch(() => ({}))) as { fileUrl?: string; mode?: string; error?: string };
+  if (!res.ok || !json.fileUrl) throw new FileValidationError(json.error ?? "No se pudo agregar la firma y el timbre.");
+  if (json.mode === "appended-page") {
+    notify("info", "No se encontró el nombre del Director en el PDF: se agregó una hoja final con su firma y timbre.");
+  } else if (json.mode === "none") {
+    notify("error", "No hay firma institucional configurada: la circular se publicó sin firma ni timbre.");
+  }
+  return json.fileUrl;
+}
 
 /** Alta/edición de una Circular Informativa -- sección pública propia del
  * sitio web (independiente de Documentos y de Informativos Semanales),
@@ -17,6 +38,7 @@ const FOLDER = "circulares-informativas";
  * reemplazable dentro del mismo formulario. */
 export function CircularInformativaForm({ circular }: { circular?: CircularInformativaRow }) {
   const router = useRouter();
+  const showToast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(circular?.visible ?? true);
@@ -42,10 +64,15 @@ export function CircularInformativaForm({ circular }: { circular?: CircularInfor
     let previousFileUrl: string | null = null;
 
     if (file && file.size > 0) {
+      let uploadedUrl: string | null = null;
       try {
         previousFileUrl = circular?.file_url ?? null;
-        fileUrl = await uploadPublicFile(FOLDER, file, "document");
+        uploadedUrl = await uploadPublicFile(FOLDER, file, "document");
+        fileUrl = await addDirectorSignature(uploadedUrl, showToast);
       } catch (uploadError) {
+        // Si el PDF ya se subió pero no se pudo firmar, se borra: no queda un archivo sin firma huérfano en Storage.
+        const orphanPath = uploadedUrl ? pathFromPublicUrl(uploadedUrl) : null;
+        if (orphanPath) void deletePublicFile(orphanPath);
         setLoading(false);
         setError(uploadError instanceof FileValidationError ? uploadError.message : "No pudimos subir el archivo.");
         return;

@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { getBulletinById } from "@/services/weekly-bulletins-admin";
 import { BulletinDocument, type BulletinPageSize } from "@/lib/pdf/BulletinDocument";
 import { inlineBulletinImages } from "@/lib/pdf/bulletin-images";
+import { getDirectorSignature } from "@/lib/pdf/director-signature";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import type { JSONContent } from "@tiptap/core";
@@ -32,14 +33,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const body = await request.json().catch(() => ({}));
   const pageSize: BulletinPageSize = body.pageSize === "oficio" ? "oficio" : "carta";
 
+  const [content, signature] = await Promise.all([inlineBulletinImages(bulletin.content as JSONContent), getDirectorSignature()]);
   const buffer = await renderToBuffer(
     BulletinDocument({
       number: bulletin.number,
       title: bulletin.title,
       weekLabel: bulletin.week_label,
       publishDate: bulletin.publish_date,
-      content: await inlineBulletinImages(bulletin.content as JSONContent),
+      content,
       pageSize,
+      signature,
     })
   );
 
