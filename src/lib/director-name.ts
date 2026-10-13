@@ -29,3 +29,26 @@ export function looksLikeDirectorName(text: string, directorFullName: string): b
   const matches = nameTokens.filter((token) => lineWords.has(token)).length;
   return matches >= 2;
 }
+
+interface TextBlock {
+  type?: string;
+  text?: string;
+  content?: TextBlock[];
+}
+
+function blockPlainText(node: TextBlock): string {
+  return (node.content ?? []).map((n) => (n.type === "hardBreak" ? " " : n.text ?? "")).join("");
+}
+
+/**
+ * Último bloque (párrafo o título) de un documento TipTap que es el nombre
+ * impreso del Director: la firma y el timbre van justo arriba de él. -1 si no
+ * aparece. Compartido por el PDF y por la página web del informativo.
+ */
+export function findDirectorNameBlockIndex(blocks: TextBlock[], directorFullName: string): number {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const n = blocks[i];
+    if ((n.type === "paragraph" || n.type === "heading") && looksLikeDirectorName(blockPlainText(n), directorFullName)) return i;
+  }
+  return -1;
+}

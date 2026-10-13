@@ -2,10 +2,38 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Download, ArrowLeft } from "lucide-react";
-import { BulletinContent } from "@/components/public/BulletinContent";
+import { BulletinContent, type BulletinSignatureView } from "@/components/public/BulletinContent";
+import { bulletinSignaturePaths } from "@/lib/bulletin-signature-assets";
+import { getInstitutionalProfile } from "@/services/school-config";
 import { formatBulletinDate } from "@/lib/bulletin-content";
 import { getPublishedBulletinByNumber } from "@/services/public-content";
 import type { JSONContent } from "@tiptap/core";
+
+async function publicFileExists(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Firma y timbre del Director si el informativo se publicó con ellos (copias públicas dejadas al publicar). */
+async function getSignatureView(bulletinId: string): Promise<BulletinSignatureView | null> {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  const paths = bulletinSignaturePaths(bulletinId);
+  const publicUrl = (path: string) => `${base}/storage/v1/object/public/archivos-publicos/${path}`;
+  const [hasSignature, hasStamp] = await Promise.all([publicFileExists(publicUrl(paths.signature)), publicFileExists(publicUrl(paths.stamp))]);
+  if (!hasSignature) return null;
+  const profile = await getInstitutionalProfile();
+  return {
+    signatureUrl: publicUrl(paths.signature),
+    stampUrl: hasStamp ? publicUrl(paths.stamp) : null,
+    directorName: profile.director,
+    directorTitle: profile.directorTitle,
+  };
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }): Promise<Metadata> {
   const { number } = await params;
@@ -21,6 +49,7 @@ export default async function InformativoDetailPage({ params }: { params: Promis
 
   const bulletin = await getPublishedBulletinByNumber(parsedNumber);
   if (!bulletin) notFound();
+  const signature = await getSignatureView(bulletin.id);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
@@ -49,7 +78,7 @@ export default async function InformativoDetailPage({ params }: { params: Promis
       </div>
 
       <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
-        <BulletinContent content={bulletin.content as JSONContent} />
+        <BulletinContent content={bulletin.content as JSONContent} signature={signature} />
       </div>
     </article>
   );

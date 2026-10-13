@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BulletinDocument } from "@/lib/pdf/BulletinDocument";
 import { inlineBulletinImages } from "@/lib/pdf/bulletin-images";
 import { getDirectorSignature } from "@/lib/pdf/director-signature";
+import { syncBulletinSignatureAssets } from "@/lib/bulletin-signature-assets";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 import type { JSONContent } from "@tiptap/core";
@@ -54,6 +55,8 @@ export async function POST(request: Request) {
     console.error("[informativos/publicar] storage upload error", { message: uploadError.message, id: bulletin.id });
     return NextResponse.json({ error: "No se pudo generar el PDF del informativo" }, { status: 500 });
   }
+
+  await syncBulletinSignatureAssets(supabase, bulletin.id, signature);
 
   const pdfUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 

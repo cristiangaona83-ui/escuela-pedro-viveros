@@ -5,7 +5,7 @@ import { pdfStyles } from "./styles";
 import { DocumentHeader } from "./DocumentHeader";
 import { SITE } from "@/config/site";
 import { isSafeColor, isSafeUrl, safeAlignment, safeFontSizePx, safeImageWidth, formatBulletinDate, type BulletinAlignment } from "@/lib/bulletin-content";
-import { looksLikeDirectorName } from "@/lib/director-name";
+import { findDirectorNameBlockIndex } from "@/lib/director-name";
 import type { DirectorSignature } from "@/lib/pdf/director-signature";
 
 const bulletinStyles = StyleSheet.create({
@@ -288,19 +288,6 @@ function SignatureImages({ signature, align }: { signature: DirectorSignature; a
   );
 }
 
-function paragraphPlainText(node: JSONContent): string {
-  return (node.content ?? []).map((n) => (n.type === "hardBreak" ? " " : n.text ?? "")).join("");
-}
-
-/** Último bloque de texto corto que es el nombre del Director (la firma impresa): la firma y el timbre van justo arriba. -1 si no aparece. */
-function findSignatureAnchorIndex(nodes: JSONContent[], directorName: string): number {
-  for (let i = nodes.length - 1; i >= 0; i--) {
-    const n = nodes[i];
-    if ((n.type === "paragraph" || n.type === "heading") && looksLikeDirectorName(paragraphPlainText(n), directorName)) return i;
-  }
-  return -1;
-}
-
 export function BulletinDocument({
   number,
   title,
@@ -320,7 +307,7 @@ export function BulletinDocument({
 }) {
   const blocks = content?.content ?? [];
   const activeSignature = signature && isPdfImageDataUri(signature.signatureDataUri) ? signature : null;
-  const anchorIndex = activeSignature ? findSignatureAnchorIndex(blocks, activeSignature.directorName) : -1;
+  const anchorIndex = activeSignature ? findDirectorNameBlockIndex(blocks, activeSignature.directorName) : -1;
   const anchorAlign = anchorIndex >= 0 ? safeAlignment(blocks[anchorIndex].attrs?.textAlign) : "center";
 
   return (
