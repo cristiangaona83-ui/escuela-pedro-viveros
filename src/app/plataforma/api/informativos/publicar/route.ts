@@ -81,5 +81,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ pdf_url: pdfUrl, published: true });
+  return NextResponse.json({ pdf_url: pdfUrl, published: true, signed: Boolean(signature) });
 }

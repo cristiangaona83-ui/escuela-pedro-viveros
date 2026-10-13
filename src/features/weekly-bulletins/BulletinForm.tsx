@@ -9,7 +9,7 @@ import { FormField, Input } from "@/components/ui/Field";
 import { Card, CardBody } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/client";
 import { BulletinEditor } from "./BulletinEditor";
-import { publishBulletin } from "./publish-bulletin";
+import { publishBulletin, UNSIGNED_BULLETIN_NOTICE } from "./publish-bulletin";
 import { BulletinContent } from "@/components/public/BulletinContent";
 import { STARTER_BULLETIN_CONTENT, formatBulletinDate } from "@/lib/bulletin-content";
 import type { WeeklyBulletinRow } from "@/types/database";
@@ -109,6 +109,7 @@ export function BulletinForm({ bulletin, suggestedNumber }: { bulletin?: WeeklyB
       setError(result.error);
       return;
     }
+    if (!result.signed) window.alert(UNSIGNED_BULLETIN_NOTICE);
     router.push("/plataforma/informativos");
     router.refresh();
   }

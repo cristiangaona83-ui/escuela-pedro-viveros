@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
-import { publishBulletin } from "./publish-bulletin";
+import { publishBulletin, UNSIGNED_BULLETIN_NOTICE } from "./publish-bulletin";
 
 export function PublishBulletinButton({ bulletinId, title }: { bulletinId: string; title: string }) {
   const router = useRouter();
@@ -18,6 +18,7 @@ export function PublishBulletinButton({ bulletinId, title }: { bulletinId: strin
       window.alert(result.error);
       return;
     }
+    if (!result.signed) window.alert(UNSIGNED_BULLETIN_NOTICE);
     router.refresh();
   }
 
