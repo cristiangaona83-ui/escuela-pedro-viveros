@@ -51,7 +51,9 @@ export function Sidebar({
             )}
             <div className="space-y-0.5">
               {groupItems.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+                // Si otro ítem del menú coincide con una ruta más específica (ej. Traspaso de año dentro de Administración), solo ese queda activo.
+                const active = matches(item.href) && !items.some((other) => other.href.length > item.href.length && matches(other.href));
                 return (
                   <Link
                     key={item.href}
