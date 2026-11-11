@@ -54,7 +54,7 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Jefaturas", href: "/plataforma/cursos/jefaturas", icon: "UserCog", roles: ["director", "utp", "superadmin"], group: "utp" },
   { label: "Evaluaciones", href: "/plataforma/evaluaciones", icon: "ClipboardList", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },
   { label: "Calificaciones", href: "/plataforma/calificaciones", icon: "NotebookPen", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },
-  { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "superadmin"], group: "utp" },
+  { label: "Informes", href: "/plataforma/informes", icon: "FileBarChart", roles: ["director", "utp", "administrativo", "docente", "superadmin"], group: "utp" },
   { label: "Seguimiento Pedagógico", href: "/plataforma/seguimiento", icon: "Activity", roles: ["director", "utp", "docente", "convivencia", "superadmin"], group: "utp" },
   { label: "Objetivos de Aprendizaje", href: "/plataforma/objetivos", icon: "Target", roles: ["director", "utp", "superadmin"], group: "utp" },
   { label: "Planificaciones", href: "/plataforma/planificaciones", icon: "FileEdit", roles: ["director", "utp", "docente", "superadmin"], group: "utp" },

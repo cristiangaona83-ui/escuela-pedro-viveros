@@ -15,7 +15,7 @@ export interface DirectorSignature {
  * que devuelve Storage no es confiable). WEBP -- que la firma y el timbre
  * admiten al subirse -- se convierte a PNG; cualquier otra cosa devuelve null.
  */
-async function toPdfImageDataUri(dataUri: string | null, label: string): Promise<string | null> {
+export async function toPdfImageDataUri(dataUri: string | null, label: string): Promise<string | null> {
   if (!dataUri) return null;
   const match = /^data:[^;,]*;base64,(.+)$/.exec(dataUri);
   if (!match) return null;

@@ -513,6 +513,46 @@ export type BulletinEmailLogRow = {
   sent_at: string | null;
 }
 
+/** Informes Pedagógicos de Educación Parvularia (supabase/migrations/0057_parvularia_reports.sql). */
+export type ParvulariaLevel = "Prekínder" | "Kínder";
+/** Escala conceptual: Logrado, Medianamente Logrado, Por Lograr, No Observado. */
+export type ParvulariaValue = "L" | "ML" | "PL" | "NO";
+
+export type ParvulariaIndicatorRow = {
+  id: string;
+  level: ParvulariaLevel;
+  ambito: string;
+  nucleo: string;
+  text: string;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ParvulariaEvaluationRow = {
+  id: string;
+  student_id: string;
+  academic_year_id: string;
+  indicator_id: string;
+  semester: 1 | 2;
+  value: ParvulariaValue;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ParvulariaReportNoteRow = {
+  id: string;
+  student_id: string;
+  academic_year_id: string;
+  observations: string | null;
+  delivery_date: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /** Circulares Informativas -- sección independiente del sitio público
  * (no confundir con la categoría de Documentos internos de la Plataforma). */
 export type CircularInformativaRow = {
@@ -1488,6 +1528,9 @@ export interface Database {
       bulletin_email_log: CrudTable<BulletinEmailLogRow>;
       documents: CrudTable<DocumentRow>;
       circulares_informativas: CrudTable<CircularInformativaRow>;
+      parvularia_indicators: CrudTable<ParvulariaIndicatorRow>;
+      parvularia_evaluations: CrudTable<ParvulariaEvaluationRow>;
+      parvularia_report_notes: CrudTable<ParvulariaReportNoteRow>;
       events: CrudTable<EventRow>;
       contact_messages: CrudTable<ContactMessageRow>;
       testimonials: CrudTable<TestimonialRow>;

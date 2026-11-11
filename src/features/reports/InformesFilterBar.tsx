@@ -10,11 +10,14 @@ export function InformesFilterBar({
   periods,
   year,
   period,
+  showPeriod = true,
 }: {
   academicYears: AcademicYearRow[];
   periods: (AcademicPeriodRow & { academic_years: { year: number } | null })[];
   year: string;
   period: string;
+  /** Oculta el selector de período (el Informe de Prebásica es por año completo). */
+  showPeriod?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -37,6 +40,7 @@ export function InformesFilterBar({
           ))}
         </Select>
       </div>
+      {showPeriod && (
       <div className="w-56">
         <label className="mb-1 block text-xs font-medium text-slate-500">Período (Informe Semestral)</label>
         <Select value={period} onChange={(e) => updateParam("period", e.target.value)} disabled={periods.length === 0}>
@@ -49,6 +53,7 @@ export function InformesFilterBar({
           )}
         </Select>
       </div>
+      )}
     </div>
   );
 }

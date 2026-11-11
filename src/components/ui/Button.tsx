@@ -50,3 +50,8 @@ export function LinkButton({
     </Link>
   );
 }
+
+/** Clases de un botón para usar en un `<a>` normal (ej. abrir un PDF en pestaña nueva sin que next/link lo precargue). */
+export function buttonClassName(variant: Variant = "primary", size: Size = "md", className?: string) {
+  return cn(base, VARIANTS[variant], SIZES[size], className);
+}

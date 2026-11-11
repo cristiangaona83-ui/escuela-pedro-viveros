@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileBarChart, AlertTriangle, Users } from "lucide-react";
+import { FileBarChart, AlertTriangle, Users, Baby, ListChecks } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { Tabs } from "@/components/ui/Tabs";
+import { LinkButton } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/server";
 import { listAcademicYears, getActiveAcademicYear, levelSortIndex } from "@/services/courses";
 import { listOpenPeriods } from "@/services/academic-scope";
 import { isEnsenanzaBasica } from "@/lib/pdf/academic-certificate-wording";
 import { InformesFilterBar } from "@/features/reports/InformesFilterBar";
+import { listParvulariaCourses } from "@/services/parvularia";
+import { getSessionContext } from "@/features/auth/session";
+import { canWrite } from "@/features/auth/can";
+
+/** Informes de Enseñanza Básica: solo Dirección/UTP/Administrativo. Prebásica también la educadora (ver sus cursos). */
+const BASICA_ROLES = ["director", "utp", "administrativo", "superadmin"] as const;
+const PARVULARIA_ADMIN_ROLES = ["director", "utp", "superadmin"] as const;
 
 export const metadata: Metadata = { title: "Informes" };
 
@@ -58,7 +67,7 @@ function CourseCardGrid({ tipo, courses, extraParams }: { tipo: string; courses:
 export default async function InformesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string; period?: string }>;
+  searchParams: Promise<{ year?: string; period?: string; nivel?: string }>;
 }) {
   const sp = await searchParams;
   const [academicYears, activeYear, allPeriods] = await Promise.all([listAcademicYears(), getActiveAcademicYear(), listOpenPeriods()]);
@@ -67,7 +76,15 @@ export default async function InformesPage({
   const yearPeriods = allPeriods.filter((p) => p.academic_year_id === selectedYearId);
   const selectedPeriodId = sp.period || yearPeriods[0]?.id || "";
 
-  const courses = selectedYearId ? await getEnsenanzaBasicaCourses(selectedYearId) : [];
+  const session = await getSessionContext();
+  const roles = session?.roles ?? [];
+  const canBasica = canWrite(roles, [...BASICA_ROLES]);
+  const canAdminParvularia = canWrite(roles, [...PARVULARIA_ADMIN_ROLES]);
+  // Sin acceso a Básica (ej. educadora), se entra directo a Prebásica.
+  const nivel = canBasica && sp.nivel !== "prebasica" ? "basica" : "prebasica";
+
+  const courses = selectedYearId && nivel === "basica" ? await getEnsenanzaBasicaCourses(selectedYearId) : [];
+  const parvulariaCourses = selectedYearId && nivel === "prebasica" ? await listParvulariaCourses(selectedYearId) : [];
 
   return (
     <div>
@@ -77,16 +94,72 @@ export default async function InformesPage({
         <h1 className="text-2xl font-semibold text-slate-900">Informes</h1>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        Informes de calificaciones organizados por curso. Aplican solo a Enseñanza Básica (1° a 8° Básico).
+        Informes organizados por curso: calificaciones para Enseñanza Básica (1° a 8° Básico) e informes pedagógicos para Educación Parvularia (Prekínder y Kínder).
       </p>
 
+      {canBasica && (
+        <div className="mt-6">
+          <Tabs
+            basePath="/plataforma/informes"
+            paramName="nivel"
+            tabs={[
+              { key: "basica", label: "Informes de Básica" },
+              { key: "prebasica", label: "Informes de Prebásica" },
+            ]}
+            active={nivel}
+            extraParams={{ year: sp.year, period: sp.period }}
+          />
+        </div>
+      )}
+
       <div className="mt-6">
-        <InformesFilterBar academicYears={academicYears} periods={yearPeriods} year={selectedYearId} period={selectedPeriodId} />
+        <InformesFilterBar academicYears={academicYears} periods={yearPeriods} year={selectedYearId} period={selectedPeriodId} showPeriod={nivel === "basica"} />
       </div>
 
       {!selectedYearId ? (
         <div className="mt-6">
           <EmptyState icon={FileBarChart} title="Sin años académicos registrados" />
+        </div>
+      ) : nivel === "prebasica" ? (
+        <div className="mt-8">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                <Baby className="h-5 w-5 text-brand-700" /> Informe Pedagógico de Educación Parvularia
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Evaluación conceptual (L, ML, PL, N/O) por indicador y semestre, para Prekínder y Kínder.
+              </p>
+            </div>
+            {canAdminParvularia && (
+              <LinkButton href="/plataforma/informes/parvularia/indicadores" variant="secondary" size="sm">
+                <ListChecks className="h-4 w-4" /> Administrar indicadores
+              </LinkButton>
+            )}
+          </div>
+          <div className="mt-4">
+            {parvulariaCourses.length === 0 ? (
+              <EmptyState
+                icon={Baby}
+                title="Sin cursos de Prekínder o Kínder"
+                description={canBasica ? "No hay cursos de Educación Parvularia activos este año." : "No tienes cursos de Prekínder o Kínder asignados este año."}
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {parvulariaCourses.map((c) => (
+                  <Link key={c.id} href={`/plataforma/informes/parvularia/${c.id}?year=${selectedYearId}`}>
+                    <Card className="h-full transition-shadow hover:shadow-md">
+                      <CardBody className="flex flex-col items-center gap-1 py-4 text-center">
+                        <span className="text-sm font-semibold text-slate-900">{c.label}</span>
+                        <span className="text-xs text-slate-500">{c.matricula} niño{c.matricula === 1 ? "" : "s"}(as)</span>
+                        <span className="mt-1 text-[11px] font-medium text-brand-700">Ver curso</span>
+                      </CardBody>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="mt-8 space-y-10">
