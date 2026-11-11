@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveAcademicYear } from "@/services/courses";
 
 export interface TeacherAssignmentWithRelations {
   id: string;
@@ -23,6 +24,11 @@ export async function listTeacherAssignments(filters?: {
     .select("id, active, weekly_hours, course_id, subject_id, teacher_id, courses(level, letter), subjects(name), profiles(id, full_name)")
     .order("created_at", { ascending: true });
 
+  // Un curso ya pertenece a un año; sin curso, solo la carga del año de trabajo.
+  if (!filters?.courseId) {
+    const year = await getActiveAcademicYear();
+    if (year) query = query.eq("academic_year_id", year.id);
+  }
   if (filters?.courseId) query = query.eq("course_id", filters.courseId);
   if (filters?.teacherId) query = query.eq("teacher_id", filters.teacherId);
 

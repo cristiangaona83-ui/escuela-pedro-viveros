@@ -6,6 +6,7 @@ import { getStudent, findActiveEnrollment } from "@/services/students";
 import { listStudentGuardiansFull, listStudentGuardiansLimited } from "@/services/guardians";
 import { listPickupAuthorizations, listStudentAuthorizations } from "@/services/student-record";
 import { authorizationLabel } from "@/config/student-authorizations";
+import { getActiveAcademicYear } from "@/services/courses";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   const primary = guardians.find((g) => g.isPrimary) ?? guardians[0] ?? null;
   const emergencyContact = guardians.find((g) => g.isEmergencyContact) ?? null;
 
-  const enrollment = findActiveEnrollment(student);
+  const enrollment = findActiveEnrollment(student, (await getActiveAcademicYear())?.id);
 
   const addressParts = [student.address_street, student.address_number].filter(Boolean).join(" ");
   const addressLine = [addressParts, student.address_sector, student.address_commune, student.address_region]

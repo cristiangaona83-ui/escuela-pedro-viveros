@@ -466,12 +466,14 @@ export async function getStudentAttendanceDetail(studentId: string, range: DateR
   const { data: student } = await supabase.from("students").select("first_names, last_names, run").eq("id", studentId).maybeSingle();
   if (!student) return null;
 
-  const { data: enrollment } = await supabase
+  const workingYear = await getActiveAcademicYear();
+  let enrollmentQuery = supabase
     .from("enrollments")
     .select("course_id, courses(level, letter)")
     .eq("student_id", studentId)
-    .eq("status", "activa")
-    .maybeSingle();
+    .eq("status", "activa");
+  if (workingYear) enrollmentQuery = enrollmentQuery.eq("academic_year_id", workingYear.id);
+  const { data: enrollment } = await enrollmentQuery.maybeSingle();
   const course = enrollment?.courses as unknown as { level: string; letter: string } | null;
 
   const year = range.to.slice(0, 4);

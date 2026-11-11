@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/features/auth/session";
+import { getActiveAcademicYear } from "@/services/courses";
 
 export interface CourseSubjectOption {
   course_id: string;
@@ -12,13 +13,14 @@ export interface CourseSubjectOption {
 /** Combinaciones curso+asignatura que el usuario actual puede gestionar. */
 export async function getTeachableCourseSubjects(): Promise<CourseSubjectOption[]> {
   const supabase = await createClient();
-  const session = await getSessionContext();
+  const [session, year] = await Promise.all([getSessionContext(), getActiveAcademicYear()]);
   const isManagement = session?.roles.some((r) => ["director", "utp", "superadmin"].includes(r));
 
   let query = supabase
     .from("teacher_assignments")
     .select("course_id, subject_id, active, courses(level, letter), subjects(name)")
     .eq("active", true);
+  if (year) query = query.eq("academic_year_id", year.id);
 
   if (!isManagement && session) {
     query = query.eq("teacher_id", session.userId);
@@ -54,9 +56,11 @@ export interface CourseOption {
  * superadmin/convivencia/inspectoria_general (convivencia nunca puede
  * escribir, solo ver; inspectoria_general puede ver y escribir).
  */
-export async function getTeachableCourses(academicYearId?: string): Promise<CourseOption[]> {
+export async function getTeachableCourses(requestedYearId?: string): Promise<CourseOption[]> {
   const supabase = await createClient();
   const session = await getSessionContext();
+  // Sin año indicado, el año de trabajo elegido en el selector de año.
+  const academicYearId = requestedYearId ?? (await getActiveAcademicYear())?.id;
   const hasBroadAccess = session?.roles.some((r) => ["director", "utp", "superadmin", "convivencia", "inspectoria_general"].includes(r));
 
   if (hasBroadAccess) {
@@ -98,12 +102,17 @@ export async function getTeachableCourses(academicYearId?: string): Promise<Cour
   return Array.from(byId, ([course_id, course_label]) => ({ course_id, course_label }));
 }
 
-export async function listOpenPeriods() {
+/**
+ * Períodos académicos. Sin argumento: los del año de trabajo (el del selector de
+ * año de la plataforma); con un id de año, los de ese año; con "all", los de
+ * todos los años (para pantallas que filtran por un año elegido en la URL).
+ */
+export async function listOpenPeriods(scope?: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("academic_periods")
-    .select("*, academic_years(year)")
-    .order("order_index", { ascending: true })
+  const yearId = scope === "all" ? null : scope ?? (await getActiveAcademicYear())?.id ?? null;
+  let query = supabase.from("academic_periods").select("*, academic_years(year)").order("order_index", { ascending: true });
+  if (yearId) query = query.eq("academic_year_id", yearId);
+  const { data } = await query
     .returns<(import("@/types/database").AcademicPeriodRow & { academic_years: { year: number } | null })[]>();
   return data ?? [];
 }

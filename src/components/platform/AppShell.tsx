@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, LogOut, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/platform/Sidebar";
+import { YearSelector, type YearOption } from "@/components/platform/YearSelector";
 import { createClient } from "@/lib/supabase/client";
 import { ROLE_LABELS } from "@/features/auth/role-labels";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -12,10 +13,14 @@ import type { RoleCode } from "@/types/database";
 export function AppShell({
   roles,
   userName,
+  years,
+  selectedYearId,
   children,
 }: {
   roles: RoleCode[];
   userName: string;
+  years: YearOption[];
+  selectedYearId: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -43,6 +48,7 @@ export function AppShell({
             <Menu className="h-5 w-5" />
           </button>
           <div className="ml-auto flex items-center gap-3">
+            <YearSelector years={years} selectedId={selectedYearId} />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-slate-800">{userName}</p>
               <p className="text-xs text-slate-500">{roles.map((r) => ROLE_LABELS[r]).join(" · ") || "Sin rol asignado"}</p>

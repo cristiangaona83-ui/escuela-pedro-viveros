@@ -1,11 +1,17 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { SELECTED_YEAR_COOKIE } from "@/lib/academic-year-cookie";
 
-export async function listCourses() {
+/** Cursos del año de trabajo (o del año indicado). */
+export async function listCourses(academicYearId?: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  const yearId = academicYearId ?? (await getActiveAcademicYear())?.id;
+  let query = supabase
     .from("courses")
     .select("*, academic_years(year), profiles!courses_homeroom_teacher_id_fkey(full_name), enrollments(count)")
     .order("level", { ascending: true });
+  if (yearId) query = query.eq("academic_year_id", yearId);
+  const { data } = await query;
   return data ?? [];
 }
 
@@ -21,51 +27,55 @@ export async function getCourse(id: string) {
   return data;
 }
 
-/** Lista liviana de cursos activos (solo id/nivel/letra), para selects en otros módulos. */
-export async function listCourseOptions() {
+/** Lista liviana de cursos activos del año de trabajo (solo id/nivel/letra), para selects en otros módulos. */
+export async function listCourseOptions(academicYearId?: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("courses")
-    .select("id, level, letter")
-    .eq("active", true)
-    .order("level", { ascending: true });
+  const yearId = academicYearId ?? (await getActiveAcademicYear())?.id;
+  let query = supabase.from("courses").select("id, level, letter").eq("active", true).order("level", { ascending: true });
+  if (yearId) query = query.eq("academic_year_id", yearId);
+  const { data } = await query;
   return data ?? [];
 }
 
 export async function listAcademicYears() {
   const supabase = await createClient();
-  const { data } = await supabase.from("academic_years").select("*").order("year", { ascending: false });
+  const { data } = await supabase.from("academic_years").select("*").order("year", { ascending: true });
   return data ?? [];
 }
 
-/** Año académico marcado como vigente (academic_years.active = true). */
-export async function getActiveAcademicYear(): Promise<{ id: string; year: number } | null> {
+/** Año académico VIGENTE (academic_years.active = true; solo uno). Si no hubiera ninguno marcado, el más reciente. */
+export async function getCurrentAcademicYear(): Promise<{ id: string; year: number } | null> {
   const supabase = await createClient();
   const { data } = await supabase.from("academic_years").select("id, year").eq("active", true).maybeSingle();
-  return data ?? null;
+  if (data) return data;
+  const { data: latest } = await supabase.from("academic_years").select("id, year").order("year", { ascending: false }).limit(1).maybeSingle();
+  return latest ?? null;
 }
 
-// Orden pedagógico real (Prekínder → 8° Básico). `level` es texto libre en
-// courses, así que el orden alfabético no sirve ("Kínder" quedaría antes que
-// "Prekínder"). Cursos con un `level` fuera de esta lista (p. ej. Educación
-// Media, si se agrega en el futuro) se muestran al final, sin excluirse.
-export const COURSE_LEVEL_ORDER = [
-  "Prekínder",
-  "Kínder",
-  "1° Básico",
-  "2° Básico",
-  "3° Básico",
-  "4° Básico",
-  "5° Básico",
-  "6° Básico",
-  "7° Básico",
-  "8° Básico",
-];
-
-export function levelSortIndex(level: string): number {
-  const idx = COURSE_LEVEL_ORDER.indexOf(level);
-  return idx === -1 ? COURSE_LEVEL_ORDER.length : idx;
+/**
+ * Año de TRABAJO de la plataforma: el que la persona eligió en el selector de
+ * año de la barra superior (cookie `pv_year`), y si no eligió ninguno, el año
+ * vigente. Todos los módulos (cursos, estudiantes, evaluaciones, informes...)
+ * lo usan como año por defecto, así que cambiarlo en el selector cambia la
+ * plataforma entera. El nombre se mantiene por compatibilidad con los módulos
+ * que ya lo llaman.
+ */
+export async function getActiveAcademicYear(): Promise<{ id: string; year: number } | null> {
+  let selected: string | undefined;
+  try {
+    selected = (await cookies()).get(SELECTED_YEAR_COOKIE)?.value;
+  } catch {
+    selected = undefined; // fuera de una solicitud (sin cookies disponibles)
+  }
+  if (selected) {
+    const supabase = await createClient();
+    const { data } = await supabase.from("academic_years").select("id, year").eq("id", selected).maybeSingle();
+    if (data) return data;
+  }
+  return getCurrentAcademicYear();
 }
+
+export { COURSE_LEVEL_ORDER, levelSortIndex } from "@/lib/course-levels";
 
 export async function listTeachers() {
   const supabase = await createClient();

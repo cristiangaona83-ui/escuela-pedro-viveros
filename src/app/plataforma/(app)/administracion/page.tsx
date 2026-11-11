@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ArrowRight,
   LayoutTemplate,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { getSessionContext } from "@/features/auth/session";
@@ -44,7 +45,8 @@ const SECTIONS: Section[] = [
   { title: "Galería", description: "Álbumes y fotografías del sitio público.", href: "/plataforma/galeria", icon: ImageIcon },
   { title: "Documentos", description: "PEI, Reglamento Interno, protocolos y circulares descargables.", href: "/plataforma/documentos", icon: FolderOpen },
   { title: "Usuarios y roles", description: "Asigna roles del sistema a cada cuenta del equipo.", href: "/plataforma/administracion/usuarios", icon: Users },
-  { title: "Años académicos", description: "Crea años, cursos base y administra la apertura/cierre de períodos.", href: "/plataforma/administracion/anios", icon: CalendarRange },
+  { title: "Años académicos", description: "Años 2026 a 2050, año vigente y apertura/cierre de períodos.", href: "/plataforma/administracion/anios", icon: CalendarRange },
+  { title: "Traspaso de año", description: "Pasa la matrícula, los cursos y la carga docente de un año al siguiente.", href: "/plataforma/administracion/traspaso", icon: ArrowRightLeft },
 ];
 
 export default async function AdministracionPage() {

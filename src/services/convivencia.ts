@@ -64,11 +64,14 @@ async function studentCourseMap(studentIds: string[]): Promise<Map<string, { id:
   const map = new Map<string, { id: string; label: string }>();
   if (studentIds.length === 0) return map;
   const supabase = await createClient();
-  const { data } = await supabase
+  const year = await getActiveAcademicYear();
+  let query = supabase
     .from("enrollments")
     .select("student_id, status, courses(id, level, letter)")
     .in("student_id", studentIds)
     .eq("status", "activa");
+  if (year) query = query.eq("academic_year_id", year.id);
+  const { data } = await query;
   type Row = { student_id: string; courses: { id: string; level: string; letter: string } | null };
   for (const row of (data ?? []) as unknown as Row[]) {
     if (row.courses) map.set(row.student_id, { id: row.courses.id, label: `${row.courses.level} ${row.courses.letter}` });

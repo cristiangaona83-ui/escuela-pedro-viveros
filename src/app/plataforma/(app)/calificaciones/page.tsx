@@ -27,10 +27,11 @@ export default async function CalificacionesPage({
   const sp = await searchParams;
   const [options, periods, gradingConfig, session] = await Promise.all([
     getTeachableCourseSubjects(),
-    listOpenPeriods(),
+    listOpenPeriods("all"),
     getGradingConfig(),
     getSessionContext(),
   ]);
+  const workingYear = await getActiveAcademicYear();
   const allowedToWrite = canWrite(session?.roles ?? [], [...WRITE_ROLES]);
   const isManagement = canWrite(session?.roles ?? [], [...MANAGEMENT_ROLES]);
 
@@ -115,7 +116,7 @@ export default async function CalificacionesPage({
           <CardBody>
             <GradeEntryGrid
               options={options}
-              periods={periods}
+              periods={periods.filter((p) => p.academic_year_id === workingYear?.id)}
               gradingConfig={gradingConfig}
               userId={session?.userId ?? ""}
               canWrite={allowedToWrite}

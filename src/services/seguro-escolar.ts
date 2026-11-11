@@ -69,15 +69,17 @@ export async function resolveStudentForDeclaration(studentId: string): Promise<S
   const { data: student } = await supabase
     .from("students")
     .select(
-      "id, first_names, last_names, sex, birth_date, address_street, address_number, address_sector, address_commune, address_region, enrollments(status, courses(id, level, letter))"
+      "id, first_names, last_names, sex, birth_date, address_street, address_number, address_sector, address_commune, address_region, enrollments(status, academic_year_id, courses(id, level, letter))"
     )
     .eq("id", studentId)
     .maybeSingle();
   if (!student) return null;
 
-  type EnrollmentJoin = { status: string; courses: { id: string; level: string; letter: string } | null };
+  type EnrollmentJoin = { status: string; academic_year_id: string; courses: { id: string; level: string; letter: string } | null };
   const enrollments = (student as unknown as { enrollments: EnrollmentJoin[] }).enrollments ?? [];
-  const active = enrollments.find((e) => e.status === "activa");
+  const workingYear = await getActiveAcademicYear();
+  const activeEnrollments = enrollments.filter((e) => e.status === "activa");
+  const active = activeEnrollments.find((e) => e.academic_year_id === workingYear?.id) ?? activeEnrollments[0];
 
   const { data: guardianLinks } = await supabase
     .from("student_guardians")

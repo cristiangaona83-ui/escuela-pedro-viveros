@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Field";
 import { CourseRosterActions } from "@/features/reports/CourseRosterActions";
-import { listAcademicYears } from "@/services/courses";
+import { listAcademicYears, getActiveAcademicYear } from "@/services/courses";
 import { getTeachableCourses } from "@/services/academic-scope";
 import { getCourseRoster } from "@/services/course-roster";
 import { formatDate } from "@/lib/utils";
@@ -29,7 +29,8 @@ export default async function ListadosPorCursoPage({
 
   const years = await listAcademicYears();
   const { anio, curso } = await searchParams;
-  const selectedYearId = anio || years.find((y) => y.active)?.id || years[0]?.id;
+  const workingYear = await getActiveAcademicYear();
+  const selectedYearId = anio || workingYear?.id || years.find((y) => y.active)?.id || years[0]?.id;
   const courses = selectedYearId ? await getTeachableCourses(selectedYearId) : [];
   const selectedCourseId = curso && courses.some((c) => c.course_id === curso) ? curso : undefined;
   const roster = selectedCourseId ? await getCourseRoster(selectedCourseId) : null;

@@ -9,9 +9,10 @@ export interface StudentWithCourse extends StudentRow {
 
 export async function listStudents(search?: string): Promise<StudentWithCourse[]> {
   const supabase = await createClient();
+  const year = await getActiveAcademicYear();
   let query = supabase
     .from("students")
-    .select("*, enrollments(status, courses(id, level, letter, academic_years(year)))")
+    .select("*, enrollments(status, academic_year_id, courses(id, level, letter, academic_years(year)))")
     .order("last_names", { ascending: true });
 
   if (search) {
@@ -24,10 +25,12 @@ export async function listStudents(search?: string): Promise<StudentWithCourse[]
   return (data ?? []).map((s) => {
     type EnrollmentJoin = {
       status: string;
+      academic_year_id: string;
       courses: { id: string; level: string; letter: string; academic_years: { year: number } | null } | null;
     };
     const enrollments = (s as unknown as { enrollments: EnrollmentJoin[] }).enrollments ?? [];
-    const active = enrollments.find((e) => e.status === "activa");
+    // El curso que se muestra es el del año de trabajo (un estudiante puede tener matrícula en varios años).
+    const active = enrollments.find((e) => e.status === "activa" && (!year || e.academic_year_id === year.id));
     const course_label = active?.courses ? `${active.courses.level} ${active.courses.letter}` : null;
     const course_id = active?.courses?.id ?? null;
     const { enrollments: _omit, ...rest } = s as unknown as StudentRow & { enrollments: unknown };
@@ -128,10 +131,18 @@ export interface StudentEnrollmentJoin {
   } | null;
 }
 
-/** Matrícula activa del estudiante (para el botón de retiro y la Ficha de Matrícula). */
-export function findActiveEnrollment(student: { enrollments?: unknown }) {
-  const enrollments = (student.enrollments as StudentEnrollmentJoin[] | undefined) ?? [];
-  return enrollments.find((e) => e.status === "activa") ?? null;
+/**
+ * Matrícula activa del estudiante (para el botón de retiro y la Ficha de Matrícula).
+ * Con varios años matriculados, la del año indicado (el de trabajo) si existe y,
+ * si no, la del año más reciente.
+ */
+export function findActiveEnrollment(student: { enrollments?: unknown }, academicYearId?: string) {
+  const active = ((student.enrollments as StudentEnrollmentJoin[] | undefined) ?? []).filter((e) => e.status === "activa");
+  if (academicYearId) {
+    const inYear = active.find((e) => e.academic_year_id === academicYearId);
+    if (inYear) return inYear;
+  }
+  return active.slice().sort((a, b) => (b.courses?.academic_years?.year ?? 0) - (a.courses?.academic_years?.year ?? 0))[0] ?? null;
 }
 
 /** Nombre del profesor/a jefe de un curso, siempre desde

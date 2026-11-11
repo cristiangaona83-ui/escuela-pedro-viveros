@@ -70,7 +70,7 @@ export default async function InformesPage({
   searchParams: Promise<{ year?: string; period?: string; nivel?: string }>;
 }) {
   const sp = await searchParams;
-  const [academicYears, activeYear, allPeriods] = await Promise.all([listAcademicYears(), getActiveAcademicYear(), listOpenPeriods()]);
+  const [academicYears, activeYear, allPeriods] = await Promise.all([listAcademicYears(), getActiveAcademicYear(), listOpenPeriods("all")]);
 
   const selectedYearId = sp.year || activeYear?.id || academicYears[0]?.id || "";
   const yearPeriods = allPeriods.filter((p) => p.academic_year_id === selectedYearId);

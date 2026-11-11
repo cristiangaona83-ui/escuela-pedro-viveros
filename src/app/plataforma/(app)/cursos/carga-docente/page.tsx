@@ -9,7 +9,7 @@ import { NewTeacherAssignmentForm } from "@/features/teacher-assignments/NewTeac
 import { EditAssignmentForm } from "@/features/teacher-assignments/EditAssignmentForm";
 import { ToggleAssignmentActiveButton } from "@/features/teacher-assignments/ToggleAssignmentActiveButton";
 import { listTeacherAssignments } from "@/services/teacher-assignments";
-import { listCourseOptions, listAcademicYears, listTeachers } from "@/services/courses";
+import { listCourseOptions, listAcademicYears, listTeachers, getActiveAcademicYear } from "@/services/courses";
 import { listSubjectOptions } from "@/services/subjects";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -36,7 +36,8 @@ export default async function CargaDocentePage({
     listTeacherAssignments({ courseId: curso || undefined, teacherId: docente || undefined }),
   ]);
 
-  const activeYear = years.find((y) => y.active) ?? years[0];
+  const workingYear = await getActiveAcademicYear();
+  const activeYear = years.find((y) => y.id === workingYear?.id) ?? years.find((y) => y.active) ?? years[0];
   const teachers = (teacherRows as unknown as { profiles: { id: string; full_name: string } | null }[])
     .map((r) => r.profiles)
     .filter((p): p is { id: string; full_name: string } => Boolean(p))

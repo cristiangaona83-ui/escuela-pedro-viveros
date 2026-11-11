@@ -106,7 +106,7 @@ export default async function CursoDetailPage({
   // función que usan los Informes, nunca un cálculo propio.
   let courseAverage: number | null = null;
   if (tab === "indicadores" && isEnsenanzaBasica(course.level)) {
-    const periods = await listOpenPeriods();
+    const periods = await listOpenPeriods(academicYearId);
     const currentPeriod = periods.find((p) => p.academic_year_id === academicYearId && p.status === "abierto") ?? null;
     if (currentPeriod) {
       const reports = await getCourseSubjectAverages(id, academicYearId, currentPeriod.id);

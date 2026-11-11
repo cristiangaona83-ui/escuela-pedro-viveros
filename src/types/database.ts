@@ -1385,6 +1385,30 @@ export interface Database {
         };
         Returns: boolean;
       };
+      set_current_academic_year: {
+        Args: { p_year_id: string };
+        Returns: boolean;
+      };
+      rollover_academic_year: {
+        Args: {
+          p_from_year: string;
+          p_to_year: string;
+          p_courses: { level: string; letter: string }[];
+          p_enrollments: { student_id: string; level: string; letter: string }[];
+          p_graduates?: string[];
+          p_copy_homeroom?: boolean;
+          p_copy_assignments?: boolean;
+        };
+        Returns: {
+          from_year: number;
+          to_year: number;
+          courses_created: number;
+          assignments_copied: number;
+          enrolled: number;
+          skipped: number;
+          graduated: number;
+        };
+      };
       enroll_student: {
         Args: { p_student_id: string; p_course_id: string; p_academic_year_id: string };
         Returns: boolean;

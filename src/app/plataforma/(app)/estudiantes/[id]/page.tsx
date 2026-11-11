@@ -36,7 +36,7 @@ import {
   summarizeAttendance,
 } from "@/services/student-record";
 import { listTeacherAssignments } from "@/services/teacher-assignments";
-import { listAcademicYears } from "@/services/courses";
+import { listAcademicYears, getActiveAcademicYear } from "@/services/courses";
 import { getTeachableCourses } from "@/services/academic-scope";
 import { getStudentConvivenciaSummary } from "@/services/convivencia";
 import { CASE_STATUS_LABELS, CASE_STATUS_TONE } from "@/features/convivencia/labels";
@@ -112,7 +112,8 @@ export default async function EstudianteDetailPage({
   const canManageGuardiansFull = canWrite(roles, [...GUARDIAN_FULL_ROLES]);
   const isInspectoria = roles.includes("inspectoria_general");
   const hasPieAccess = canWrite(roles, [...PIE_ACCESS_ROLES]);
-  const activeEnrollment = findActiveEnrollment(student);
+  const workingYear = await getActiveAcademicYear();
+  const activeEnrollment = findActiveEnrollment(student, workingYear?.id);
 
   const [years, courses] = allowedToManage ? await Promise.all([listAcademicYears(), getTeachableCourses()]) : [[], []];
 

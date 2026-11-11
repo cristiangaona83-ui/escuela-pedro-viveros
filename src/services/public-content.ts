@@ -204,7 +204,19 @@ export async function getSubjectTeachersPublic(): Promise<SubjectTeacherWithStaf
 
 export async function getPublicCourses(): Promise<(CourseRow & { homeroom_teacher?: { full_name: string } | null })[]> {
   try {
+    type PublicCourse = CourseRow & { homeroom_teacher?: { full_name: string } | null };
     const supabase = await createClient();
+    // Solo los cursos del año vigente (con varios años en la base, cada curso existe una vez por año).
+    const current = await supabase
+      .from("courses")
+      .select("*, homeroom_teacher:profiles!courses_homeroom_teacher_id_fkey(full_name), academic_years!inner(active)")
+      .eq("public_visible", true)
+      .eq("active", true)
+      .eq("academic_years.active", true)
+      .order("level", { ascending: true });
+    if (!current.error && current.data && current.data.length > 0) return current.data as unknown as PublicCourse[];
+
+    // Respaldo: si el año vigente aún no tiene cursos públicos, se muestran todos (como antes).
     const { data, error } = await supabase
       .from("courses")
       .select("*, homeroom_teacher:profiles!courses_homeroom_teacher_id_fkey(full_name)")
@@ -212,7 +224,7 @@ export async function getPublicCourses(): Promise<(CourseRow & { homeroom_teache
       .eq("active", true)
       .order("level", { ascending: true });
     if (error) throw error;
-    return (data as unknown as (CourseRow & { homeroom_teacher?: { full_name: string } | null })[]) ?? [];
+    return (data as unknown as PublicCourse[]) ?? [];
   } catch {
     return [];
   }
