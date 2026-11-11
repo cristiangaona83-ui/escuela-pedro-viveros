@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (!period) return NextResponse.json({ error: "Período no encontrado" }, { status: 404 });
 
   const year = (period as unknown as { academic_years: { year: number } | null }).academic_years?.year ?? 0;
-  const report = await getStudentSubjectAverages(student_id, period.academic_year_id, period_id);
+  const report = await getStudentSubjectAverages(student_id, period.academic_year_id, period_id, { excludeTalleres: true });
   if (!report) return NextResponse.json({ error: "El estudiante no tiene matrícula en ese año" }, { status: 404 });
   if (!isEnsenanzaBasica(report.courseLevel)) {
     return NextResponse.json({ error: "El Certificado Semestral de Estudios aplica solo a cursos de Enseñanza Básica (1° a 8° Básico)" }, { status: 400 });

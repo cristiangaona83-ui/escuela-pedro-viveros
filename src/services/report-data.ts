@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_GRADING_CONFIG, roundGrade, computeWeightedAverage } from "@/config/grading";
-import { sortByOfficialSubjectOrder, isExcludedFromReports } from "@/config/curriculum-subjects";
+import { sortByOfficialSubjectOrder, isExcludedFromReports, isTaller } from "@/config/curriculum-subjects";
 import type { SubjectAverageRow, LinkedSubjectRow } from "@/lib/pdf/OfficialCertificateShared";
 
 export interface StudentReportData {
@@ -49,17 +49,26 @@ type SubjectBucket = { name: string; linkedTo: string | null; scores: ScoreEntry
  * figuran en el certificado oficial ni cuentan en el promedio general (ver
  * comentario de esa función en curriculum-subjects.ts).
  *
+ * Con `excludeTalleres` (informes Semestral y de Cierre de Año) los
+ * talleres -- por nombre ("Taller N") o por tener `linked_subject_id` -- se
+ * descartan antes de todo lo anterior: no aparecen, no tienen apartado
+ * "Talleres complementarios" y no suman al promedio de la asignatura
+ * troncal ni al general.
+ *
  * `rows` se ordena según el Plan de Estudio oficial del ciclo de
  * `courseLevel` (ver src/config/curriculum-subjects.ts), no alfabéticamente.
  */
 function buildSubjectReport(
   evaluations: EvaluationRow[],
   scoreByEvalId: Map<string, number | null>,
-  courseLevel: string
+  courseLevel: string,
+  excludeTalleres: boolean
 ): { rows: SubjectAverageRow[]; linkedRows: LinkedSubjectRow[] } {
   const bySubject = new Map<string, SubjectBucket>();
   for (const e of evaluations) {
     if (isExcludedFromReports(e.subjects?.name)) continue;
+    // Informes sin talleres: ni aparecen ni suman al promedio de la asignatura troncal a la que estén vinculados.
+    if (excludeTalleres && (isTaller(e.subjects?.name) || e.subjects?.linked_subject_id)) continue;
     const entry: SubjectBucket =
       bySubject.get(e.subject_id) ?? { name: e.subjects?.name ?? "Asignatura", linkedTo: e.subjects?.linked_subject_id ?? null, scores: [] };
     entry.scores.push({ score: scoreByEvalId.get(e.id) ?? null, weight: e.weight });
@@ -96,10 +105,16 @@ function generalAverageFromRows(rows: SubjectAverageRow[]): number | null {
   return validAverages.length ? roundGrade(validAverages.reduce((a, b) => a + b, 0) / validAverages.length, DEFAULT_GRADING_CONFIG) : null;
 }
 
+export interface ReportOptions {
+  /** Deja fuera los talleres: no se muestran ni inciden en ningún promedio (Semestral y Cierre de Año). */
+  excludeTalleres?: boolean;
+}
+
 export async function getStudentSubjectAverages(
   studentId: string,
   academicYearId: string,
-  periodId?: string
+  periodId?: string,
+  options: ReportOptions = {}
 ): Promise<StudentReportData | null> {
   const supabase = await createClient();
 
@@ -130,7 +145,7 @@ export async function getStudentSubjectAverages(
     : { data: [] };
 
   const scoreByEval = new Map((grades ?? []).map((g) => [g.evaluation_id, g.score]));
-  const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoreByEval, course.level);
+  const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoreByEval, course.level, Boolean(options.excludeTalleres));
   const generalAverage = generalAverageFromRows(rows);
 
   return {
@@ -158,7 +173,8 @@ export async function getStudentSubjectAverages(
 export async function getCourseSubjectAverages(
   courseId: string,
   academicYearId: string,
-  periodId?: string
+  periodId?: string,
+  options: ReportOptions = {}
 ): Promise<StudentReportData[]> {
   const supabase = await createClient();
 
@@ -200,7 +216,7 @@ export async function getCourseSubjectAverages(
     .sort((a, b) => a.students!.last_names.localeCompare(b.students!.last_names) || a.students!.first_names.localeCompare(b.students!.first_names))
     .map((e) => {
       const s = e.students!;
-      const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoresByStudent.get(s.id) ?? new Map(), course.level);
+      const { rows, linkedRows } = buildSubjectReport(evaluationRows, scoresByStudent.get(s.id) ?? new Map(), course.level, Boolean(options.excludeTalleres));
       return {
         studentId: s.id,
         studentName: `${s.first_names} ${s.last_names}`,

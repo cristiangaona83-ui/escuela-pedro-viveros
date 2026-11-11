@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "El Informe Semestral aplica solo a cursos de Enseñanza Básica (1° a 8° Básico)" }, { status: 400 });
   }
 
-  const reports = await getCourseSubjectAverages(course_id, period.academic_year_id, period_id);
+  const reports = await getCourseSubjectAverages(course_id, period.academic_year_id, period_id, { excludeTalleres: true });
   const available = reports.filter((r) => r.generalAverage !== null);
   if (available.length === 0) {
     return NextResponse.json({ error: "Ningún estudiante de este curso tiene el informe completo todavía." }, { status: 400 });

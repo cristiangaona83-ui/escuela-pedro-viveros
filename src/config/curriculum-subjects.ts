@@ -62,6 +62,17 @@ export function isExcludedFromReports(name: string | null | undefined): boolean 
   return EXCLUDED_FROM_REPORTS_NORMALIZED.has(normalizeSubjectName(name));
 }
 
+/**
+ * ¿Es un Taller (Taller 1, Taller 2, Taller 3, ... -- ver migración 0052)?
+ * Se reconoce por nombre, sin tildes/mayúsculas. Los informes Semestral y de
+ * Cierre de Año los dejan fuera por completo (ver `excludeTalleres` en
+ * services/report-data.ts).
+ */
+export function isTaller(name: string | null | undefined): boolean {
+  if (!name) return false;
+  return /^taller(es)?(\s|$)/.test(normalizeSubjectName(name));
+}
+
 /** "5° Básico" -> 5. Solo reconoce niveles de Enseñanza Básica (1° a 8°). */
 function basicaGrade(level: string): number | null {
   const match = level.match(/^(\d)°?\s*Básico$/i);
