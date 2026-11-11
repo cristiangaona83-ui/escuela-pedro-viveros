@@ -49,7 +49,7 @@ type SubjectBucket = { name: string; linkedTo: string | null; scores: ScoreEntry
  * figuran en el certificado oficial ni cuentan en el promedio general (ver
  * comentario de esa función en curriculum-subjects.ts).
  *
- * Con `excludeTalleres` (informes Semestral y de Cierre de Año) los
+ * Con `excludeTalleres` (informes Semestral, Anual y de Cierre de Año) los
  * talleres -- por nombre ("Taller N") o por tener `linked_subject_id` -- se
  * descartan antes de todo lo anterior: no aparecen, no tienen apartado
  * "Talleres complementarios" y no suman al promedio de la asignatura
@@ -106,7 +106,7 @@ function generalAverageFromRows(rows: SubjectAverageRow[]): number | null {
 }
 
 export interface ReportOptions {
-  /** Deja fuera los talleres: no se muestran ni inciden en ningún promedio (Semestral y Cierre de Año). */
+  /** Deja fuera los talleres: no se muestran ni inciden en ningún promedio (Semestral, Anual y Cierre de Año). */
   excludeTalleres?: boolean;
 }
 

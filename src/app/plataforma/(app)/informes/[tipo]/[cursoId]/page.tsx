@@ -61,7 +61,7 @@ export default async function InformesCursoPage({
   const courseLabel = `${course.level} ${course.letter}`.trim();
   const periodForQuery = tipo === "semestral" ? period : undefined;
   const [reports, gradeDetail] = await Promise.all([
-    getCourseSubjectAverages(cursoId, year, periodForQuery, { excludeTalleres: tipo !== "anual" }),
+    getCourseSubjectAverages(cursoId, year, periodForQuery, { excludeTalleres: true }),
     getCourseGradeDetail(cursoId, year, periodForQuery),
   ]);
   const completed = reports.filter((r) => r.generalAverage !== null);

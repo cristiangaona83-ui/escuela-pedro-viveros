@@ -64,7 +64,7 @@ export function isExcludedFromReports(name: string | null | undefined): boolean 
 
 /**
  * ¿Es un Taller (Taller 1, Taller 2, Taller 3, ... -- ver migración 0052)?
- * Se reconoce por nombre, sin tildes/mayúsculas. Los informes Semestral y de
+ * Se reconoce por nombre, sin tildes/mayúsculas. Los informes Semestral, Anual y de
  * Cierre de Año los dejan fuera por completo (ver `excludeTalleres` en
  * services/report-data.ts).
  */

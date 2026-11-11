@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const { data: year } = await supabase.from("academic_years").select("year").eq("id", academic_year_id).maybeSingle();
   if (!year) return NextResponse.json({ error: "Año no encontrado" }, { status: 404 });
 
-  const report = await getStudentSubjectAverages(student_id, academic_year_id);
+  const report = await getStudentSubjectAverages(student_id, academic_year_id, undefined, { excludeTalleres: true });
   if (!report) return NextResponse.json({ error: "El estudiante no tiene matrícula en ese año" }, { status: 404 });
   if (!isEnsenanzaBasica(report.courseLevel)) {
     return NextResponse.json({ error: "El Certificado Anual de Estudios aplica solo a cursos de Enseñanza Básica (1° a 8° Básico)" }, { status: 400 });
