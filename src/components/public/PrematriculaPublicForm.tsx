@@ -9,6 +9,7 @@ import { MatriculaForm } from "@/features/matricula/MatriculaForm";
 /** Formulario público de pre-matrícula (el mismo de Inspectoría, en su versión para familias). */
 export function PrematriculaPublicForm({ token, yearLabel, levels }: { token: string; yearLabel: string; levels: string[] }) {
   const [code, setCode] = useState<string | null>(null);
+  const [level, setLevel] = useState("");
 
   async function handleSubmit(data: MatriculaFormData, _courseId: string, honeypot: string): Promise<string | null> {
     void _courseId;
@@ -20,6 +21,7 @@ export function PrematriculaPublicForm({ token, yearLabel, levels }: { token: st
       });
       const json = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
       if (!res.ok) return json.error ?? "No pudimos enviar la pre-matrícula. Inténtalo de nuevo.";
+      setLevel(data.level_requested);
       setCode(json.code ?? "");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return null;
@@ -35,7 +37,7 @@ export function PrematriculaPublicForm({ token, yearLabel, levels }: { token: st
           <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
           <h2 className="font-heading text-xl font-medium text-slate-900">¡Pre-matrícula enviada!</h2>
           <p className="mx-auto max-w-md text-sm text-slate-600">
-            Recibimos la ficha. El establecimiento revisará los datos y se comunicará con ustedes para confirmar la matrícula {yearLabel}.
+            Recibimos la ficha para <strong>{level}</strong>. El establecimiento revisará los datos y se comunicará con ustedes para confirmar la matrícula {yearLabel}.
           </p>
           {code && code !== "00000000" && <p className="text-xs text-slate-500">Código de referencia: <strong>{code}</strong></p>}
           <p className="text-xs text-slate-500">Esta pre-matrícula no confirma cupo ni formaliza por sí sola la matrícula.</p>

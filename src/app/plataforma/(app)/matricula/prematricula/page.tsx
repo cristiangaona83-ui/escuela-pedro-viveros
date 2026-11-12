@@ -9,7 +9,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
-import { getActiveAcademicYear, listAcademicYears } from "@/services/courses";
+import { getActiveAcademicYear, listAcademicYears, levelSortIndex } from "@/services/courses";
 import { SITE } from "@/config/site";
 import { formatDate, formatRun } from "@/lib/utils";
 import { PrematriculaCampaigns, type CampaignView } from "@/features/matricula/PrematriculaCampaigns";
@@ -21,7 +21,7 @@ export const metadata: Metadata = { title: "Pre-matrícula" };
 const ALLOWED_ROLES = ["director", "utp", "superadmin", "inspectoria_general", "administrativo"] as const;
 
 
-export default async function PrematriculaPage({ searchParams }: { searchParams: Promise<{ estado?: string }> }) {
+export default async function PrematriculaPage({ searchParams }: { searchParams: Promise<{ estado?: string; curso?: string }> }) {
   const session = await getSessionContext();
   if (!session || !canWrite(session.roles, [...ALLOWED_ROLES])) {
     return (
@@ -34,7 +34,7 @@ export default async function PrematriculaPage({ searchParams }: { searchParams:
     );
   }
 
-  const { estado } = await searchParams;
+  const { estado, curso } = await searchParams;
   const filter: PrematriculaStatus | "todas" = estado && estado in PREMATRICULA_STATUS_LABEL ? (estado as PrematriculaStatus) : "todas";
   const supabase = await createClient();
   const [years, working] = await Promise.all([listAcademicYears(), getActiveAcademicYear()]);
@@ -75,7 +75,14 @@ export default async function PrematriculaPage({ searchParams }: { searchParams:
   }));
   const campaignTitle = new Map(campaignViews.map((c) => [c.id, `${c.title}`]));
 
-  const shown = filter === "todas" ? requests : requests.filter((r) => r.status === filter);
+  const byStatus = filter === "todas" ? requests : requests.filter((r) => r.status === filter);
+  // Separadas por curso al que postulan (en el orden Prekínder → 8° Básico); las que no indican curso, al final.
+  const NO_LEVEL = "Sin curso indicado";
+  const levelOf = (r: Req) => r.level_requested || NO_LEVEL;
+  const levels = [...new Set(byStatus.map(levelOf))].sort((a, b) => levelSortIndex(a) - levelSortIndex(b) || a.localeCompare(b, "es"));
+  const levelFilter = curso && levels.includes(curso) ? curso : "todos";
+  const shown = levelFilter === "todos" ? byStatus : byStatus.filter((r) => levelOf(r) === levelFilter);
+  const groups = (levelFilter === "todos" ? levels : [levelFilter]).map((level) => ({ level, rows: shown.filter((r) => levelOf(r) === level) }));
   const counts = (s: PrematriculaStatus) => requests.filter((r) => r.status === s).length;
 
   // Pre-matrícula mira al año siguiente: por defecto se propone el año que sigue al de trabajo.
@@ -104,6 +111,7 @@ export default async function PrematriculaPage({ searchParams }: { searchParams:
         <Tabs
           basePath="/plataforma/matricula/prematricula"
           paramName="estado"
+          extraParams={{ curso: levelFilter === "todos" ? undefined : levelFilter }}
           tabs={[
             { key: "todas", label: `Todas (${requests.length})` },
             { key: "pendiente", label: `Por revisar (${counts("pendiente")})` },
@@ -114,52 +122,76 @@ export default async function PrematriculaPage({ searchParams }: { searchParams:
           active={filter}
         />
       </div>
-      <Card className="mt-3">
-        <CardBody>
-          {shown.length === 0 ? (
+      {levels.length > 0 && (
+        <div className="mt-2">
+          <Tabs
+            basePath="/plataforma/matricula/prematricula"
+            paramName="curso"
+            extraParams={{ estado: filter === "todas" ? undefined : filter }}
+            tabs={[
+              { key: "todos", label: `Todos los cursos (${byStatus.length})` },
+              ...levels.map((l) => ({ key: l, label: `${l} (${byStatus.filter((r) => levelOf(r) === l).length})` })),
+            ]}
+            active={levelFilter}
+          />
+        </div>
+      )}
+
+      {shown.length === 0 ? (
+        <Card className="mt-3">
+          <CardBody>
             <EmptyState icon={Inbox} title="Sin solicitudes" description="Cuando una familia envíe la ficha desde el enlace, aparecerá aquí." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="py-2 pr-3">Estudiante</th>
-                    <th className="py-2 pr-3">Postula a</th>
-                    <th className="py-2 pr-3">Apoderado/a</th>
-                    <th className="py-2 pr-3">Recibida</th>
-                    <th className="py-2 pr-3">Estado</th>
-                    <th className="py-2 pr-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {shown.map((r) => (
-                    <tr key={r.id} className="border-b border-slate-100 last:border-0">
-                      <td className="py-2 pr-3">
-                        <p className="font-medium text-slate-800">{r.student_name ?? "—"}</p>
-                        <p className="text-xs text-slate-400">{formatRun(r.student_run)} · {campaignTitle.get(r.campaign_id)}</p>
-                      </td>
-                      <td className="py-2 pr-3 text-slate-600">
-                        {r.level_requested ?? "—"} {r.admission_type && <span className="text-xs text-slate-400">({r.admission_type})</span>}
-                      </td>
-                      <td className="py-2 pr-3 text-slate-600">
-                        {r.guardian_name ?? "—"}
-                        {r.guardian_phone && <p className="text-xs text-slate-400">{r.guardian_phone}</p>}
-                      </td>
-                      <td className="py-2 pr-3 text-slate-600">{formatDate(r.created_at)}</td>
-                      <td className="py-2 pr-3"><Badge tone={STATUS_TONE[r.status]}>{PREMATRICULA_STATUS_LABEL[r.status]}</Badge></td>
-                      <td className="py-2 pr-3 text-right">
-                        <Link href={`/plataforma/matricula/prematricula/${r.id}`} className="text-xs font-medium text-brand-700 hover:underline">
-                          Revisar
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
+      ) : (
+        groups.map((group) => (
+          <section key={group.level} className="mt-5">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              {group.level} <Badge tone="brand">{group.rows.length}</Badge>
+            </h3>
+            <Card className="mt-2">
+              <CardBody>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
+                        <th className="py-2 pr-3">Estudiante</th>
+                        <th className="py-2 pr-3">Tipo</th>
+                        <th className="py-2 pr-3">Apoderado/a</th>
+                        <th className="py-2 pr-3">Recibida</th>
+                        <th className="py-2 pr-3">Estado</th>
+                        <th className="py-2 pr-3" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.rows.map((r) => (
+                        <tr key={r.id} className="border-b border-slate-100 last:border-0">
+                          <td className="py-2 pr-3">
+                            <p className="font-medium text-slate-800">{r.student_name ?? "—"}</p>
+                            <p className="text-xs text-slate-400">{formatRun(r.student_run)} · {campaignTitle.get(r.campaign_id)}</p>
+                          </td>
+                          <td className="py-2 pr-3 text-slate-600">{r.admission_type ?? "—"}</td>
+                          <td className="py-2 pr-3 text-slate-600">
+                            {r.guardian_name ?? "—"}
+                            {r.guardian_phone && <p className="text-xs text-slate-400">{r.guardian_phone}</p>}
+                          </td>
+                          <td className="py-2 pr-3 text-slate-600">{formatDate(r.created_at)}</td>
+                          <td className="py-2 pr-3"><Badge tone={STATUS_TONE[r.status]}>{PREMATRICULA_STATUS_LABEL[r.status]}</Badge></td>
+                          <td className="py-2 pr-3 text-right">
+                            <Link href={`/plataforma/matricula/prematricula/${r.id}`} className="text-xs font-medium text-brand-700 hover:underline">
+                              Revisar
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardBody>
+            </Card>
+          </section>
+        ))
+      )}
     </div>
   );
 }

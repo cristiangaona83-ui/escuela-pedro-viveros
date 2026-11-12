@@ -100,7 +100,10 @@ export default async function PrematriculaDetailPage({ params }: { params: Promi
             </p>
           </div>
         </div>
-        <Badge tone={PREMATRICULA_STATUS_TONE[request.status]}>{PREMATRICULA_STATUS_LABEL[request.status]}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          {request.level_requested && <Badge tone="brand">Postula a {request.level_requested}</Badge>}
+          <Badge tone={PREMATRICULA_STATUS_TONE[request.status]}>{PREMATRICULA_STATUS_LABEL[request.status]}</Badge>
+        </div>
       </div>
 
       {request.student_id && (
