@@ -4,6 +4,7 @@ import type { GuardianRow, GuardianContactRow } from "@/types/database";
 export interface StudentGuardianFull {
   linkId: string;
   isPrimary: boolean;
+  isSubstitute: boolean;
   isEmergencyContact: boolean;
   relationship: string | null;
   guardian: GuardianRow;
@@ -12,6 +13,7 @@ export interface StudentGuardianFull {
 export interface StudentGuardianLimited {
   linkId: string;
   isPrimary: boolean;
+  isSubstitute: boolean;
   isEmergencyContact: boolean;
   relationship: string | null;
   guardian: GuardianContactRow;
@@ -24,13 +26,14 @@ export async function listStudentGuardiansFull(studentId: string): Promise<Stude
   const supabase = await createClient();
   const { data } = await supabase
     .from("student_guardians")
-    .select("id, is_primary, is_emergency_contact, relationship, guardians(id, full_name, run, phone, phone_alt, email, address, relationship, created_at)")
+    .select("id, is_primary, is_substitute, is_emergency_contact, relationship, guardians(id, full_name, run, phone, phone_alt, email, address, relationship, created_at)")
     .eq("student_id", studentId)
     .order("is_primary", { ascending: false });
 
   type Row = {
     id: string;
     is_primary: boolean;
+    is_substitute: boolean;
     is_emergency_contact: boolean;
     relationship: string | null;
     guardians: GuardianRow | null;
@@ -40,6 +43,7 @@ export async function listStudentGuardiansFull(studentId: string): Promise<Stude
     .map((r) => ({
       linkId: r.id,
       isPrimary: r.is_primary,
+      isSubstitute: r.is_substitute,
       isEmergencyContact: r.is_emergency_contact,
       relationship: r.relationship,
       guardian: r.guardians!,
@@ -54,7 +58,7 @@ export async function listStudentGuardiansLimited(studentId: string): Promise<St
   const supabase = await createClient();
   const { data: links } = await supabase
     .from("student_guardians")
-    .select("id, guardian_id, is_primary, is_emergency_contact, relationship")
+    .select("id, guardian_id, is_primary, is_substitute, is_emergency_contact, relationship")
     .eq("student_id", studentId)
     .order("is_primary", { ascending: false });
 
@@ -71,6 +75,7 @@ export async function listStudentGuardiansLimited(studentId: string): Promise<St
     .map((l) => ({
       linkId: l.id,
       isPrimary: l.is_primary,
+      isSubstitute: l.is_substitute,
       isEmergencyContact: l.is_emergency_contact,
       relationship: l.relationship,
       guardian: byId.get(l.guardian_id)!,

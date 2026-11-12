@@ -112,6 +112,7 @@ export type StudentGuardianRow = {
   relationship: string | null;
   is_primary: boolean;
   is_emergency_contact: boolean;
+  is_substitute: boolean;
   created_at: string;
 }
 
@@ -141,6 +142,8 @@ export type StudentRow = {
   first_enrollment_date: string | null;
   pickup_restriction_flag: boolean;
   pickup_restriction_note: string | null;
+  ipe: string | null;
+  social_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -160,6 +163,14 @@ export type EnrollmentRow = {
   withdrawn_at: string | null;
   reactivated_at: string | null;
   notes: string | null;
+  emergency_alerts: string | null;
+  support_coordination: "si" | "no" | "verificar" | null;
+  transport_mode: "familia_a_pie" | "transporte_escolar" | "publico" | "otro" | null;
+  rules_informed: boolean;
+  evaluation_rules_informed: boolean;
+  privacy_informed: boolean;
+  outings_informed: boolean;
+  received_by: string | null;
   created_at: string;
 }
 
@@ -551,6 +562,42 @@ export type ParvulariaReportNoteRow = {
   updated_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Pre-matrícula en línea (supabase/migrations/0059_matricula_prematricula.sql). */
+export type PrematriculaStatus = "pendiente" | "revisada" | "aceptada" | "rechazada" | "matriculada";
+
+export type PrematriculaCampaignRow = {
+  id: string;
+  academic_year_id: string;
+  title: string;
+  intro_text: string | null;
+  token: string;
+  active: boolean;
+  opens_at: string | null;
+  closes_at: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type PrematriculaRequestRow = {
+  id: string;
+  campaign_id: string;
+  status: PrematriculaStatus;
+  student_run: string | null;
+  student_name: string | null;
+  level_requested: string | null;
+  admission_type: string | null;
+  guardian_name: string | null;
+  guardian_phone: string | null;
+  guardian_email: string | null;
+  data: Record<string, unknown>;
+  staff_notes: string | null;
+  student_id: string | null;
+  enrollment_id: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
 };
 
 /** Circulares Informativas -- sección independiente del sitio público
@@ -1385,6 +1432,10 @@ export interface Database {
         };
         Returns: boolean;
       };
+      register_student_enrollment: {
+        Args: { p: Record<string, unknown> };
+        Returns: { student_id: string; enrollment_id: string; enrollment_number: string | null; created_student: boolean };
+      };
       set_current_academic_year: {
         Args: { p_year_id: string };
         Returns: boolean;
@@ -1552,6 +1603,8 @@ export interface Database {
       bulletin_email_log: CrudTable<BulletinEmailLogRow>;
       documents: CrudTable<DocumentRow>;
       circulares_informativas: CrudTable<CircularInformativaRow>;
+      prematricula_campaigns: CrudTable<PrematriculaCampaignRow>;
+      prematricula_requests: CrudTable<PrematriculaRequestRow>;
       parvularia_indicators: CrudTable<ParvulariaIndicatorRow>;
       parvularia_evaluations: CrudTable<ParvulariaEvaluationRow>;
       parvularia_report_notes: CrudTable<ParvulariaReportNoteRow>;

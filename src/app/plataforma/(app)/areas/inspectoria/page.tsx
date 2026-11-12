@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarCheck, Users, Info, ArrowRight } from "lucide-react";
+import { CalendarCheck, Users, Info, ArrowRight, ClipboardSignature } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { getSessionContext } from "@/features/auth/session";
 import { canWrite } from "@/features/auth/can";
@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Inspectoría General" };
 const ALLOWED_ROLES = ["director", "inspectoria_general", "superadmin"] as const;
 
 const SECTIONS = [
+  { title: "Matrícula", description: "Ficha de matrícula en 3 pasos y pre-matrícula en línea con enlace para las familias.", href: "/plataforma/matricula", icon: ClipboardSignature },
   { title: "Asistencia", description: "Registro diario de asistencia, atrasos y retiros.", href: "/plataforma/asistencia", icon: CalendarCheck },
   { title: "Estudiantes", description: "Ficha, matrícula, retiro/reincorporación y autorizaciones de retiro.", href: "/plataforma/estudiantes", icon: Users },
 ];
@@ -24,7 +25,7 @@ export default async function InspectoriaHubPage() {
       <h2 className="text-lg font-semibold text-slate-900">Inspectoría General</h2>
       <p className="mt-1 text-sm text-slate-500">Asistencia, retiros, autorizaciones y registro operativo diario.</p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((s) => (
           <Link key={s.href} href={s.href}>
             <Card className="h-full transition-shadow hover:shadow-md">

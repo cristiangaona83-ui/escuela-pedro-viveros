@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { UserPlus, Search, ClipboardList, CalendarCheck, Info } from "lucide-react";
+import { UserPlus, Search, ClipboardList, CalendarCheck, Info, ClipboardSignature } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 
 export function QuickActionsPanel() {
   const actions = [
+    { label: "Matrícula completa", href: "/plataforma/matricula", icon: ClipboardSignature },
     { label: "Nuevo estudiante", href: "/plataforma/estudiantes/nuevo-rapido", icon: UserPlus },
     { label: "Buscar estudiante", href: "#buscar", icon: Search },
     { label: "Listados por curso", href: "/plataforma/estudiantes/listados", icon: ClipboardList },
@@ -14,7 +15,7 @@ export function QuickActionsPanel() {
     <Card>
       <CardBody>
         <h2 className="font-semibold text-slate-900">Acciones rápidas</h2>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {actions.map((a) => (
             <Link
               key={a.label}

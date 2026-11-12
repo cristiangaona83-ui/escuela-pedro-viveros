@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { FileDown, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { requestPdf } from "@/lib/download-pdf";
 
+/** Ficha de matrícula (formato de Inspectoría General) del año de trabajo. */
 export function FichaMatriculaActions({ studentId }: { studentId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,9 +12,19 @@ export function FichaMatriculaActions({ studentId }: { studentId: string }) {
   async function handleDownload() {
     setLoading(true);
     setError(null);
-    const result = await requestPdf("/plataforma/api/reportes/ficha-matricula", { student_id: studentId });
-    setLoading(false);
-    if (!result.ok) setError(result.error ?? "Error desconocido");
+    try {
+      const response = await fetch(`/plataforma/api/matricula/ficha?student_id=${studentId}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo generar la ficha.");
+        return;
+      }
+      const blobUrl = URL.createObjectURL(await response.blob());
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

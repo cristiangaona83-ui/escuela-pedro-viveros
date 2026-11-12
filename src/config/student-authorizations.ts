@@ -17,7 +17,10 @@ export function authorizationLabel(code: string): string {
 }
 
 export const ENROLLMENT_DOC_TYPES: { code: string; label: string }[] = [
+  { code: "identificacion_estudiante", label: "Identificación del estudiante" },
+  { code: "identificacion_apoderado", label: "Identificación del apoderado" },
   { code: "certificado_nacimiento", label: "Certificado de nacimiento" },
+  { code: "antecedentes_escolares", label: "Antecedentes escolares" },
   { code: "certificado_estudios_anterior", label: "Certificado de estudios anterior" },
   { code: "documentacion_matricula", label: "Documentación de matrícula" },
   { code: "autorizacion", label: "Autorización" },
